@@ -1,2 +1,4 @@
 chilkat==10.1.2
 pi==0.1.2
+selenium==4.28.1
+

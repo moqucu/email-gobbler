@@ -42,7 +42,7 @@ class ChilkatImapFetcherAndMailPublisher(ImapFetcherAndMailPublisher):
             self.logger.error(imap.lastErrorText())
             sys.exit(-1)
 
-        # The username is usually the name part of your iCloud email address
+        # The username is usually the name part of your iCloud module-1 address
         # (for example, emilyparker, not emilyparker@icloud.com).
         success = imap.Login(user, password)
         if not success:
@@ -63,8 +63,8 @@ class ChilkatImapFetcherAndMailPublisher(ImapFetcherAndMailPublisher):
         # Convert message information into mail object
         for message_index in range(1, number_messages + 1):
 
-            # Download the email by sequence number.
-            # email is a CkEmail
+            # Download the module-1 by sequence number.
+            # module-1 is a CkEmail
             downloaded_message = imap.FetchSingle(message_index, False)
             if not imap.get_LastMethodSuccess():
                 self.logger.error(imap.lastErrorText())

@@ -1,7 +1,7 @@
 import argparse
 import logging
 
-from email.ImapFetcherAndMailPublisher import ChilkatImapFetcherAndMailPublisher
+from module.ImapFetcherAndMailPublisher import IMAPClientAndMailParserImapFetcherAndMailPublisher
 
 # Define the parser
 commandline_parser = argparse.ArgumentParser(description='Email Fetcher')
@@ -22,7 +22,7 @@ if commandline_arguments.password != '':
 else:
     logger.warning('No password provided!')
 
-imap_fetcher_and_mail_publisher = ChilkatImapFetcherAndMailPublisher()
+imap_fetcher_and_mail_publisher = IMAPClientAndMailParserImapFetcherAndMailPublisher()
 emails = imap_fetcher_and_mail_publisher.fetch_emails_since(
     0.0,
     'imap.mail.me.com',
@@ -31,6 +31,7 @@ emails = imap_fetcher_and_mail_publisher.fetch_emails_since(
 )
 
 for email in emails:
+    logger.info('Id: {}'.format(email.id))
     logger.info('From: {}'.format(email.source))
     logger.info('Subject: {}'.format(email.subject))
     logger.info('----------------------------------------------------')

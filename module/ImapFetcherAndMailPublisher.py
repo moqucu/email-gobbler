@@ -3,11 +3,14 @@ from typing import List
 import logging
 import chilkat
 import sys
+from imapclient import IMAPClient
+import mailparser
 
 
 class Email:
 
-    def __init__(self, sent, source, to, cc, subject, body, attachments):
+    def __init__(self, id, sent, source, to, cc, subject, body, attachments):
+        self.id = id
         self.sent = sent
         self.source = source
         self.to = to
@@ -42,8 +45,7 @@ class ChilkatImapFetcherAndMailPublisher(ImapFetcherAndMailPublisher):
             self.logger.error(imap.lastErrorText())
             sys.exit(-1)
 
-        # The username is usually the name part of your iCloud module-1 address
-        # (for example, emilyparker, not emilyparker@icloud.com).
+        # The username is usually the name part of your iCloud module address
         success = imap.Login(user, password)
         if not success:
             self.logger.error(imap.lastErrorText())
@@ -63,8 +65,8 @@ class ChilkatImapFetcherAndMailPublisher(ImapFetcherAndMailPublisher):
         # Convert message information into mail object
         for message_index in range(1, number_messages + 1):
 
-            # Download the module-1 by sequence number.
-            # module-1 is a CkEmail
+            # Download the module by sequence number.
+            # module is a CkEmail
             downloaded_message = imap.FetchSingle(message_index, False)
             if not imap.get_LastMethodSuccess():
                 self.logger.error(imap.lastErrorText())
@@ -88,4 +90,58 @@ class ChilkatImapFetcherAndMailPublisher(ImapFetcherAndMailPublisher):
             self.logger.error(imap.lastErrorText())
             sys.exit(-5)
 
+        return all_messages
+
+
+class IMAPClientAndMailParserImapFetcherAndMailPublisher(ImapFetcherAndMailPublisher):
+    logger = logging.getLogger(__name__)
+    logging.basicConfig(level=logging.INFO)
+
+    def fetch_emails_since(self, last_fetched_ts: float, imap_server: str, user: str, password: str) -> List[Email]:
+        all_messages = list()
+
+        # Connect to IMAP server
+        with IMAPClient(imap_server) as client:
+            client.login(user, password)
+            client.select_folder("Inbox", readonly=True)
+
+            messages = client.search(["SINCE", "01-Jan-2025"])
+
+            self.logger.info(f"Fetching {len(messages)} emails...")
+
+            # Fetch full email data
+            # response = client.fetch(messages, ["BODY[HEADER]"])
+            response = client.fetch(messages, ["BODY[]"])
+
+            for message_id, data in response.items():
+                raw_mail_bytes = data[b'BODY[]']
+                mail = mailparser.parse_from_bytes(raw_mail_bytes)
+
+
+                # Parse email using mail-parser
+
+                all_messages.append(
+                    Email(
+                        mail.message_id,
+                        mail.date,
+                        mail.from_,
+                        mail.to,
+                        mail.bc,
+                        mail.subject,
+                        mail.body,
+                        mail.attachments
+                    )
+                )
+
+                # # Save attachments
+                # for attachment in mail.attachments:
+                #     filename = attachment["filename"]
+                #     filepath = os.path.join(ATTACHMENTS_FOLDER, filename)
+                #     with open(filepath, "wb") as f:
+                #         f.write(attachment["payload"])
+                #     print(f"Attachment saved: {filepath}")
+
+            #client.logout()
+
+        self.logger.info(f"Found  {len(all_messages)} emails...")
         return all_messages

@@ -1,4 +1,6 @@
 chilkat==10.1.2
-pi==0.1.2
 selenium==4.28.1
 
+
+IMAPClient~=3.0.1
+mail-parser~=4.1.2

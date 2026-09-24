@@ -4,8 +4,8 @@ A pure Swift domain library for processing Schoology student weekly overall-grad
 
 ## Requirements
 
-- **Swift:** 6.0 or later (macOS 12+)
-- **Toolchain:** Swift Compiler 6.3+ (matches Package.swift `swiftLanguageModes: [.v6]`)
+- **Swift Compiler:** 6.3 or later
+- **Language Mode:** Swift 6 (see Package.swift `swiftLanguageModes: [.v6]`)
 
 ## Testing
 
@@ -25,13 +25,17 @@ SchoologyDomain validates and upserts weekly grade snapshots. The caller is resp
 ### Complete-Snapshot Requirement
 
 Input a **complete snapshot** of grades for a single student/year/sheet:
-- **Report grades must be complete:** Every configured course must appear exactly once in the report; no partial updates.
+- **Report grades must be complete:** Every course in the report must appear exactly once; no partial updates. The caller is responsible for ensuring the report's course set matches the configured courses for that student/year sheet.
+- **Library validation:** The library checks that each existing row's course set matches the report's course set exactly (as supplied); it does not validate against a separate course configuration.
 - **All grades require a letter:** No blanks allowed in the incoming report.
 - **Percentage is optional:** May be `nil` (letter-only) or a precise decimal value; never inferred.
 
 ### Data Types
 
 ```swift
+import Foundation
+import SchoologyDomain
+
 let date = try CalendarDate(year: 2025, month: 3, day: 9)
 let grade = CourseGrade(courseId: "math", percentage: Decimal(string: "95.5"), letter: "A")
 let row = WeeklyRow(studentId: "student-a", academicYear: "2024-25", weekEnd: date, grades: [grade])
@@ -86,6 +90,9 @@ let result = try upsertWeeklyRows(existingRows: existing, report: incomingReport
 Validation failures throw `DomainError.validationFailed(_)` or `DomainError.invalidDate`:
 
 ```swift
+import Foundation
+import SchoologyDomain
+
 do {
     let result = try upsertWeeklyRows(existingRows: existing, report: report)
 } catch DomainError.validationFailed(let message) {

@@ -86,11 +86,11 @@ public struct WeeklyReport: Hashable {
 }
 
 private func isNonBlank(_ str: String) -> Bool {
-    !str.trimmingCharacters(in: .whitespaces).isEmpty
+    !str.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
 }
 
 private func isValidLetter(_ letter: String) -> Bool {
-    let trimmed = letter.trimmingCharacters(in: .whitespaces)
+    let trimmed = letter.trimmingCharacters(in: .whitespacesAndNewlines)
     return !trimmed.isEmpty && trimmed != "-"
 }
 

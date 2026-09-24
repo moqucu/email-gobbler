@@ -445,4 +445,47 @@ final class SchoologyDomainTests: XCTestCase {
         XCTAssertFalse(newer < older)
         XCTAssertEqual(older, older)
     }
+
+    // MARK: - Regression Tests (Whitespace Validation)
+    func testInvalidReport_NewlineStudentId() throws {
+        let grades = [CourseGrade(courseId: "math", percentage: Decimal(string: "90"), letter: "A")]
+        let report = WeeklyReport(studentId: "\n", academicYear: "2024-25", periodStart: date(2025, 3, 3), periodEnd: date(2025, 3, 9), grades: grades)
+        assertValidationFailed(try upsertWeeklyRows(existingRows: [], report: report))
+    }
+    
+    func testInvalidReport_MixedWhitespaceAcademicYear() throws {
+        let grades = [CourseGrade(courseId: "math", percentage: Decimal(string: "90"), letter: "A")]
+        let report = WeeklyReport(studentId: "student-a", academicYear: " \t\r\n ", periodStart: date(2025, 3, 3), periodEnd: date(2025, 3, 9), grades: grades)
+        assertValidationFailed(try upsertWeeklyRows(existingRows: [], report: report))
+    }
+
+    func testInvalidReport_NewlinePaddedDashLetter() throws {
+        let grades = [CourseGrade(courseId: "math", percentage: Decimal(string: "90"), letter: "\n-\n")]
+        let report = WeeklyReport(studentId: "student-a", academicYear: "2024-25", periodStart: date(2025, 3, 3), periodEnd: date(2025, 3, 9), grades: grades)
+        assertValidationFailed(try upsertWeeklyRows(existingRows: [], report: report))
+    }
+
+    func testInvalidExistingRow_Retained_MixedWhitespaceCourseId() throws {
+        let invalidGrades = [CourseGrade(courseId: " \t\r\n", percentage: Decimal(string: "90"), letter: "A")]
+        let validReportGrades = [CourseGrade(courseId: " \t\r\n", percentage: Decimal(string: "95"), letter: "A")] // Match course set
+        let existing = WeeklyRow(studentId: "student-a", academicYear: "2024-25", weekEnd: date(2025, 3, 2), grades: invalidGrades)
+        let report = WeeklyReport(studentId: "student-a", academicYear: "2024-25", periodStart: date(2025, 3, 3), periodEnd: date(2025, 3, 9), grades: validReportGrades)
+        assertValidationFailed(try upsertWeeklyRows(existingRows: [existing], report: report))
+    }
+
+    func testInvalidExistingRow_Retained_NewlineLetter() throws {
+        let invalidGrades = [CourseGrade(courseId: "math", percentage: Decimal(string: "90"), letter: "\n")]
+        let validReportGrades = [CourseGrade(courseId: "math", percentage: Decimal(string: "95"), letter: "A")]
+        let existing = WeeklyRow(studentId: "student-a", academicYear: "2024-25", weekEnd: date(2025, 3, 2), grades: invalidGrades)
+        let report = WeeklyReport(studentId: "student-a", academicYear: "2024-25", periodStart: date(2025, 3, 3), periodEnd: date(2025, 3, 9), grades: validReportGrades)
+        assertValidationFailed(try upsertWeeklyRows(existingRows: [existing], report: report))
+    }
+
+    func testInvalidExistingRow_ReplacementTarget_NewlinePaddedDashLetter() throws {
+        let invalidGrades = [CourseGrade(courseId: "math", percentage: Decimal(string: "90"), letter: "\n-\n")]
+        let validReportGrades = [CourseGrade(courseId: "math", percentage: Decimal(string: "95"), letter: "A")]
+        let existing = WeeklyRow(studentId: "student-a", academicYear: "2024-25", weekEnd: date(2025, 3, 9), grades: invalidGrades) // same weekEnd as report
+        let report = WeeklyReport(studentId: "student-a", academicYear: "2024-25", periodStart: date(2025, 3, 3), periodEnd: date(2025, 3, 9), grades: validReportGrades)
+        assertValidationFailed(try upsertWeeklyRows(existingRows: [existing], report: report))
+    }
 }

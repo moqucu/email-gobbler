@@ -16,9 +16,9 @@ cd SchoologyDomain
 swift test
 ```
 
-The weekly-upsert domain tests (`SchoologyDomainTests`) are expected to pass. The weekly-email extraction tests (`SchoologyWeeklyEmailExtractionTests`) are RED until the parser is implemented: `parseSchoologyWeeklyEmail(html:)` currently throws `notImplemented`.
+The weekly-upsert domain tests (`SchoologyDomainTests`) and the weekly-email extraction tests (`SchoologyWeeklyEmailExtractionTests`) are GREEN. The parser is fully implemented.
 
-## Weekly-Email Extraction (SG-02, in progress)
+## Weekly-Email Extraction (SG-02, completed)
 
 `parseSchoologyWeeklyEmail(html:)` is meant to turn decoded Schoology weekly-digest HTML into `SchoologyWeeklyExtraction`: the reporting period, then each student's course labels, optional grading-period text, and overall grade. Extraction types are separate from `WeeklyReport`. Labels are not mapped to IDs, and no course is filtered out. MIME decoding, Mail, and Numbers are out of scope.
 

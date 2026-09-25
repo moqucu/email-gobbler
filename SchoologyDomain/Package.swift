@@ -20,7 +20,8 @@ let package = Package(
         ),
         .testTarget(
             name: "SchoologyDomainTests",
-            dependencies: ["SchoologyDomain"]
+            dependencies: ["SchoologyDomain"],
+            resources: [.copy("Fixtures")]
         ),
     ],
     swiftLanguageModes: [.v6]

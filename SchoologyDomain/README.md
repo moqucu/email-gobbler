@@ -142,7 +142,7 @@ This is a **pure domain library** for a single isolated concern:
 - ✓ Validates grade snapshots
 - ✓ Upserts rows without duplicates
 - ✓ Canonical course ordering
-- ✗ No email/HTML parsing
+- ✓ HTML weekly-digest extraction
 - ✗ No Mail or Numbers integration
 - ✗ No mapping, routing, or precedence resolution
 - ✗ No application shell or UI

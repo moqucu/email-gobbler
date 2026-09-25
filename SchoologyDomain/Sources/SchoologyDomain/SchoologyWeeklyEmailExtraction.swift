@@ -65,6 +65,11 @@ public enum SchoologyExtractionError: Error, Hashable {
 func parseDate(_ text: String) throws -> CalendarDate? {
     let t = text.trimmingCharacters(in: .whitespacesAndNewlines)
     if t.isEmpty { return nil }
+    
+    guard t.range(of: "^[0-9]{2}/[0-9]{2}/[0-9]{2}$", options: .regularExpression) != nil else {
+        throw SchoologyExtractionError.invalidReportingDate(text: t)
+    }
+    
     let parts = t.split(separator: "/")
     guard parts.count == 3,
           let m = Int(parts[0]),
@@ -81,22 +86,18 @@ func parseDate(_ text: String) throws -> CalendarDate? {
 }
 
 public func parseSchoologyWeeklyEmail(html: String) throws -> SchoologyWeeklyExtraction {
-    let nbspHolder = "\u{E000}"
-    var processedHtml = html.replacingOccurrences(of: "\u{00A0}", with: nbspHolder)
-    processedHtml = processedHtml.replacingOccurrences(of: "&nbsp;", with: nbspHolder)
-    processedHtml = processedHtml.replacingOccurrences(of: "&#160;", with: nbspHolder)
-    
     let doc: Document
     do {
-        doc = try SwiftSoup.parse(processedHtml)
+        doc = try SwiftSoup.parse(html)
     } catch {
         throw SchoologyExtractionError.unsupportedReportStructure
     }
 
     func getText(_ el: Element?) throws -> String {
         guard let el = el else { return "" }
-        let t = try el.text(trimAndNormaliseWhitespace: true)
-        return t.replacingOccurrences(of: nbspHolder, with: "\u{00A0}")
+        let raw = try el.text(trimAndNormaliseWhitespace: false)
+        let collapsed = raw.replacingOccurrences(of: "[ \t\r\n\u{000C}]+", with: " ", options: .regularExpression)
+        return collapsed.trimmingCharacters(in: CharacterSet(charactersIn: " \t\r\n\u{000C}"))
     }
 
     // Reporting Period
@@ -180,10 +181,9 @@ public func parseSchoologyWeeklyEmail(html: String) throws -> SchoologyWeeklyExt
                     var letter = ""
                     var percentageText: String? = nil
                     
-                    if let roundedGrade = try gradeCell.select(".rounded-grade").first() {
-                        percentageText = try getText(roundedGrade)
-                        // Remove numeric-grade-value from DOM to leave just the letter
-                        try gradeCell.select(".numeric-grade-value").remove()
+                    if let numericGrade = try gradeCell.select(".numeric-grade-value").first() {
+                        percentageText = try getText(numericGrade)
+                        try numericGrade.remove()
                         letter = try getText(gradeCell)
                     } else {
                         letter = try getText(gradeCell)

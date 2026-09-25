@@ -4,6 +4,8 @@ import Foundation
 
 // SG-02 RED tests. The baseline is the anonymized fixture; every SyntheticDigest or
 // baselineVariant input is a CONSTRUCTED edge case, not an observed Schoology format.
+// Prototype rules are documented in SchoologyDomain/README.md. Error tests contain one
+// fault each; precedence among multiple independent faults is deliberately unspecified.
 final class SchoologyWeeklyEmailExtractionTests: XCTestCase {
 
     private let gp = SchoologyFixtures.baselineGradingPeriod
@@ -190,6 +192,19 @@ final class SchoologyWeeklyEmailExtractionTests: XCTestCase {
                        cases.map { .present(letter: $0.0, percentage: pct($0.2)) })
     }
 
+    func testGradeFidelity_FinitePercentagesOutsideZeroToHundredAreNotClipped() throws {
+        let html = SyntheticDigest.document(students: [
+            SyntheticDigest.student("Student Gamma", rows: [
+                SyntheticDigest.course("Example Course 46: Section 1", gradeHTML: SyntheticDigest.overall("F", "-5%")),
+                SyntheticDigest.course("Example Course 47: Section 1", gradeHTML: SyntheticDigest.overall("A+", "105.5%")),
+            ]),
+        ])
+        XCTAssertEqual(try parseSchoologyWeeklyEmail(html: html).students.first?.courses.map(\.overallGrade), [
+            .present(letter: "F", percentage: pct("-5")),
+            .present(letter: "A+", percentage: pct("105.5")),
+        ])
+    }
+
     func testGradeFidelity_LetterOnlyHasNoInferredPercentage() throws {
         let html = SyntheticDigest.document(students: [
             SyntheticDigest.student("Student Gamma", rows: [
@@ -251,6 +266,21 @@ final class SchoologyWeeklyEmailExtractionTests: XCTestCase {
         ])
         XCTAssertEqual(try parseSchoologyWeeklyEmail(html: html).reportingPeriod,
                        ReportingPeriod(start: date(2026, 3, 9), end: date(2026, 3, 9)))
+    }
+
+    func testReportingDates_TwoDigitYearsMapTo2000Through2099() throws {
+        let cases: [(String, String, ReportingPeriod)] = [
+            ("01/01/00", "01/07/00", ReportingPeriod(start: date(2000, 1, 1), end: date(2000, 1, 7))),
+            ("12/25/99", "12/31/99", ReportingPeriod(start: date(2099, 12, 25), end: date(2099, 12, 31))),
+            ("02/23/00", "02/29/00", ReportingPeriod(start: date(2000, 2, 23), end: date(2000, 2, 29))),
+            ("02/29/24", "03/06/24", ReportingPeriod(start: date(2024, 2, 29), end: date(2024, 3, 6))),
+        ]
+        for (start, end, expected) in cases {
+            let html = SyntheticDigest.document(start: start, end: end, students: [
+                SyntheticDigest.student("Student Gamma", rows: [SyntheticDigest.course("Example Course 82: Section 1", gradeHTML: "A")]),
+            ])
+            XCTAssertEqual(try parseSchoologyWeeklyEmail(html: html).reportingPeriod, expected, "\(start) - \(end)")
+        }
     }
 
     // MARK: - 7. Reporting context
@@ -335,9 +365,29 @@ final class SchoologyWeeklyEmailExtractionTests: XCTestCase {
         assertExtractionError(.missingReportingDates, try parseSchoologyWeeklyEmail(html: noEnd))
     }
 
+    func testErrors_EmptyOrWhitespaceDateSpanIsMissing() throws {
+        for blank in ["", " ", " \n\t "] {
+            for (start, end) in [(blank, "03/09/26"), ("03/02/26", blank)] {
+                let html = SyntheticDigest.document(start: start, end: end, students: [
+                    SyntheticDigest.student("Student Gamma", rows: [SyntheticDigest.course("Example Course 01: Section 1", gradeHTML: "A")]),
+                ])
+                assertExtractionError(.missingReportingDates, try parseSchoologyWeeklyEmail(html: html))
+            }
+        }
+    }
+
     func testErrors_InvalidReportingDates() throws {
         for bad in ["02/30/26", "13/01/26", "02/29/25", "Synthetic"] {
             let html = SyntheticDigest.document(start: bad, end: "03/09/26", students: [
+                SyntheticDigest.student("Student Gamma", rows: [SyntheticDigest.course("Example Course 01: Section 1", gradeHTML: "A")]),
+            ])
+            assertExtractionError(.invalidReportingDate(text: bad), try parseSchoologyWeeklyEmail(html: html))
+        }
+    }
+
+    func testErrors_InvalidReportingEndDates() throws {
+        for bad in ["04/31/26", "00/10/26", "02/29/26", "Synthetic"] {
+            let html = SyntheticDigest.document(start: "03/02/26", end: bad, students: [
                 SyntheticDigest.student("Student Gamma", rows: [SyntheticDigest.course("Example Course 01: Section 1", gradeHTML: "A")]),
             ])
             assertExtractionError(.invalidReportingDate(text: bad), try parseSchoologyWeeklyEmail(html: html))
@@ -366,6 +416,38 @@ final class SchoologyWeeklyEmailExtractionTests: XCTestCase {
             assertExtractionError(.malformedGrade(studentLabel: "Student Delta", courseLabel: "Example Course 02: Section 1"),
                                   try parseSchoologyWeeklyEmail(html: html))
         }
+    }
+
+    func testErrors_PercentageWithoutLetterIsMalformed() throws {
+        let percentOnly = #"<span class="numeric-grade-value"><span class="rounded-grade" title="Synthetic label">73.17%</span></span>"#
+        let html = SyntheticDigest.document(students: [
+            SyntheticDigest.student("Student Gamma", rows: [SyntheticDigest.course("Example Course 01: Section 1", gradeHTML: "A")]),
+            SyntheticDigest.student("Student Delta", rows: [SyntheticDigest.course("Example Course 02: Section 1", gradeHTML: percentOnly)]),
+        ])
+        assertExtractionError(.malformedGrade(studentLabel: "Student Delta", courseLabel: "Example Course 02: Section 1"),
+                              try parseSchoologyWeeklyEmail(html: html))
+    }
+
+    func testErrors_NumericGradeWithoutPercentSignIsMalformed() throws {
+        for bad in ["73.17", "0", "100"] {
+            let html = SyntheticDigest.document(students: [
+                SyntheticDigest.student("Student Gamma", rows: [SyntheticDigest.course("Example Course 01: Section 1", gradeHTML: "A")]),
+                SyntheticDigest.student("Student Delta", rows: [SyntheticDigest.course("Example Course 02: Section 1", gradeHTML: SyntheticDigest.overall("B", bad))]),
+            ])
+            assertExtractionError(.malformedGrade(studentLabel: "Student Delta", courseLabel: "Example Course 02: Section 1"),
+                                  try parseSchoologyWeeklyEmail(html: html))
+        }
+    }
+
+    func testErrors_UnsupportedStructureWhenSummaryTableHasNoCourseRows() throws {
+        let alone = SyntheticDigest.document(students: [SyntheticDigest.student("Student Gamma", rows: [])])
+        assertExtractionError(.unsupportedReportStructure, try parseSchoologyWeeklyEmail(html: alone))
+
+        let withValidPeer = SyntheticDigest.document(students: [
+            SyntheticDigest.student("Student Gamma", rows: [SyntheticDigest.course("Example Course 01: Section 1", gradeHTML: "A")]),
+            SyntheticDigest.student("Student Delta", rows: []),
+        ])
+        assertExtractionError(.unsupportedReportStructure, try parseSchoologyWeeklyEmail(html: withValidPeer))
     }
 
     func testErrors_UnsupportedStructureWithoutStudentSections() throws {
@@ -420,5 +502,20 @@ final class SchoologyWeeklyEmailExtractionTests: XCTestCase {
         ])
         let courses = try parseSchoologyWeeklyEmail(html: html).students.first?.courses
         XCTAssertEqual(courses, rows.map { ExtractedCourse(courseLabel: $0.0, gradingPeriodText: gp, overallGrade: $0.2) })
+    }
+
+    func testCompleteExtraction_DuplicateLabelsWithinStudentStaySeparateInOrder() throws {
+        let html = SyntheticDigest.document(students: [
+            SyntheticDigest.student("Student Gamma", rows: [
+                SyntheticDigest.course("Repeated Course: Section 1", gradeHTML: SyntheticDigest.overall("A", "95%")),
+                SyntheticDigest.course("Example Course 02: Section 1", gradeHTML: "B"),
+                SyntheticDigest.course("Repeated Course: Section 1", gradeHTML: SyntheticDigest.dash),
+            ]),
+        ])
+        XCTAssertEqual(try parseSchoologyWeeklyEmail(html: html).students.first?.courses, [
+            ExtractedCourse(courseLabel: "Repeated Course: Section 1", gradingPeriodText: gp, overallGrade: .present(letter: "A", percentage: pct("95"))),
+            ExtractedCourse(courseLabel: "Example Course 02: Section 1", gradingPeriodText: gp, overallGrade: .present(letter: "B", percentage: nil)),
+            ExtractedCourse(courseLabel: "Repeated Course: Section 1", gradingPeriodText: gp, overallGrade: .missing(.dash)),
+        ])
     }
 }

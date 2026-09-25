@@ -518,4 +518,68 @@ final class SchoologyWeeklyEmailExtractionTests: XCTestCase {
             ExtractedCourse(courseLabel: "Repeated Course: Section 1", gradingPeriodText: gp, overallGrade: .missing(.dash)),
         ])
     }
+
+    // MARK: - Regressions from Codex implementation review (constructed variants)
+
+    private func singleCourseDigest(start: String = "03/02/26", end: String = "03/09/26",
+                                    studentLabel: String = "Student Gamma",
+                                    courseLabel: String = "Example Course 01: Section 1",
+                                    gradingPeriodHTML: String? = SchoologyFixtures.baselineGradingPeriod,
+                                    gradeHTML: String = "A") -> String {
+        SyntheticDigest.document(start: start, end: end, students: [
+            SyntheticDigest.student(studentLabel, rows: [
+                SyntheticDigest.course(courseLabel, gradingPeriodHTML: gradingPeriodHTML, gradeHTML: gradeHTML),
+            ]),
+        ])
+    }
+
+    func testRegression_StrictDateSyntaxRejectedInStartField() throws {
+        for bad in ["03/02/2026", "03//02/26", "03/02/-1", "3/02/26", "03/02/+6"] {
+            assertExtractionError(.invalidReportingDate(text: bad),
+                                  try parseSchoologyWeeklyEmail(html: singleCourseDigest(start: bad, end: "03/09/26")))
+        }
+    }
+
+    func testRegression_StrictDateSyntaxRejectedInEndField() throws {
+        for bad in ["03/09/2026", "03//09/26", "03/09/-1", "3/09/26", "03/09/+6"] {
+            assertExtractionError(.invalidReportingDate(text: bad),
+                                  try parseSchoologyWeeklyEmail(html: singleCourseDigest(start: "03/02/26", end: bad)))
+        }
+    }
+
+    func testRegression_NumericNoBreakSpaceEntitiesPreserved() throws {
+        for entity in ["&#xA0;", "&#xa0;", "&#x00A0;", "&#X00a0;", "&#160;", "&#0160;", "&#00160;"] {
+            let result = try parseSchoologyWeeklyEmail(html: singleCourseDigest(
+                studentLabel: "Student\(entity)Gamma",
+                courseLabel: "Art\(entity)Class",
+                gradingPeriodHTML: "T2\(entity)(Synthetic)"))
+            XCTAssertEqual(result.students, [ExtractedStudent(studentLabel: "Student\u{00A0}Gamma", courses: [
+                ExtractedCourse(courseLabel: "Art\u{00A0}Class", gradingPeriodText: "T2\u{00A0}(Synthetic)",
+                                overallGrade: .present(letter: "A", percentage: nil)),
+            ])], entity)
+        }
+    }
+
+    func testRegression_PrivateUseCharacterPreservedAlongsideNoBreakSpace() throws {
+        let result = try parseSchoologyWeeklyEmail(html: singleCourseDigest(
+            studentLabel: "Student\u{E000}Gamma",
+            courseLabel: "Art\u{E000}Class\u{00A0}Studio&nbsp;One",
+            gradingPeriodHTML: "T2\u{E000}\u{00A0}(Synthetic)"))
+        XCTAssertEqual(result.students, [ExtractedStudent(studentLabel: "Student\u{E000}Gamma", courses: [
+            ExtractedCourse(courseLabel: "Art\u{E000}Class\u{00A0}Studio\u{00A0}One", gradingPeriodText: "T2\u{E000}\u{00A0}(Synthetic)",
+                            overallGrade: .present(letter: "A", percentage: nil)),
+        ])])
+    }
+
+    func testRegression_NumericFieldWithoutRoundedGradeAndPercentSignIsMalformed() throws {
+        let html = singleCourseDigest(gradeHTML: #"B <span class="numeric-grade-value">73.17</span>"#)
+        assertExtractionError(.malformedGrade(studentLabel: "Student Gamma", courseLabel: "Example Course 01: Section 1"),
+                              try parseSchoologyWeeklyEmail(html: html))
+    }
+
+    func testRegression_StandaloneNumericFieldWithoutLetterIsMalformed() throws {
+        let html = singleCourseDigest(gradeHTML: #"<span class="numeric-grade-value">73.17%</span>"#)
+        assertExtractionError(.malformedGrade(studentLabel: "Student Gamma", courseLabel: "Example Course 01: Section 1"),
+                              try parseSchoologyWeeklyEmail(html: html))
+    }
 }

@@ -24,7 +24,7 @@ The weekly-upsert domain tests (`SchoologyDomainTests`) and the weekly-email ext
 
 Prototype rules, encoded by the tests. These are contract decisions for the anonymized fixture, not claims about every format Schoology may produce:
 
-- **Dates:** `MM/DD/YY` two-digit years map to 2000–2099, independent of today's date. An absent, empty, or whitespace-only date span is `missingReportingDates`. Nonempty text that isn't a valid date is `invalidReportingDate`. A start date after the end date is `reversedReportingRange`.
+- **Dates:** each date must be exactly `MM/DD/YY`: two ASCII digits per field, separated by single slashes, with no signs or extra digits. `YY` maps to 2000–2099, independent of today's date. An absent, empty, or whitespace-only date span is `missingReportingDates`. Nonempty text that isn't a valid date is `invalidReportingDate`. A start date after the end date is `reversedReportingRange`.
 - **Text:** ordinary HTML whitespace (space, tab, CR, LF, FF) is collapsed and trimmed. Entities are decoded. Nonbreaking spaces (literal or `&nbsp;`) are preserved.
 - **Context:** grading-period text is kept verbatim when present and `nil` when absent. No academic year is inferred.
 - **Grades:** only the overall grade cell counts. Assignment, attendance, and activity grades are ignored. A letter with a `NN%` value becomes `present(letter, percentage)`. A letter alone becomes `present(letter, nil)`. A dash is `missing(.dash)`, and an empty cell is `missing(.blank)`; both are distinct from `0%`. Numeric decimal values are preserved, but not textual trailing zeros. Finite percentages outside 0–100 are kept unclipped.

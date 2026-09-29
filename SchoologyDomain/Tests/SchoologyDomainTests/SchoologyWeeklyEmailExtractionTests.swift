@@ -268,6 +268,14 @@ final class SchoologyWeeklyEmailExtractionTests: XCTestCase {
                        ReportingPeriod(start: date(2026, 3, 9), end: date(2026, 3, 9)))
     }
 
+    func testReportingDates_SingleDigitMonthAndDayFromLiveMessage() throws {
+        let html = SyntheticDigest.document(start: "9/7/26", end: "9/21/26", students: [
+            SyntheticDigest.student("Student Gamma", rows: [SyntheticDigest.course("Example Course 81: Section 1", gradeHTML: "A")]),
+        ])
+        XCTAssertEqual(try parseSchoologyWeeklyEmail(html: html).reportingPeriod,
+                       ReportingPeriod(start: date(2026, 9, 7), end: date(2026, 9, 21)))
+    }
+
     func testReportingDates_TwoDigitYearsMapTo2000Through2099() throws {
         let cases: [(String, String, ReportingPeriod)] = [
             ("01/01/00", "01/07/00", ReportingPeriod(start: date(2000, 1, 1), end: date(2000, 1, 7))),
@@ -534,14 +542,14 @@ final class SchoologyWeeklyEmailExtractionTests: XCTestCase {
     }
 
     func testRegression_StrictDateSyntaxRejectedInStartField() throws {
-        for bad in ["03/02/2026", "03//02/26", "03/02/-1", "3/02/26", "03/02/+6"] {
+        for bad in ["03/02/2026", "03//02/26", "03/02/-1", "003/02/26", "03/02/+6"] {
             assertExtractionError(.invalidReportingDate(text: bad),
                                   try parseSchoologyWeeklyEmail(html: singleCourseDigest(start: bad, end: "03/09/26")))
         }
     }
 
     func testRegression_StrictDateSyntaxRejectedInEndField() throws {
-        for bad in ["03/09/2026", "03//09/26", "03/09/-1", "3/09/26", "03/09/+6"] {
+        for bad in ["03/09/2026", "03//09/26", "03/09/-1", "003/09/26", "03/09/+6"] {
             assertExtractionError(.invalidReportingDate(text: bad),
                                   try parseSchoologyWeeklyEmail(html: singleCourseDigest(start: "03/02/26", end: bad)))
         }

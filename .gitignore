@@ -1,7 +1,4 @@
-# Created by venv; see https://docs.python.org/3/library/venv.html
-bin/*
-include/*
-lib/*
-pyvenv.cfg
 .idea/*
-__pycache__/
+
+# Local source emails and other private inputs
+/private-inputs/

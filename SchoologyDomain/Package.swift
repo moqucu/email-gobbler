@@ -14,6 +14,7 @@ let package = Package(
             name: "SchoologyDomain",
             targets: ["SchoologyDomain"]
         ),
+        .executable(name: "schoology-mail-preview", targets: ["SchoologyMailPreview"]),
     ],
     dependencies: [
         .package(url: "https://github.com/scinfu/SwiftSoup.git", from: "2.7.0"),
@@ -27,8 +28,12 @@ let package = Package(
         ),
         .testTarget(
             name: "SchoologyDomainTests",
-            dependencies: ["SchoologyDomain"],
+            dependencies: ["SchoologyDomain", "SchoologyMailPreview"],
             resources: [.copy("Fixtures")]
+        ),
+        .executableTarget(
+            name: "SchoologyMailPreview",
+            dependencies: ["SchoologyDomain"]
         ),
     ],
     swiftLanguageModes: [.v6]

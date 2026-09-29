@@ -21,15 +21,38 @@ cd SchoologyDomain
 swift test
 ```
 
-The weekly-upsert domain tests (`SchoologyDomainTests`) and the weekly-email extraction tests (`SchoologyWeeklyEmailExtractionTests`) are GREEN. All 90 tests pass, including the extraction regression tests.
+The weekly-upsert domain tests, weekly-email extraction tests, and mail-decoder tests are GREEN. All 94 tests pass.
+
+## Read-only mail preview
+
+The `schoology-mail-preview` Swift executable reads a message from an `.eml` file
+or from the macOS Mail Inbox through Mail's Apple Events interface. It decodes a
+`text/html` MIME part, extracts the Schoology weekly summary, and prints the
+reporting dates and counts of students, courses, and present grades. It does
+not delete messages, change message flags, or update a workbook. The Mail mode
+uses the account already configured in macOS Mail and may prompt for Automation
+access. It selects the newest Inbox message whose subject contains the supplied
+text.
+
+```bash
+cd SchoologyDomain
+swift run schoology-mail-preview --eml /path/to/schoology-message.eml
+swift run schoology-mail-preview --mail-subject "Your Children's Weekly Schoology Summary"
+```
+
+The preview supports `text/html` with base64, quoted-printable, or unencoded
+content and common UTF-8/Latin-1/Windows-1252 charsets. It reports an error for
+unsupported MIME formats or Schoology layouts. Message content stays in memory;
+the program does not save a copy. The domain library remains independent of
+Mail and the filesystem.
 
 ## Weekly-Email Extraction (SG-02, completed)
 
-`parseSchoologyWeeklyEmail(html:)` turns decoded Schoology weekly-digest HTML into `SchoologyWeeklyExtraction`: the reporting period, then each student's course labels, optional grading-period text, and overall grade. Extraction types are separate from `WeeklyReport`. Labels are not mapped to IDs, and no course is filtered out. MIME decoding, Mail, and Numbers are out of scope.
+`parseSchoologyWeeklyEmail(html:)` turns decoded Schoology weekly-digest HTML into `SchoologyWeeklyExtraction`: the reporting period, then each student's course labels, optional grading-period text, and overall grade. Extraction types are separate from `WeeklyReport`. Labels are not mapped to IDs, and no course is filtered out. MIME decoding and Mail access are handled by the preview executable; Numbers is out of scope.
 
 Prototype rules, encoded by the tests. These are contract decisions for the anonymized fixture, not claims about every format Schoology may produce:
 
-- **Dates:** each date must be exactly `MM/DD/YY`: two ASCII digits per field, separated by single slashes, with no signs or extra digits. `YY` maps to 2000–2099, independent of today's date. An absent, empty, or whitespace-only date span is `missingReportingDates`. Nonempty text that isn't a valid date is `invalidReportingDate`. A start date after the end date is `reversedReportingRange`.
+- **Dates:** each date uses one or two ASCII digits for month and day, then a two-digit year (`M/D/YY` or `MM/DD/YY`). Single slashes separate fields; signs and extra digits are rejected. `YY` maps to 2000–2099, independent of today's date. An absent, empty, or whitespace-only date span is `missingReportingDates`. Nonempty text that isn't a valid date is `invalidReportingDate`. A start date after the end date is `reversedReportingRange`.
 - **Text:** ordinary HTML whitespace (space, tab, CR, LF, FF) is collapsed and trimmed. Entities are decoded. Nonbreaking spaces (literal or `&nbsp;`) are preserved.
 - **Context:** grading-period text follows the text-normalization rule above when present and is `nil` when absent. No academic year is inferred.
 - **Grades:** only the overall grade cell counts. Assignment, attendance, and activity grades are ignored. A letter with a `NN%` value becomes `present(letter, percentage)`. A letter alone becomes `present(letter, nil)`. A dash is `missing(.dash)`, and an empty cell is `missing(.blank)`; both are distinct from `0%`. Numeric decimal values are preserved, but not textual trailing zeros. Finite percentages outside 0–100 are kept unclipped.
@@ -143,16 +166,17 @@ try CalendarDate(year: 2023, month: 2, day: 29)  // ✗ Invalid (not a leap year
 
 ## Scope & Limitations
 
-This library provides HTML extraction and weekly grade-row processing:
+The library provides HTML extraction and weekly grade-row processing:
 - ✓ Validates grade snapshots
 - ✓ Upserts rows without duplicates
 - ✓ Canonical course ordering
 - ✓ HTML weekly-digest extraction
-- ✗ No Mail or Numbers integration
+- ✓ Read-only Mail preview in a separate Swift executable
+- ✗ No Numbers integration
 - ✗ No mapping, routing, or precedence resolution
 - ✗ No application shell or UI
 
-**Not yet integrated:** Mail/Numbers automation, report precedence, multi-sheet workbooks, and academic-year inference remain upstream concerns outside this library.
+**Not yet integrated:** Numbers automation, report precedence, multi-sheet workbooks, and academic-year inference remain upstream concerns outside this library.
 
 ## Guarantees
 

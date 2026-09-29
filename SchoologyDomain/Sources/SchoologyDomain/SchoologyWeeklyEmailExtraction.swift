@@ -66,7 +66,7 @@ func parseDate(_ text: String) throws -> CalendarDate? {
     let t = text.trimmingCharacters(in: .whitespacesAndNewlines)
     if t.isEmpty { return nil }
     
-    guard t.range(of: "^[0-9]{2}/[0-9]{2}/[0-9]{2}$", options: .regularExpression) != nil else {
+    guard t.range(of: "^[0-9]{1,2}/[0-9]{1,2}/[0-9]{2}$", options: .regularExpression) != nil else {
         throw SchoologyExtractionError.invalidReportingDate(text: t)
     }
     

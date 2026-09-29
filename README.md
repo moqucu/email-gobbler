@@ -6,5 +6,6 @@ for its API, requirements, and current scope.
 
 Run the tests from `SchoologyDomain` with `swift test`. The Swift executable
 can read a Schoology `.eml` file or the newest matching message in macOS Mail,
-preview a Numbers update, and apply it with a backup and read-back check; see
-the package documentation for commands.
+preview a Numbers update, apply it with a backup and read-back check, and then
+optionally mark the Mail message read and move it to iCloud Archive; see the
+package documentation for commands.

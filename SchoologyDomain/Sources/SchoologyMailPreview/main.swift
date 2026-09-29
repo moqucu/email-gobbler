@@ -8,7 +8,7 @@ enum PreviewError: Error, CustomStringConvertible {
     var description: String {
         switch self {
         case .usage:
-            return "Usage: schoology-mail-preview (--eml <path> | --mail-subject <text>) [--numbers <path> --sheet <name> --student <exact label> [--apply --backup <path>]]"
+            return "Usage: schoology-mail-preview (--eml <path> | --mail-subject <text>) [--numbers <path> --sheet <name> --student <exact label> [--apply --backup <path> [--consume]]]"
         case .mailAccess(let message):
             return "Mail access failed: \(message)"
         }
@@ -20,7 +20,7 @@ func appleScriptString(_ text: String) -> String {
         .replacingOccurrences(of: "\"", with: "\\\"") + "\""
 }
 
-func messageFromMail(subject: String) throws -> Data {
+func messageFromMail(subject: String) throws -> FetchedMailMessage {
     guard !subject.isEmpty, !subject.contains("\n"), !subject.contains("\r") else {
         throw PreviewError.usage
     }
@@ -32,7 +32,8 @@ func messageFromMail(subject: String) throws -> Data {
         repeat with candidate in matches
             if (date received of candidate) > (date received of chosen) then set chosen to candidate
         end repeat
-        return source of chosen
+        set a to account of mailbox of chosen
+        return {source of chosen, id of chosen, id of a, message id of chosen}
     end tell
     """
     guard let appleScript = NSAppleScript(source: script) else {
@@ -43,16 +44,23 @@ func messageFromMail(subject: String) throws -> Data {
     if let errorInfo {
         throw PreviewError.mailAccess("\(errorInfo)")
     }
-    guard let source = result.stringValue else {
-        throw PreviewError.mailAccess("Mail returned no message source")
+    guard result.numberOfItems == 4,
+          let source = result.atIndex(1)?.stringValue,
+          let accountID = result.atIndex(3)?.stringValue,
+          let rfcMessageID = result.atIndex(4)?.stringValue,
+          let idDescriptor = result.atIndex(2),
+          idDescriptor.int32Value > 0 else {
+        throw PreviewError.mailAccess("Mail returned incomplete message identity")
     }
-    return Data(source.utf8)
+    return FetchedMailMessage(source: Data(source.utf8), id: idDescriptor.int32Value,
+                              accountID: accountID, rfcMessageID: rfcMessageID)
 }
 
 func preview() throws {
     var arguments = Array(CommandLine.arguments.dropFirst())
     let apply = arguments.contains("--apply")
-    arguments.removeAll { $0 == "--apply" }
+    let shouldConsume = arguments.contains("--consume")
+    arguments.removeAll { $0 == "--apply" || $0 == "--consume" }
     guard arguments.count.isMultiple(of: 2) else { throw PreviewError.usage }
     var options: [String: String] = [:]
     for index in stride(from: 0, to: arguments.count, by: 2) {
@@ -70,11 +78,16 @@ func preview() throws {
     }
     guard (apply && options["--backup"] != nil && options["--numbers"] != nil)
         || (!apply && options["--backup"] == nil) else { throw PreviewError.usage }
+    guard !shouldConsume || (apply && options["--mail-subject"] != nil) else {
+        throw PreviewError.usage
+    }
     let message: Data
+    var fetchedMail: FetchedMailMessage?
     if let path = options["--eml"] {
         message = try Data(contentsOf: URL(fileURLWithPath: path))
     } else {
-        message = try messageFromMail(subject: options["--mail-subject"]!)
+        fetchedMail = try messageFromMail(subject: options["--mail-subject"]!)
+        message = fetchedMail!.source
     }
 
     let html = try MailDecoder.html(from: message)
@@ -106,10 +119,20 @@ func preview() throws {
         print("Ignored courses without grades: \(plan.ignoredMissingCourses.count)")
         if apply, let backupPath = options["--backup"] {
             print("Backup target: \(backupPath)")
-            try writeNumbersUpdate(at: URL(fileURLWithPath: workbookPath), sheetName: sheetName,
-                                   snapshot: snapshot, plan: plan,
-                                   backupURL: URL(fileURLWithPath: backupPath))
-            print("Workbook saved and verified")
+            let write = {
+                try writeNumbersUpdate(at: URL(fileURLWithPath: workbookPath), sheetName: sheetName,
+                                       snapshot: snapshot, plan: plan,
+                                       backupURL: URL(fileURLWithPath: backupPath))
+                print("Workbook saved and verified")
+            }
+            if shouldConsume, let fetchedMail {
+                try writeThenConsume(write: write, consume: {
+                    try consumeMailMessage(fetchedMail)
+                    print("Mail message marked read and moved to iCloud Archive")
+                })
+            } else {
+                try write()
+            }
         }
     }
 }

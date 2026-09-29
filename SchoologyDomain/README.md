@@ -22,15 +22,15 @@ swift test
 ```
 
 The weekly-upsert domain tests, weekly-email extraction tests, mail-decoder tests,
-and workbook planning tests are GREEN. All 98 tests pass.
+workbook planning tests, and mail-consumption ordering tests are GREEN. All 100
+tests pass.
 
 ## Mail preview and Numbers update
 
 The `schoology-mail-preview` Swift executable reads a message from an `.eml` file
 or from the macOS Mail Inbox through Mail's Apple Events interface. It decodes a
 `text/html` MIME part, extracts the Schoology weekly summary, and prints the
-reporting dates and counts of students, courses, and present grades. It does
-not delete messages or change message flags. The Mail mode
+reporting dates and counts of students, courses, and present grades. The Mail mode
 uses the account already configured in macOS Mail and may prompt for Automation
 access. It selects the newest Inbox message whose subject contains the supplied
 text.
@@ -78,7 +78,14 @@ still matches the preview, copies the original to the backup, inserts a new row
 at the planned position or replaces the existing week, saves, and reopens a
 temporary copy to verify the date and all planned values. A failed save or
 verification leaves the backup available for recovery. Repeating a run for the
-same week replaces its row rather than adding a duplicate. Mail is never changed.
+same week replaces its row rather than adding a duplicate.
+
+For a message read directly from Mail, add `--consume` alongside `--apply` to
+mark that exact message as read and move it from the iCloud Inbox to the iCloud
+Archive mailbox. The command verifies the moved message in Archive. Consumption
+runs only after the Numbers save and read-back checks pass. `.eml` input and
+preview-only commands cannot consume mail. Without `--consume`, Mail remains
+unchanged.
 
 ## Weekly-Email Extraction (SG-02, completed)
 
@@ -207,6 +214,7 @@ The library provides HTML extraction and weekly grade-row processing:
 - ✓ HTML weekly-digest extraction
 - ✓ Read-only Mail preview in a separate Swift executable
 - ✓ Numbers change preview, backed-up write, and read-back verification in the executable
+- ✓ Optional mark-read and iCloud Archive move after a verified write
 - ✗ No mapping, routing, or precedence resolution
 - ✗ No application shell or UI
 

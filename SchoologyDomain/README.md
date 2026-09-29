@@ -21,15 +21,16 @@ cd SchoologyDomain
 swift test
 ```
 
-The weekly-upsert domain tests, weekly-email extraction tests, and mail-decoder tests are GREEN. All 94 tests pass.
+The weekly-upsert domain tests, weekly-email extraction tests, mail-decoder tests,
+and workbook planning tests are GREEN. All 98 tests pass.
 
-## Read-only mail preview
+## Mail preview and Numbers update
 
 The `schoology-mail-preview` Swift executable reads a message from an `.eml` file
 or from the macOS Mail Inbox through Mail's Apple Events interface. It decodes a
 `text/html` MIME part, extracts the Schoology weekly summary, and prints the
 reporting dates and counts of students, courses, and present grades. It does
-not delete messages, change message flags, or update a workbook. The Mail mode
+not delete messages or change message flags. The Mail mode
 uses the account already configured in macOS Mail and may prompt for Automation
 access. It selects the newest Inbox message whose subject contains the supplied
 text.
@@ -46,9 +47,42 @@ unsupported MIME formats or Schoology layouts. Message content stays in memory;
 the program does not save a copy. The domain library remains independent of
 Mail and the filesystem.
 
+### Preview a Numbers update
+
+Supply an exact student label and target sheet to compare the extracted email
+with a Numbers workbook. The command opens a temporary copy of the workbook,
+reads its headers and date rows, and prints the proposed row and cell values.
+Without `--apply`, it never writes to the source workbook.
+
+```bash
+swift run schoology-mail-preview \
+  --mail-subject "Your Children's Weekly Schoology Summary" \
+  --numbers /path/to/trend.numbers \
+  --sheet "Student 2026/27" \
+  --student "Student Full Name"
+```
+
+The current planner expects a Date column followed by percentage/letter column
+pairs, with the course name above each percentage column. It matches the part
+of a Schoology course label before its numeric section suffix to the header.
+Every workbook course must occur in the email. A graded email course without a
+matching header stops the plan; unmatched courses with missing grades are
+reported as ignored. Percentages are displayed as Numbers fractions (for
+example, `0.8794` for `87.94%`). The planner identifies an existing week for
+replacement or a row position for insertion. It has not yet been connected to
+the domain row-upsert API.
+
+To save the proposed row, add `--apply --backup /path/to/backup.numbers` to the
+same command. The backup path must not exist. The writer checks that the workbook
+still matches the preview, copies the original to the backup, inserts a new row
+at the planned position or replaces the existing week, saves, and reopens a
+temporary copy to verify the date and all planned values. A failed save or
+verification leaves the backup available for recovery. Repeating a run for the
+same week replaces its row rather than adding a duplicate. Mail is never changed.
+
 ## Weekly-Email Extraction (SG-02, completed)
 
-`parseSchoologyWeeklyEmail(html:)` turns decoded Schoology weekly-digest HTML into `SchoologyWeeklyExtraction`: the reporting period, then each student's course labels, optional grading-period text, and overall grade. Extraction types are separate from `WeeklyReport`. Labels are not mapped to IDs, and no course is filtered out. MIME decoding and Mail access are handled by the preview executable; Numbers is out of scope.
+`parseSchoologyWeeklyEmail(html:)` turns decoded Schoology weekly-digest HTML into `SchoologyWeeklyExtraction`: the reporting period, then each student's course labels, optional grading-period text, and overall grade. Extraction types are separate from `WeeklyReport`. Labels are not mapped to IDs, and no course is filtered out. MIME decoding, Mail access, and Numbers updates are handled by the executable.
 
 Prototype rules, encoded by the tests. These are contract decisions for the anonymized fixture, not claims about every format Schoology may produce:
 
@@ -172,11 +206,11 @@ The library provides HTML extraction and weekly grade-row processing:
 - ✓ Canonical course ordering
 - ✓ HTML weekly-digest extraction
 - ✓ Read-only Mail preview in a separate Swift executable
-- ✗ No Numbers integration
+- ✓ Numbers change preview, backed-up write, and read-back verification in the executable
 - ✗ No mapping, routing, or precedence resolution
 - ✗ No application shell or UI
 
-**Not yet integrated:** Numbers automation, report precedence, multi-sheet workbooks, and academic-year inference remain upstream concerns outside this library.
+**Not yet integrated:** Automatic student/sheet routing, report precedence, multi-sheet runs, and academic-year inference remain upstream concerns outside this library.
 
 ## Guarantees
 

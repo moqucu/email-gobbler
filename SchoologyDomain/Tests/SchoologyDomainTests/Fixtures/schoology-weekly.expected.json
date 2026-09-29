@@ -1,0 +1,257 @@
+{
+  "fixture": "schoology-weekly.synthetic.html",
+  "reportingPeriod": {
+    "start": "2026-03-02",
+    "end": "2026-03-09"
+  },
+  "students": [
+    {
+      "studentLabel": "Student Alpha",
+      "courses": [
+        {
+          "courseLabel": "Example Course 01: Section 1",
+          "gradingPeriodText": "25-26 T2 (14 Jan - 12 Jun)",
+          "grade": {
+            "state": "missing",
+            "marker": "-",
+            "letter": null,
+            "percentage": null
+          }
+        },
+        {
+          "courseLabel": "Example Course 02: Section 1",
+          "gradingPeriodText": "25-26 T2 (14 Jan - 12 Jun)",
+          "grade": {
+            "state": "missing",
+            "marker": "-",
+            "letter": null,
+            "percentage": null
+          }
+        },
+        {
+          "courseLabel": "Example Course 03: Section 1",
+          "gradingPeriodText": "25-26 T2 (14 Jan - 12 Jun)",
+          "grade": {
+            "state": "present",
+            "letter": "B+",
+            "percentage": "73.17"
+          }
+        },
+        {
+          "courseLabel": "Example Course 04: Section 1",
+          "gradingPeriodText": "25-26 T2 (14 Jan - 12 Jun)",
+          "grade": {
+            "state": "present",
+            "letter": "B",
+            "percentage": null
+          }
+        },
+        {
+          "courseLabel": "Example Course 05: Section 1",
+          "gradingPeriodText": "25-26 T2 (14 Jan - 12 Jun)",
+          "grade": {
+            "state": "present",
+            "letter": "C+",
+            "percentage": "75.17"
+          }
+        },
+        {
+          "courseLabel": "Example Course 06: Section 1",
+          "gradingPeriodText": "25-26 T2 (14 Jan - 12 Jun)",
+          "grade": {
+            "state": "present",
+            "letter": "A-",
+            "percentage": "76.17"
+          }
+        },
+        {
+          "courseLabel": "Example Course 07: Section 1",
+          "gradingPeriodText": "25-26 T2 (14 Jan - 12 Jun)",
+          "grade": {
+            "state": "present",
+            "letter": "B+",
+            "percentage": "77.17"
+          }
+        },
+        {
+          "courseLabel": "Example Course 08: Section 1",
+          "gradingPeriodText": "25-26 T2 (14 Jan - 12 Jun)",
+          "grade": {
+            "state": "present",
+            "letter": "B",
+            "percentage": "78.17"
+          }
+        },
+        {
+          "courseLabel": "Example Course 09: Section 1",
+          "gradingPeriodText": "25-26 T2 (14 Jan - 12 Jun)",
+          "grade": {
+            "state": "missing",
+            "marker": "-",
+            "letter": null,
+            "percentage": null
+          }
+        },
+        {
+          "courseLabel": "Example Course 10: Section 1",
+          "gradingPeriodText": "25-26 T2 (14 Jan - 12 Jun)",
+          "grade": {
+            "state": "missing",
+            "marker": "-",
+            "letter": null,
+            "percentage": null
+          }
+        },
+        {
+          "courseLabel": "Example Course 11: Section 1",
+          "gradingPeriodText": "25-26 T2 (14 Jan - 12 Jun)",
+          "grade": {
+            "state": "missing",
+            "marker": "-",
+            "letter": null,
+            "percentage": null
+          }
+        },
+        {
+          "courseLabel": "Example Course 12: Section 1",
+          "gradingPeriodText": "25-26 T2 (14 Jan - 12 Jun)",
+          "grade": {
+            "state": "missing",
+            "marker": "-",
+            "letter": null,
+            "percentage": null
+          }
+        },
+        {
+          "courseLabel": "Example Course 13: Section 1",
+          "gradingPeriodText": "25-26 T2 (14 Jan - 12 Jun)",
+          "grade": {
+            "state": "missing",
+            "marker": "-",
+            "letter": null,
+            "percentage": null
+          }
+        }
+      ]
+    },
+    {
+      "studentLabel": "Student Beta",
+      "courses": [
+        {
+          "courseLabel": "Example Course 01: Section 1",
+          "gradingPeriodText": "25-26 T2 (14 Jan - 12 Jun)",
+          "grade": {
+            "state": "missing",
+            "marker": "-",
+            "letter": null,
+            "percentage": null
+          }
+        },
+        {
+          "courseLabel": "Example Course 02: Section 1",
+          "gradingPeriodText": "25-26 T2 (14 Jan - 12 Jun)",
+          "grade": {
+            "state": "present",
+            "letter": "A-",
+            "percentage": null
+          }
+        },
+        {
+          "courseLabel": "Example Course 03: Section 1",
+          "gradingPeriodText": "25-26 T2 (14 Jan - 12 Jun)",
+          "grade": {
+            "state": "present",
+            "letter": "B+",
+            "percentage": "73.63"
+          }
+        },
+        {
+          "courseLabel": "Example Course 04: Section 1",
+          "gradingPeriodText": "25-26 T2 (14 Jan - 12 Jun)",
+          "grade": {
+            "state": "present",
+            "letter": "B",
+            "percentage": "74.63"
+          }
+        },
+        {
+          "courseLabel": "Example Course 05: Section 1",
+          "gradingPeriodText": "25-26 T2 (14 Jan - 12 Jun)",
+          "grade": {
+            "state": "present",
+            "letter": "C+",
+            "percentage": "75.63"
+          }
+        },
+        {
+          "courseLabel": "Example Course 06: Section 1",
+          "gradingPeriodText": "25-26 T2 (14 Jan - 12 Jun)",
+          "grade": {
+            "state": "present",
+            "letter": "A-",
+            "percentage": null
+          }
+        },
+        {
+          "courseLabel": "Example Course 07: Section 1",
+          "gradingPeriodText": "25-26 T2 (14 Jan - 12 Jun)",
+          "grade": {
+            "state": "missing",
+            "marker": "-",
+            "letter": null,
+            "percentage": null
+          }
+        },
+        {
+          "courseLabel": "Example Course 08: Section 1",
+          "gradingPeriodText": "25-26 T2 (14 Jan - 12 Jun)",
+          "grade": {
+            "state": "present",
+            "letter": "B",
+            "percentage": "78.63"
+          }
+        },
+        {
+          "courseLabel": "Example Course 09: Section 1",
+          "gradingPeriodText": "25-26 T2 (14 Jan - 12 Jun)",
+          "grade": {
+            "state": "missing",
+            "marker": "-",
+            "letter": null,
+            "percentage": null
+          }
+        },
+        {
+          "courseLabel": "Example Course 10: Section 1",
+          "gradingPeriodText": "25-26 T2 (14 Jan - 12 Jun)",
+          "grade": {
+            "state": "missing",
+            "marker": "-",
+            "letter": null,
+            "percentage": null
+          }
+        },
+        {
+          "courseLabel": "Example Course 11: Section 1",
+          "gradingPeriodText": "25-26 T2 (14 Jan - 12 Jun)",
+          "grade": {
+            "state": "missing",
+            "marker": "-",
+            "letter": null,
+            "percentage": null
+          }
+        },
+        {
+          "courseLabel": "Example Course 12: Section 1",
+          "gradingPeriodText": "25-26 T2 (14 Jan - 12 Jun)",
+          "grade": {
+            "state": "missing",
+            "marker": "-",
+            "letter": null,
+            "percentage": null
+          }
+        }
+      ]
+    }
+  ]
+}

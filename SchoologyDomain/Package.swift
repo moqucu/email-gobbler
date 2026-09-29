@@ -5,21 +5,34 @@ import PackageDescription
 
 let package = Package(
     name: "SchoologyDomain",
+    platforms: [
+        .macOS(.v10_15)
+    ],
     products: [
         // Products define the executables and libraries a package produces, making them visible to other packages.
         .library(
             name: "SchoologyDomain",
             targets: ["SchoologyDomain"]
         ),
+        .executable(name: "schoology-mail-preview", targets: ["SchoologyMailPreview"]),
+    ],
+    dependencies: [
+        .package(url: "https://github.com/scinfu/SwiftSoup.git", from: "2.7.0"),
     ],
     targets: [
         // Targets are the basic building blocks of a package, defining a module or a test suite.
         // Targets can depend on other targets in this package and products from dependencies.
         .target(
-            name: "SchoologyDomain"
+            name: "SchoologyDomain",
+            dependencies: ["SwiftSoup"]
         ),
         .testTarget(
             name: "SchoologyDomainTests",
+            dependencies: ["SchoologyDomain", "SchoologyMailPreview"],
+            resources: [.copy("Fixtures")]
+        ),
+        .executableTarget(
+            name: "SchoologyMailPreview",
             dependencies: ["SchoologyDomain"]
         ),
     ],

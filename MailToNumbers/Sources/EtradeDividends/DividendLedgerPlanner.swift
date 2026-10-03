@@ -7,11 +7,19 @@ public enum DividendLedger {
     public static let headers = ["Financial Institution", "Account", "Type", "Date", "Security", "Amount Credited"]
 }
 
-public enum DividendLedgerError: Error, Equatable {
-    case notImplemented
+public enum DividendLedgerError: Error, Equatable, CustomStringConvertible {
     case unexpectedHeaders
     case unsupportedAccount(String)
     case noTemplateRow
+
+    public var description: String {
+        switch self {
+        case .unexpectedHeaders:
+            return "Ledger headers must include each of: " + DividendLedger.headers.joined(separator: ", ")
+        case .unsupportedAccount(let mask): return "Account mask does not end in four digits: \(mask)"
+        case .noTemplateRow: return "The ledger has no row to copy formatting from; enter the first payment manually"
+        }
+    }
 }
 
 public struct DividendLedgerPlan: Equatable {

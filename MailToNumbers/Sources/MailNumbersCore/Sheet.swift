@@ -189,7 +189,6 @@ public struct PlannedRow: Equatable {
 }
 
 public enum SheetError: Error, Equatable, CustomStringConvertible {
-    case notImplemented
     case invalidPlacement
     case invalidValue(String)
     case templateNotFormatted(row: Int, column: Int)
@@ -201,7 +200,6 @@ public enum SheetError: Error, Equatable, CustomStringConvertible {
 
     public var description: String {
         switch self {
-        case .notImplemented: return "Not implemented"
         case .invalidPlacement: return "The planned rows do not fit the sheet"
         case .invalidValue(let value): return "Cannot write value \(value)"
         case .templateNotFormatted(let row, let column):

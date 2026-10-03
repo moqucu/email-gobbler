@@ -26,11 +26,6 @@ public enum MailConsumptionError: Error, CustomStringConvertible {
     }
 }
 
-public func writeThenConsume(write: () throws -> Void, consume: () throws -> Void) throws {
-    try write()
-    try consume()
-}
-
 public func consumeMailMessage(_ message: FetchedMailMessage) throws {
     let script = """
     tell application "Mail"
@@ -50,10 +45,5 @@ public func consumeMailMessage(_ message: FetchedMailMessage) throws {
         return "archived"
     end tell
     """
-    guard let appleScript = NSAppleScript(source: script) else {
-        throw MailConsumptionError.automation("Unable to create AppleScript")
-    }
-    var errorInfo: NSDictionary?
-    _ = appleScript.executeAndReturnError(&errorInfo)
-    if let errorInfo { throw MailConsumptionError.automation("\(errorInfo)") }
+    _ = try runAppleScript(script)
 }

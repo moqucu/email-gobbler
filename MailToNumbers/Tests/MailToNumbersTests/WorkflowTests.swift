@@ -17,7 +17,8 @@ final class WorkflowTests: XCTestCase {
 
     private struct WriteFailure: Error {}
 
-    private let sheet = SheetSnapshot(rows: [[SheetCell(value: .text("Date"), formatted: "Date", format: .automatic)]])
+    private let sheet = SheetSnapshot(rows: [[SheetCell(value: .text("Date"), formatted: "Date", format: .automatic)],
+                                             [SheetCell(value: .text("row"), formatted: "row", format: .text)]])
     private let oneRow = SheetUpdatePlan(placement: .insertBelow(row: 2), rows: [PlannedRow(values: [1: .text("x")], displays: [:])],
                                          templateRequirements: [:])
     private let noRows = SheetUpdatePlan(placement: .insertBelow(row: 2), rows: [], templateRequirements: [:])
@@ -51,6 +52,16 @@ final class WorkflowTests: XCTestCase {
         XCTAssertEqual(outcome, .previewed(rows: 1))
         XCTAssertEqual(events, ["read"])
         XCTAssertTrue(lines.contains("note"))
+    }
+
+    func testPreviewReportsMissingAnchorFormattingBeforeAnyWrite() {
+        let needsDate = SheetUpdatePlan(placement: .insertBelow(row: 1), rows: [PlannedRow(values: [1: .text("x")], displays: [:])],
+                                        templateRequirements: [1: .dateOnly(.monthDayFullYear)])
+        XCTAssertThrowsError(try processMessage(html: "<html>", useCase: FakeUseCase(update: needsDate),
+                                                actions: actions()) { _ in }) { error in
+            XCTAssertEqual(error as? SheetError, .invalidPlacement)
+        }
+        XCTAssertEqual(events, ["read"])
     }
 
     func testWriteHappensBeforeConsume() throws {

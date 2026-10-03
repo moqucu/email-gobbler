@@ -1,141 +1,115 @@
+import EtradeDividends
 import Foundation
 import MailNumbersCore
 import SchoologyGrades
 
-enum PreviewError: Error, CustomStringConvertible {
-    case usage
-    case mailAccess(String)
+let usage = """
+Usage:
+  mail-to-numbers schoology-grades (--eml <path> | --mail [--subject <text>])
+      [--numbers <path> --sheet <name> --student <label> [--apply --backup-dir <dir> [--consume]]]
+  mail-to-numbers etrade-dividends (--eml <path> | --mail [--subject <text>])
+      [--numbers <path> [--sheet <name>] [--apply --backup-dir <dir> [--consume]]]
+"""
 
-    var description: String {
-        switch self {
-        case .usage:
-            return "Usage: mail-to-numbers (--eml <path> | --mail-subject <text>) [--numbers <path> --sheet <name> --student <exact label> [--apply --backup <path> [--consume]]]"
-        case .mailAccess(let message):
-            return "Mail access failed: \(message)"
+struct UsageError: Error, CustomStringConvertible {
+    var description: String { usage }
+}
+
+struct Options {
+    let useCase: any MailToNumbersUseCase
+    let emlPath: String?
+    let workbook: URL?
+    let sheetName: String?
+    let backupDirectory: URL?
+    let apply: Bool
+    let consume: Bool
+
+    init(arguments: [String]) throws {
+        guard let command = arguments.first else { throw UsageError() }
+        var rest = Array(arguments.dropFirst())
+        let flags = ["--mail", "--apply", "--consume"]
+        let mail = rest.contains("--mail")
+        apply = rest.contains("--apply")
+        consume = rest.contains("--consume")
+        rest.removeAll { flags.contains($0) }
+        guard rest.count.isMultiple(of: 2) else { throw UsageError() }
+        var values: [String: String] = [:]
+        for index in stride(from: 0, to: rest.count, by: 2) {
+            let key = rest[index]
+            guard ["--eml", "--subject", "--numbers", "--sheet", "--student", "--backup-dir"].contains(key),
+                  values[key] == nil else { throw UsageError() }
+            values[key] = rest[index + 1]
+        }
+        emlPath = values["--eml"]
+        guard (emlPath != nil) != mail, values["--subject"] == nil || mail else { throw UsageError() }
+        workbook = values["--numbers"].map { URL(fileURLWithPath: $0) }
+        backupDirectory = values["--backup-dir"].map { URL(fileURLWithPath: $0, isDirectory: true) }
+        guard apply == (backupDirectory != nil), !apply || workbook != nil, !consume || (apply && mail) else {
+            throw UsageError()
+        }
+
+        switch command {
+        case "schoology-grades":
+            let query = values["--subject"].map { MailQuery(subjectContains: $0, senderContains: nil) }
+                ?? SchoologyGradesUseCase.defaultQuery
+            guard workbook == nil || (values["--sheet"] != nil && values["--student"] != nil) else { throw UsageError() }
+            useCase = SchoologyGradesUseCase(studentLabel: values["--student"], mailQuery: query)
+            sheetName = values["--sheet"]
+        case "etrade-dividends":
+            guard values["--student"] == nil else { throw UsageError() }
+            let defaults = EtradeDividendsUseCase.defaultQuery
+            let query = values["--subject"].map { MailQuery(subjectContains: $0, senderContains: defaults.senderContains) }
+                ?? defaults
+            useCase = EtradeDividendsUseCase(mailQuery: query)
+            sheetName = values["--sheet"] ?? EtradeDividendsUseCase.defaultSheetName
+        default:
+            throw UsageError()
         }
     }
 }
 
+func run() throws {
+    let options = try Options(arguments: Array(CommandLine.arguments.dropFirst()))
+    var backupSequence = 0
 
-func messageFromMail(subject: String) throws -> FetchedMailMessage {
-    guard !subject.isEmpty, !subject.contains("\n"), !subject.contains("\r") else {
-        throw PreviewError.usage
-    }
-    let script = """
-    tell application "Mail"
-        set matches to messages of inbox whose subject contains \(appleScriptString(subject))
-        if (count of matches) is 0 then error "No matching message in Inbox"
-        set chosen to item 1 of matches
-        repeat with candidate in matches
-            if (date received of candidate) > (date received of chosen) then set chosen to candidate
-        end repeat
-        set a to account of mailbox of chosen
-        return {source of chosen, id of chosen, id of a, message id of chosen}
-    end tell
-    """
-    guard let appleScript = NSAppleScript(source: script) else {
-        throw PreviewError.mailAccess("Unable to create AppleScript")
-    }
-    var errorInfo: NSDictionary?
-    let result = appleScript.executeAndReturnError(&errorInfo)
-    if let errorInfo {
-        throw PreviewError.mailAccess("\(errorInfo)")
-    }
-    guard result.numberOfItems == 4,
-          let source = result.atIndex(1)?.stringValue,
-          let accountID = result.atIndex(3)?.stringValue,
-          let rfcMessageID = result.atIndex(4)?.stringValue,
-          let idDescriptor = result.atIndex(2),
-          idDescriptor.int32Value > 0 else {
-        throw PreviewError.mailAccess("Mail returned incomplete message identity")
-    }
-    return FetchedMailMessage(source: Data(source.utf8), id: idDescriptor.int32Value,
-                              accountID: accountID, rfcMessageID: rfcMessageID)
-}
-
-func preview() throws {
-    var arguments = Array(CommandLine.arguments.dropFirst())
-    let apply = arguments.contains("--apply")
-    let shouldConsume = arguments.contains("--consume")
-    arguments.removeAll { $0 == "--apply" || $0 == "--consume" }
-    guard arguments.count.isMultiple(of: 2) else { throw PreviewError.usage }
-    var options: [String: String] = [:]
-    for index in stride(from: 0, to: arguments.count, by: 2) {
-        let key = arguments[index]
-        guard ["--eml", "--mail-subject", "--numbers", "--sheet", "--student", "--backup"].contains(key),
-              options[key] == nil else { throw PreviewError.usage }
-        options[key] = arguments[index + 1]
-    }
-    guard (options["--eml"] == nil) != (options["--mail-subject"] == nil) else {
-        throw PreviewError.usage
-    }
-    let workbookOptions = [options["--numbers"], options["--sheet"], options["--student"]]
-    guard workbookOptions.allSatisfy({ $0 == nil }) || workbookOptions.allSatisfy({ $0 != nil }) else {
-        throw PreviewError.usage
-    }
-    guard (apply && options["--backup"] != nil && options["--numbers"] != nil)
-        || (!apply && options["--backup"] == nil) else { throw PreviewError.usage }
-    guard !shouldConsume || (apply && options["--mail-subject"] != nil) else {
-        throw PreviewError.usage
-    }
-    let message: Data
-    var fetchedMail: FetchedMailMessage?
-    if let path = options["--eml"] {
-        message = try Data(contentsOf: URL(fileURLWithPath: path))
-    } else {
-        fetchedMail = try messageFromMail(subject: options["--mail-subject"]!)
-        message = fetchedMail!.source
-    }
-
-    let html = try MailDecoder.html(from: message)
-    let extraction = try parseSchoologyWeeklyEmail(html: html)
-    print("Reporting period: \(extraction.reportingPeriod.start) to \(extraction.reportingPeriod.end)")
-    print("Students: \(extraction.students.count)")
-    for student in extraction.students {
-        let graded = student.courses.filter {
-            if case .present = $0.overallGrade { return true }
-            return false
-        }.count
-        print("\(student.studentLabel): \(student.courses.count) courses, \(graded) graded")
-    }
-
-    if let workbookPath = options["--numbers"], let sheetName = options["--sheet"],
-       let studentLabel = options["--student"] {
-        let snapshot = try readNumbersSnapshot(at: URL(fileURLWithPath: workbookPath), sheetName: sheetName)
-        let plan = try planWorkbookUpdate(report: extraction, studentLabel: studentLabel, sheet: snapshot)
-        switch plan.action {
-        case .insert(let row): print("DRY RUN: insert row \(row) in \(sheetName)")
-        case .replace(let row): print("DRY RUN: replace row \(row) in \(sheetName)")
-        }
-        print("Date: \(String(format: "%04d-%02d-%02d", plan.weekEnd.year, plan.weekEnd.month, plan.weekEnd.day))")
-        for cell in plan.cells {
-            let header = snapshot.headers[cell.column - 1]
-            let label = header.isEmpty ? "letter" : header
-            print("Column \(cell.column) (\(label)): \(cell.value ?? "<blank>")")
-        }
-        print("Ignored courses without grades: \(plan.ignoredMissingCourses.count)")
-        if apply, let backupPath = options["--backup"] {
-            print("Backup target: \(backupPath)")
-            let write = {
-                try writeNumbersUpdate(at: URL(fileURLWithPath: workbookPath), sheetName: sheetName,
-                                       snapshot: snapshot, plan: plan,
-                                       backupURL: URL(fileURLWithPath: backupPath))
-                print("Workbook saved and verified")
-            }
-            if shouldConsume, let fetchedMail {
-                try writeThenConsume(write: write, consume: {
-                    try consumeMailMessage(fetchedMail)
-                    print("Mail message marked read and moved to iCloud Archive")
-                })
-            } else {
-                try write()
+    func process(source: Data, fetched: FetchedMailMessage?) throws {
+        let html = try MailDecoder.html(from: source)
+        var actions = MessageActions()
+        if let workbook = options.workbook, let sheetName = options.sheetName {
+            actions.readSheet = { try readSheetSnapshot(workbook: workbook, sheetName: sheetName) }
+            if options.apply, let directory = options.backupDirectory {
+                actions.write = { plan, sheet in
+                    backupSequence += 1
+                    let backup = backupURL(directory: directory, workbook: workbook, timestamp: Date(), sequence: backupSequence)
+                    try writeSheetUpdate(workbook: workbook, sheetName: sheetName, plan: plan, plannedFrom: sheet, backup: backup)
+                    print("Workbook saved and verified; backup at \(backup.path)")
+                }
             }
         }
+        if options.consume, let fetched {
+            actions.consume = {
+                try consumeMailMessage(fetched)
+                print("Mail message marked read and moved to iCloud Archive")
+            }
+        }
+        _ = try processMessage(html: html, useCase: options.useCase, actions: actions) { print($0) }
+    }
+
+    if let path = options.emlPath {
+        try process(source: Data(contentsOf: URL(fileURLWithPath: path)), fetched: nil)
+        return
+    }
+    let messages = try listInboxMessages(options.useCase.mailQuery)
+    print("Matching Inbox messages: \(messages.count)")
+    try processInOrder(Array(messages.enumerated())) { index, ref in
+        print("--- Message \(index + 1) of \(messages.count)")
+        let fetched = try fetchMailMessage(ref)
+        try process(source: fetched.source, fetched: fetched)
     }
 }
 
 do {
-    try preview()
+    try run()
 } catch {
     fputs("mail-to-numbers: \(error)\n", stderr)
     exit(1)

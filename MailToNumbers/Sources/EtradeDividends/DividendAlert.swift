@@ -25,8 +25,7 @@ public struct DividendAlert: Equatable {
     }
 }
 
-public enum DividendAlertError: Error, Equatable {
-    case notImplemented
+public enum DividendAlertError: Error, Equatable, CustomStringConvertible {
     case unsupportedStructure
     case missingAccount
     case missingPaymentDate
@@ -34,6 +33,18 @@ public enum DividendAlertError: Error, Equatable {
     case missingPayments
     case unpairedPayment
     case malformedAmount(text: String)
+
+    public var description: String {
+        switch self {
+        case .unsupportedStructure: return "Email is not a supported E*TRADE dividend alert"
+        case .missingAccount: return "Alert has no single account"
+        case .missingPaymentDate: return "Alert has no payment date"
+        case .invalidPaymentDate(let text): return "Alert payment date is invalid: \(text)"
+        case .missingPayments: return "Alert lists no payments"
+        case .unpairedPayment: return "Alert has a security without an amount or an amount without a security"
+        case .malformedAmount(let text): return "Alert amount is malformed: \(text)"
+        }
+    }
 }
 
 private func collapsed(_ text: String) -> String {

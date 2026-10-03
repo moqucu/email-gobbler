@@ -16,3 +16,4 @@ iCloud Archive. See the package documentation for commands and workbook formatti
 The next product step is a [menu bar app that starts at user login](docs/macOS-menu-bar-app-plan.md).
 That document covers the app shell, scheduling, permissions, workbook setup,
 and the checks required before unattended processing.
+The [implementation plan](docs/menu-bar-app-implementation-plan.md) lists the milestones.

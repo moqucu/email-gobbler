@@ -1,27 +1,31 @@
 import Foundation
 
-public func mailListingScript(_ query: MailQuery) throws -> String { "" }
-
-/// Lists matching Mail Inbox messages, oldest first.
-public func listInboxMessages(_ query: MailQuery) throws -> [MailMessageRef] {
+/// Lists matching iCloud Inbox messages; archiving only supports iCloud Mail.
+public func mailListingScript(_ query: MailQuery) throws -> String {
     guard !query.subjectContains.isEmpty,
           !(query.subjectContains + (query.senderContains ?? "")).contains(where: { "\n\r".contains($0) }) else {
         throw MailConsumptionError.automation("Mail query cannot be empty or contain line breaks")
     }
     let senderFilter = query.senderContains.map { " and sender contains \(appleScriptString($0))" } ?? ""
-    let result = try runAppleScript("""
+    return """
     tell application "Mail"
         set matches to messages of inbox whose subject contains \(appleScriptString(query.subjectContains))\(senderFilter)
         set nowDate to current date
         set outLines to {}
         repeat with m in matches
-            set end of outLines to ((id of m) as text) & tab & (id of account of mailbox of m) & tab & (message id of m) & tab & ((((date received of m) - nowDate) as integer) as text)
+            if server name of account of mailbox of m is "imap.mail.me.com" then
+                set end of outLines to ((id of m) as text) & tab & (id of account of mailbox of m) & tab & (message id of m) & tab & ((((date received of m) - nowDate) as integer) as text)
+            end if
         end repeat
         set AppleScript's text item delimiters to linefeed
         return outLines as text
     end tell
-    """)
-    return try parseMailListing(result.stringValue ?? "")
+    """
+}
+
+/// Lists matching iCloud Inbox messages, oldest first.
+public func listInboxMessages(_ query: MailQuery) throws -> [MailMessageRef] {
+    try parseMailListing(runAppleScript(try mailListingScript(query)).stringValue ?? "")
 }
 
 /// Fetches a listed message's source after confirming its identity.

@@ -31,7 +31,7 @@ final class DividendLedgerPlannerTests: XCTestCase {
         return PlannedRow(
             values: [1: .text("E*Trade Financial"), 2: .text(account), 3: .text("Dividend or Interest Paid"),
                      4: .date(day), 5: .text(security), 6: .number(dec(amount))],
-            displays: [4: .exact("\(day.month)/\(day.day)/\(day.year)"), 6: .exact(currencyDisplay(dec(amount)))]
+            displays: [4: .exact("\(day.month)/\(day.day)/\(day.year)"), 6: .currency(of: dec(amount))]
         )
     }
 

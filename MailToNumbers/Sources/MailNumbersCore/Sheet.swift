@@ -123,6 +123,7 @@ public enum DisplayExpectation: Equatable {
     case exact(String)
     /// A fraction such as 0.8794 shown as a whole percentage such as "88%".
     case wholePercent(of: Decimal)
+    case currency(of: Decimal)
 
     public func matches(_ shown: String?) -> Bool {
         switch self {
@@ -132,6 +133,8 @@ public enum DisplayExpectation: Equatable {
             guard let percent = parseWholePercent(shown) else { return false }
             let difference = percent - fraction * 100
             return difference <= Decimal(string: "0.5")! && difference >= Decimal(string: "-0.5")!
+        case .currency:
+            return false
         }
     }
 }
@@ -426,16 +429,16 @@ public func numbersSnapshotScript(workbookPath: String, sheetName: String) -> St
                 repeat with r from 1 to rc
                     set v to item r of vals
                     if v is missing value then
-                        set kind to "E"
+                        set valueKind to "E"
                         set payload to ""
                     else if class of v is date then
-                        set kind to "D"
+                        set valueKind to "D"
                         set payload to ((year of v) as text) & "-" & ((month of v as integer) as text) & "-" & ((day of v) as text)
                     else if class of v is real or class of v is integer then
-                        set kind to "N"
+                        set valueKind to "N"
                         set payload to v as text
                     else
-                        set kind to "T"
+                        set valueKind to "T"
                         set payload to my escapeField(v)
                     end if
                     set shown to item r of shownVals
@@ -444,7 +447,7 @@ public func numbersSnapshotScript(workbookPath: String, sheetName: String) -> St
                     else
                         set shownField to "+" & tab & my escapeField(shown)
                     end if
-                    set end of outLines to (r as text) & tab & (c as text) & tab & kind & tab & payload & tab & shownField & tab & ((item r of fmts) as text)
+                    set end of outLines to (r as text) & tab & (c as text) & tab & valueKind & tab & payload & tab & shownField & tab & ((item r of fmts) as text)
                 end repeat
             end repeat
             close d saving no

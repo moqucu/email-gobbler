@@ -71,6 +71,15 @@ final class SheetCoreTests: XCTestCase {
         XCTAssertFalse(DisplayExpectation.wholePercent(of: dec("0.8794")).matches(nil))
     }
 
+    func testCurrencyExpectationAcceptsCentsWithOrWithoutGrouping() {
+        XCTAssertTrue(DisplayExpectation.currency(of: dec("3.39")).matches("$3.39"))
+        XCTAssertTrue(DisplayExpectation.currency(of: dec("1234.5")).matches("$1,234.50"))
+        XCTAssertTrue(DisplayExpectation.currency(of: dec("1234.5")).matches("$1234.50"))
+        XCTAssertFalse(DisplayExpectation.currency(of: dec("3.39")).matches("3.39"))
+        XCTAssertFalse(DisplayExpectation.currency(of: dec("3.39")).matches("$3.40"))
+        XCTAssertFalse(DisplayExpectation.currency(of: dec("3.4")).matches("$3.4"))
+    }
+
     // MARK: - Applying a plan to a snapshot
 
     func testAppendingRowsBelowTheLastRowKeepsExistingRowsAndOrder() throws {
@@ -242,6 +251,18 @@ final class SheetCoreTests: XCTestCase {
         XCTAssertTrue(script.contains("set value of cell 6 of row 616 of t to -1.5"))
         XCTAssertTrue(script.contains("table 1 of sheet \"Sheet 1\""))
         XCTAssertTrue(script.contains("save d"))
+    }
+
+    func testWriteScriptReappliesCurrencyFormatAfterWritingAmounts() throws {
+        // Numbers resets an inherited currency format when a number is written into the cell.
+        let plan = SheetUpdatePlan(placement: .insertBelow(row: 3), rows: [
+            PlannedRow(values: [1: .date(date(2026, 9, 28)), 3: .number(dec("3.39"))], displays: [:]),
+        ], templateRequirements: [1: .dateOnly(.monthDayFullYear), 3: .currency])
+        let script = try numbersWriteScript(workbookPath: "/tmp/x.numbers", sheetName: "S", plan: plan)
+        let value = try XCTUnwrap(script.range(of: "set value of cell 3 of row 4 of t to 3.39"))
+        let format = try XCTUnwrap(script.range(of: "set format of cell 3 of row 4 of t to currency"))
+        XCTAssertLessThan(value.lowerBound, format.lowerBound)
+        XCTAssertFalse(script.contains("set format of cell 1"))
     }
 
     func testWriteScriptReplacesWithoutAddingRowsAndAddsAboveForInsertAbove() throws {

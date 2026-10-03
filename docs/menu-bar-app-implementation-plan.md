@@ -84,20 +84,23 @@ Gaps the app must close:
 
 ### 2. Settings, run coordination, and scheduling (package, UI-free)
 
-- [ ] `AppSettings` (Codable, versioned):
+Implemented in the `MailToNumbersService` module: `AppSettings`, `SettingsStore`, `runUseCase`/`runAll` with a swappable `AutomationClient`, `RunCoordinator`, `runSchedule`, `pruneBackups`, and content-free run log events.
+
+
+- [x] `AppSettings` (Codable, versioned):
   - Per use case: enabled, workbook path, sheet name, routes, and subject/sender overrides.
   - Schedule interval, backup folder, and retention count.
   - Validation errors name the field.
-- [ ] `SettingsStore`: atomic load and save in Application Support; a missing file means defaults.
-- [ ] `RunCoordinator` (actor):
+- [x] `SettingsStore`: atomic load and save in Application Support; a missing file means defaults.
+- [x] `RunCoordinator` (actor):
   - At most one run.
   - Triggers during a run collapse into one follow-up.
   - Pause and resume.
   - Publishes state (idle, running with use case and step, paused, or last result and error) for the UI.
-- [ ] `Scheduler`: launch, interval, and wake triggers, with an injectable clock and wake source.
-- [ ] Backup retention with an injectable file system.
-- [ ] Mail listing limited to the iCloud account that archiving already requires.
-- [ ] Tests:
+- [x] `Scheduler`: launch, interval, and wake triggers, with an injectable clock and wake source.
+- [x] Backup retention with an injectable file system.
+- [x] Mail listing limited to the iCloud account that archiving already requires.
+- [x] Tests:
   - Coalescing, pause, and interval timing with a fake clock.
   - Settings round-trip and migration.
   - Retention never deletes the newest backup.

@@ -43,7 +43,15 @@ final class ServiceRunTests: XCTestCase {
             try FileManager.default.createDirectory(at: backup.deletingLastPathComponent(), withIntermediateDirectories: true)
             try Data().write(to: backup)
             backups.append(backup)
-            sheet = try plan.update.applied(to: plannedFrom)
+            // Like Numbers, written rows keep the anchor row's formats.
+            var rows = try plan.update.applied(to: plannedFrom).rows
+            let anchor = plannedFrom.rows[plan.update.placement.anchorRow - 1]
+            for target in plan.update.targetRows {
+                rows[target - 1] = zip(rows[target - 1], anchor).map { written, template in
+                    SheetCell(value: written.value, formatted: template.formatted, format: template.format)
+                }
+            }
+            sheet = SheetSnapshot(rows: rows)
         }
 
         func consume(_ message: FetchedMailMessage) throws {
@@ -128,7 +136,7 @@ final class ServiceRunTests: XCTestCase {
         client.messages = [ref(7, age: -7200), ref(8, age: -60)]
         client.sources = [7: try alertSource(), 8: Data(second.utf8)]
         let result = runUseCase(dividends(), environment: environment(client, retention: 1))
-        XCTAssertEqual(result.rowsWritten, 2)
+        XCTAssertEqual(result.rowsWritten, 2, "\(result)")
         let directory = base.appendingPathComponent("Backups/etrade-dividends")
         XCTAssertEqual(try FileManager.default.contentsOfDirectory(atPath: directory.path),
                        [client.backups.last!.lastPathComponent])

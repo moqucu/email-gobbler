@@ -39,9 +39,43 @@ public actor RunCoordinator {
         (updates, continuation) = AsyncStream.makeStream(of: CoordinatorStatus.self)
     }
 
-    public func trigger(_ reason: TriggerReason) async {}
-    public func pause() {}
-    public func resume() {}
+    private var paused = false
+    private var isRunning = false
+    private var followUpRequested = false
+
+    /// Returns once this trigger's run and any collapsed follow-up finish, or
+    /// immediately when a run is already in progress or the trigger is blocked.
+    public func trigger(_ reason: TriggerReason) async {
+        if paused && reason != .manual { return }
+        if isRunning {
+            followUpRequested = true
+            return
+        }
+        isRunning = true
+        repeat {
+            followUpRequested = false
+            publish(.running)
+            lastSummary = await run()
+            runCount += 1
+        } while followUpRequested && !paused
+        isRunning = false
+        publish(paused ? .paused : .idle)
+    }
+
+    public func pause() {
+        paused = true
+        if !isRunning { publish(.paused) }
+    }
+
+    public func resume() {
+        paused = false
+        if !isRunning { publish(.idle) }
+    }
+
+    private func publish(_ newState: CoordinatorState) {
+        state = newState
+        continuation.yield(CoordinatorStatus(state: newState, lastSummary: lastSummary))
+    }
 }
 
 /// Triggers a launch run, then interval runs, and a run after each wake, until
@@ -49,4 +83,17 @@ public actor RunCoordinator {
 public func runSchedule(interval: Duration,
                         wakes: AsyncStream<Void>,
                         sleep: @escaping @Sendable (Duration) async throws -> Void,
-                        trigger: @escaping @Sendable (TriggerReason) async -> Void) async {}
+                        trigger: @escaping @Sendable (TriggerReason) async -> Void) async {
+    await trigger(.launch)
+    await withTaskGroup(of: Void.self) { group in
+        group.addTask {
+            while true {
+                do { try await sleep(interval) } catch { return }
+                await trigger(.interval)
+            }
+        }
+        group.addTask {
+            for await _ in wakes { await trigger(.wake) }
+        }
+    }
+}

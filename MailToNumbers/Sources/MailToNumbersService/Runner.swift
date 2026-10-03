@@ -73,10 +73,80 @@ public struct RunEnvironment {
     }
 }
 
+/// Processes one use case's matching Inbox messages oldest first. Each written
+/// sheet is backed up first and old backups are pruned after the write; the
+/// first failure stops this use case and leaves later messages in the Inbox.
 public func runUseCase(_ configured: ConfiguredUseCase, environment: RunEnvironment) -> UseCaseRunResult {
-    UseCaseRunResult(id: configured.id, messagesFound: 0, messagesProcessed: 0, rowsWritten: 0, error: "not implemented")
+    let id = configured.id
+    let client = environment.client
+    func log(_ messageID: String?, _ stage: String, _ outcome: String) {
+        environment.log(RunLogEvent(useCase: id, messageID: messageID, stage: stage, outcome: outcome))
+    }
+    func failure(_ error: Error) -> String { "failed (\(type(of: error)))" }
+
+    let messages: [MailMessageRef]
+    do {
+        messages = try client.listMessages(configured.useCase.mailQuery)
+        log(nil, "list", "\(messages.count) found")
+    } catch {
+        log(nil, "list", failure(error))
+        return UseCaseRunResult(id: id, messagesFound: 0, messagesProcessed: 0, rowsWritten: 0, error: "\(error)")
+    }
+
+    let directory = backupDirectory(base: environment.backupBase, useCase: id)
+    var processed = 0
+    var rowsWritten = 0
+    var sequence = 0
+    for ref in messages {
+        do {
+            let fetched = try client.fetchMessage(ref)
+            let html = try MailDecoder.html(from: fetched.source)
+            let actions = MessageActions(
+                readSheet: { try client.readSheet($0) },
+                write: { plan, sheet in
+                    sequence += 1
+                    let backup = backupURL(directory: directory, workbook: plan.target.workbook,
+                                           timestamp: environment.now(), sequence: sequence)
+                    try client.writeSheet(plan, plannedFrom: sheet, backup: backup)
+                    try pruneBackups(directory: directory, workbook: plan.target.workbook, keep: environment.retention)
+                },
+                consume: { try client.consume(fetched) }
+            )
+            let report = try processMessage(html: html, useCase: configured.useCase, actions: actions)
+            let written = report.targets.filter { $0.status == .written }
+            rowsWritten += written.map(\.plannedRows).reduce(0, +)
+            log(ref.rfcMessageID, "process", "\(written.count) of \(report.targets.count) sheets written")
+            log(ref.rfcMessageID, "consume", "archived")
+            processed += 1
+        } catch {
+            log(ref.rfcMessageID, "process", failure(error))
+            return UseCaseRunResult(id: id, messagesFound: messages.count, messagesProcessed: processed,
+                                    rowsWritten: rowsWritten, error: "\(error)")
+        }
+    }
+    return UseCaseRunResult(id: id, messagesFound: messages.count, messagesProcessed: processed,
+                            rowsWritten: rowsWritten, error: nil)
 }
 
+/// Runs every use case; one failing does not stop the others.
 public func runAll(_ useCases: [ConfiguredUseCase], environment: RunEnvironment) -> RunSummary {
-    RunSummary(startedAt: environment.now(), finishedAt: environment.now(), results: [])
+    let startedAt = environment.now()
+    let results = useCases.map { runUseCase($0, environment: environment) }
+    return RunSummary(startedAt: startedAt, finishedAt: environment.now(), results: results)
+}
+
+/// Mail and Numbers through AppleScript.
+public struct LiveAutomationClient: AutomationClient {
+    public init() {}
+
+    public func listMessages(_ query: MailQuery) throws -> [MailMessageRef] { try listInboxMessages(query) }
+    public func fetchMessage(_ ref: MailMessageRef) throws -> FetchedMailMessage { try fetchMailMessage(ref) }
+    public func readSheet(_ target: SheetTarget) throws -> SheetSnapshot {
+        try readSheetSnapshot(workbook: target.workbook, sheetName: target.sheetName)
+    }
+    public func writeSheet(_ plan: TargetPlan, plannedFrom: SheetSnapshot, backup: URL) throws {
+        try writeSheetUpdate(workbook: plan.target.workbook, sheetName: plan.target.sheetName,
+                             plan: plan.update, plannedFrom: plannedFrom, backup: backup)
+    }
+    public func consume(_ message: FetchedMailMessage) throws { try consumeMailMessage(message) }
 }

@@ -32,6 +32,10 @@ until its columns and formats are ready. Settings live in
 is available once valid settings are saved. The app asks for permission to control Mail and Numbers
 the first time it runs with an enabled use case.
 
+Runs never write a workbook that is open in Numbers (close it and the next run updates it), wait for
+iCloud to download a workbook if needed, hide Numbers again if a run had to launch it, and post a
+notification only when a use case newly stops; details stay in the menu.
+
 The next product step is a [menu bar app that starts at user login](docs/macOS-menu-bar-app-plan.md).
 That document covers the app shell, scheduling, permissions, workbook setup,
 and the checks required before unattended processing.

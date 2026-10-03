@@ -44,6 +44,7 @@ private func checkSheetName(_ name: String) throws {
 /// documents it opens.
 public func readSheetSnapshot(workbook: URL, sheetName: String) throws -> SheetSnapshot {
     try checkSheetName(sheetName)
+    try requireWorkbookAvailable(workbook)
     let directory = FileManager.default.temporaryDirectory
         .appendingPathComponent("mail-to-numbers-\(UUID().uuidString)", isDirectory: true)
     try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
@@ -64,6 +65,10 @@ public func writeSheetUpdate(workbook: URL, sheetName: String, plan: SheetUpdate
     let latest = try readSheetSnapshot(workbook: workbook, sheetName: sheetName)
     guard latest == plannedFrom else { throw AutomationError.workbookChanged }
     try plan.validateTemplate(in: latest)
+    // Writing opens, saves, and closes the document, so never touch one the user has open.
+    guard !isWorkbookOpen(workbook, openPaths: try openNumbersDocumentPaths()) else {
+        throw AutomationError.workbookOpen(workbook.lastPathComponent)
+    }
 
     try FileManager.default.createDirectory(at: backup.deletingLastPathComponent(), withIntermediateDirectories: true)
     try FileManager.default.copyItem(at: workbook, to: backup)
@@ -104,8 +109,36 @@ public func readSheetNames(workbook: URL) throws -> [String] {
     return parseSheetNames(result.stringValue ?? "")
 }
 
-/// True when `workbook` is among the documents open in Numbers.
-public func isWorkbookOpen(_ workbook: URL, openPaths: [String]) -> Bool { false }
+private func normalizedPath(_ path: String) -> String {
+    var normalized = URL(fileURLWithPath: path).standardizedFileURL.resolvingSymlinksInPath().path
+    while normalized.count > 1 && normalized.hasSuffix("/") { normalized.removeLast() }
+    return normalized.lowercased()
+}
+
+/// True when `workbook` is among the documents open in Numbers. APFS volumes
+/// are case-insensitive by default, so paths compare without case.
+public func isWorkbookOpen(_ workbook: URL, openPaths: [String]) -> Bool {
+    let target = normalizedPath(workbook.path)
+    return openPaths.contains { normalizedPath($0) == target }
+}
+
+/// Paths of documents open in Numbers, without launching Numbers.
+public func openNumbersDocumentPaths() throws -> [String] {
+    let result = try runAppleScript("""
+    if application id "com.apple.Numbers" is not running then return ""
+    tell application id "com.apple.Numbers"
+        set out to {}
+        repeat with candidate in documents
+            try
+                set end of out to POSIX path of ((file of candidate) as alias)
+            end try
+        end repeat
+        set AppleScript's text item delimiters to linefeed
+        return out as text
+    end tell
+    """)
+    return parseSheetNames(result.stringValue ?? "")
+}
 
 public enum WorkbookAvailability: Equatable, Sendable {
     case available
@@ -116,5 +149,27 @@ public enum WorkbookAvailability: Equatable, Sendable {
 /// iCloud download state: `nil` for files outside iCloud, otherwise one of
 /// `NSMetadataUbiquitousItemDownloadingStatus*` raw values.
 public func workbookAvailability(exists: Bool, placeholderExists: Bool, downloadStatus: String?) -> WorkbookAvailability {
-    .missing
+    if exists {
+        return downloadStatus == NSMetadataUbiquitousItemDownloadingStatusNotDownloaded ? .downloading : .available
+    }
+    return placeholderExists ? .downloading : .missing
+}
+
+/// Throws unless the workbook is on disk; starts an iCloud download when needed.
+public func requireWorkbookAvailable(_ workbook: URL) throws {
+    let manager = FileManager.default
+    let placeholder = workbook.deletingLastPathComponent().appendingPathComponent(".\(workbook.lastPathComponent).icloud")
+    let status = (try? workbook.resourceValues(forKeys: [.ubiquitousItemDownloadingStatusKey]))?
+        .ubiquitousItemDownloadingStatus?.rawValue
+    switch workbookAvailability(exists: manager.fileExists(atPath: workbook.path),
+                                placeholderExists: manager.fileExists(atPath: placeholder.path),
+                                downloadStatus: status) {
+    case .available:
+        return
+    case .downloading:
+        try? manager.startDownloadingUbiquitousItem(at: workbook)
+        throw AutomationError.workbookDownloading(workbook.lastPathComponent)
+    case .missing:
+        throw AutomationError.workbookMissing(workbook.lastPathComponent)
+    }
 }

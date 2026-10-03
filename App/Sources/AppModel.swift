@@ -45,19 +45,27 @@ final class AppModel: ObservableObject {
         let runnable = settingsIssues.isEmpty ? newSettings : nil
         let backupBase = supportDirectory
         let coordinator = RunCoordinator {
-            await onAutomationQueue {
+            let before = await ForegroundGuard.snapshot()
+            let summary = await onAutomationQueue {
                 let environment = RunEnvironment(client: LiveAutomationClient(), backupBase: backupBase,
                                                  retention: runnable?.backupRetention ?? 1, log: unifiedLog)
                 return runAll(runnable?.configuredUseCases() ?? [], environment: environment)
             }
+            await ForegroundGuard.restore(before: before)
+            return summary
         }
         self.coordinator = coordinator
         refresh()
 
         tasks.append(Task { [weak self] in
             for await update in coordinator.updates {
-                self?.status = update
-                self?.refresh()
+                guard let self else { return }
+                if update.state != .running, let finished = update.lastSummary, finished != status.lastSummary,
+                   let notice = failureNotice(previous: status.lastSummary, current: finished) {
+                    FailureNotifier.post(notice)
+                }
+                status = update
+                refresh()
             }
         })
         let wasPaused = paused

@@ -137,13 +137,14 @@ Implemented in the `MailToNumbersService` module: `AppSettings`, `SettingsStore`
 
 ### 5. Unattended behavior hardening
 
-- [ ] Measure whether a scheduled run activates Numbers or Mail, shows a document window, or steals focus. Test it while typing in another app.
-  - If it does, add containment: open documents with `activate` avoided, hide Numbers windows after opening, and restore the frontmost app.
-  - Retest after each change.
-- [ ] A workbook already open in Numbers is skipped with a clear status, so unsaved edits are never saved or closed. This needs a new test seam and `writeSheetUpdate` checks for open documents.
-- [ ] An iCloud workbook not downloaded locally is reported and retried later.
-- [ ] Sleep during a run: on wake, the coordinator re-reads state before writing, which the existing changed-workbook check already enforces.
-- [ ] A failure notification without personal data.
+- [x] Measured during live reads and writes while another app was in front, using a sampler of the frontmost app and Numbers' state (no screenshots):
+  - Numbers never became active or took focus; the user's app stayed in front.
+  - When a run launches Numbers, Numbers restores its previous session's windows and stays visible afterwards.
+- [x] Containment: after each run the app hides Numbers if the run launched or unhid it, and returns focus to the previous app if Numbers took it (`foregroundActions`).
+- [x] A workbook already open in Numbers is never written. The run stops with "Close <workbook> in Numbers; it will be updated on the next run", writes no backup, and leaves the email in the Inbox. Verified live.
+- [x] An iCloud workbook that is not downloaded starts a download and reports that it will be retried; a missing workbook is reported.
+- [x] Sleep during a run: the existing changed-workbook check re-reads the sheet before writing.
+- [x] Failure notifications only for use cases that newly stopped, naming the use cases without error details or data.
 
 ### 6. End-to-end acceptance
 

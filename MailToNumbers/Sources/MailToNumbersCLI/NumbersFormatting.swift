@@ -2,22 +2,6 @@ import Foundation
 import MailNumbersCore
 import SchoologyGrades
 
-enum NumbersCellFormat: Equatable {
-    case automatic
-    case dateAndTime
-    case percent
-    case other(String)
-
-    init(appleScriptName: String) {
-        switch appleScriptName {
-        case "automatic": self = .automatic
-        case "date and time": self = .dateAndTime
-        case "percent": self = .percent
-        default: self = .other(appleScriptName)
-        }
-    }
-}
-
 struct NumbersCellDisplay: Equatable {
     let format: NumbersCellFormat
     let formattedValue: String?

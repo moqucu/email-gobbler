@@ -17,8 +17,8 @@ Use a SwiftUI `MenuBarExtra` as the only persistent scene and set `LSUIElement`
 to `YES` so the app has no Dock icon or ordinary app window. Apple documents
 both the [menu bar scene](https://developer.apple.com/documentation/swiftui/menubarextra)
 and the [agent-app property](https://developer.apple.com/documentation/bundleresources/information-property-list/lsuielement).
-Build the app target for macOS 13 or later, where `SMAppService` is available;
-the `MailToNumbers` libraries can keep its lower deployment target.
+Build the app and the `MailToNumbers` package for macOS 13 or later, where
+`SMAppService` is available.
 
 ## Proposed architecture
 

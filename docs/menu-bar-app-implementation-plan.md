@@ -40,7 +40,7 @@ Gaps the app must close:
 - **Project:** an XcodeGen spec (`App/project.yml`) for a `MailToNumbersApp` target.
   - It depends on the local `MailToNumbers` package.
   - The generated `.xcodeproj` is not committed.
-  - The app target needs macOS 13 or later for `MenuBarExtra` and `SMAppService`; the libraries keep their lower minimum.
+  - The package and app require macOS 13 or later, for `MenuBarExtra`, `SMAppService`, and Swift concurrency clocks.
 - **Settings:** a versioned `Codable` file in `~/Library/Application Support/MailToNumbers/`.
   - Paths, student labels, and sheet names stay out of the repository.
 - **Backups:** kept in the same folder under `Backups/<use case>/`.

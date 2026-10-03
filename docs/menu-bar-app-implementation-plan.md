@@ -148,13 +148,12 @@ Implemented in the `MailToNumbersService` module: `AppSettings`, `SettingsStore`
 
 ### 6. End-to-end acceptance
 
-- [ ] A disposable dividend ledger and a copy of the grades workbook first, using `--eml` fixtures and live Mail in preview mode.
-- [ ] Then the real setup:
-  - No Dock icon or foreground window during scheduled runs.
-  - Survives logout and login.
-  - Each week or payment is written once.
-  - Failed mail stays in the Inbox, and only verified messages are archived.
-- [ ] Update the README and the design document. Retire CLI-only guidance that the app replaces.
+- [x] Disposable ledger runs through the CLI and the shared adapters: insert, verification, already-recorded skip, and refusal while the workbook is open in Numbers.
+- [x] Real setup saved through Settings (2026-10-02): both use cases enabled with one routed student, sheets passed the preflight, Launch at Login enabled, and Automation access granted.
+- [x] Launch and Run Now complete with "Up to date"; the unified log records only stage and outcome (`log show --predicate 'subsystem == "com.moqucu.MailToNumbers"'`).
+- [ ] First real dividend alert and weekly Schoology email processed by a scheduled run, written once, and archived.
+- [ ] Survives logout and login without a Dock icon or foreground window.
+- [x] Update the README and the design document.
 
 ## Resolved questions
 

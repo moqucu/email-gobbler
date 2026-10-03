@@ -9,9 +9,14 @@ enum ForegroundGuard {
         NSRunningApplication.runningApplications(withBundleIdentifier: "com.apple.Numbers").first
     }
 
+    private static var mail: NSRunningApplication? {
+        NSRunningApplication.runningApplications(withBundleIdentifier: "com.apple.mail").first
+    }
+
     static func snapshot() -> ForegroundSnapshot {
         ForegroundSnapshot(frontmostPID: NSWorkspace.shared.frontmostApplication?.processIdentifier,
-                           numbersPID: numbers?.processIdentifier, numbersHidden: numbers?.isHidden ?? false)
+                           numbersPID: numbers?.processIdentifier, numbersHidden: numbers?.isHidden ?? false,
+                           mailPID: mail?.processIdentifier)
     }
 
     static func restore(before: ForegroundSnapshot) {
@@ -19,6 +24,8 @@ enum ForegroundGuard {
             switch action {
             case .hideNumbers:
                 numbers?.hide()
+            case .hideMail:
+                mail?.hide()
             case .activate(let pid):
                 NSRunningApplication(processIdentifier: pid)?.activate(options: [])
             }

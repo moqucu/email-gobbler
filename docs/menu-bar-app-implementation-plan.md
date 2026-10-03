@@ -140,7 +140,7 @@ Implemented in the `MailToNumbersService` module: `AppSettings`, `SettingsStore`
 - [x] Measured during live reads and writes while another app was in front, using a sampler of the frontmost app and Numbers' state (no screenshots):
   - Numbers never became active or took focus; the user's app stayed in front.
   - When a run launches Numbers, Numbers restores its previous session's windows and stays visible afterwards.
-- [x] Containment: after each run the app hides Numbers if the run launched or unhid it, and returns focus to the previous app if Numbers took it (`foregroundActions`).
+- [x] Containment: after each run the app hides Numbers if the run launched or unhid it, hides Mail only if the run launched it, and returns focus to the previous app if either took it (`foregroundActions`). Keep Mail running so new mail arrives between runs.
 - [x] A workbook already open in Numbers is never written. The run stops with "Close <workbook> in Numbers; it will be updated on the next run", writes no backup, and leaves the email in the Inbox. Verified live.
 - [x] An iCloud workbook that is not downloaded starts a download and reports that it will be retried; a missing workbook is reported.
 - [x] Sleep during a run: the existing changed-workbook check re-reads the sheet before writing.

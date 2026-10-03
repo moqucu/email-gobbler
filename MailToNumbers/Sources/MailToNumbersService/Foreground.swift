@@ -23,15 +23,24 @@ public enum ForegroundAction: Equatable, Sendable {
 }
 
 /// Undoes what a run did to the screen: hide Numbers if the run launched or
-/// unhid it, and give focus back if Numbers took it.
+/// unhid it, hide Mail only if the run launched it, and give focus back once if
+/// either took it. Nothing changes while the user is working in Mail or Numbers.
 public func foregroundActions(before: ForegroundSnapshot, after: ForegroundSnapshot) -> [ForegroundAction] {
-    let userWasInNumbers = before.numbersRunning && before.frontmostPID == before.numbersPID
-    guard !userWasInNumbers, after.numbersRunning else { return [] }
+    let userApp = before.frontmostPID
+    let userWasInNumbers = before.numbersRunning && userApp == before.numbersPID
+    let userWasInMail = before.mailPID != nil && userApp == before.mailPID
+    guard !userWasInNumbers, !userWasInMail else { return [] }
+
     var actions: [ForegroundAction] = []
-    let launchedByRun = !before.numbersRunning
-    let unhiddenByRun = before.numbersHidden
-    if !after.numbersHidden && (launchedByRun || unhiddenByRun) { actions.append(.hideNumbers) }
-    if after.frontmostPID == after.numbersPID, let previous = before.frontmostPID { actions.append(.activate(pid: previous)) }
+    if after.numbersRunning && !after.numbersHidden && (!before.numbersRunning || before.numbersHidden) {
+        actions.append(.hideNumbers)
+    }
+    if before.mailPID == nil && after.mailPID != nil {
+        actions.append(.hideMail)
+    }
+    let tookFocus = after.frontmostPID != nil
+        && (after.frontmostPID == after.numbersPID || after.frontmostPID == after.mailPID)
+    if tookFocus, let userApp { actions.append(.activate(pid: userApp)) }
     return actions
 }
 

@@ -37,7 +37,7 @@ is available once valid settings are saved. The app asks for permission to contr
 the first time it runs with an enabled use case.
 
 Runs never write a workbook that is open in Numbers (close it and the next run updates it), wait for
-iCloud to download a workbook if needed, hide Numbers again if a run had to launch it, and post a
+iCloud to download a workbook if needed, hide Numbers or Mail again if a run had to launch it, and post a
 notification only when a use case newly stops; details stay in the menu.
 
 The next product step is a [menu bar app that starts at user login](docs/macOS-menu-bar-app-plan.md).

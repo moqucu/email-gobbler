@@ -55,3 +55,12 @@ Parse overall grades only. Preserve course labels and explicit context without
 mapping IDs or inferring the academic year. All course rows, including missing
 grades and nonacademic-looking labels, remain extraction results; filtering and
 workbook update policies belong to later work.
+
+# E*TRADE dividend fixture
+
+`etrade-dividend.synthetic.eml` keeps the single-part `text/html` structure of a
+real "Dividend or interest paid" alert, including its hidden preview text and the
+`td.body-content` paragraphs with bold `Account:`, `Security:`, and
+`Amount Credited:` labels. The account, security, amount, payment date, headers,
+and every link are synthetic. Git stores the file byte for byte (`.gitattributes`).
+Alerts listing several payments are constructed test variants, not observed emails.

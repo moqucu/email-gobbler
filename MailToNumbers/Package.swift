@@ -10,6 +10,7 @@ let package = Package(
     products: [
         .library(name: "MailNumbersCore", targets: ["MailNumbersCore"]),
         .library(name: "SchoologyGrades", targets: ["SchoologyGrades"]),
+        .library(name: "EtradeDividends", targets: ["EtradeDividends"]),
         .executable(name: "mail-to-numbers", targets: ["MailToNumbersCLI"]),
     ],
     dependencies: [
@@ -21,13 +22,17 @@ let package = Package(
             name: "SchoologyGrades",
             dependencies: ["MailNumbersCore", "SwiftSoup"]
         ),
+        .target(
+            name: "EtradeDividends",
+            dependencies: ["MailNumbersCore", "SwiftSoup"]
+        ),
         .executableTarget(
             name: "MailToNumbersCLI",
-            dependencies: ["MailNumbersCore", "SchoologyGrades"]
+            dependencies: ["MailNumbersCore", "SchoologyGrades", "EtradeDividends"]
         ),
         .testTarget(
             name: "MailToNumbersTests",
-            dependencies: ["MailNumbersCore", "SchoologyGrades", "MailToNumbersCLI"],
+            dependencies: ["MailNumbersCore", "SchoologyGrades", "EtradeDividends", "MailToNumbersCLI"],
             resources: [.copy("Fixtures")]
         ),
     ],

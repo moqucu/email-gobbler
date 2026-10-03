@@ -1,0 +1,187 @@
+From: Synthetic Alerts <alerts@example.invalid>
+To: owner@example.invalid
+Subject: Dividend or interest paid
+MIME-Version: 1.0
+Content-Type: text/html
+Content-Disposition: inline
+Message-Id: <synthetic-dividend-0001@example.invalid>
+Date: Tue, 17 Mar 2026 03:37:00 +0000
+
+<html xmlns:fo="http://www.w3.org/1999/XSL/Format">
+<head>
+<META http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="format-detection" content="telephone=no">
+<meta name="x-apple-disable-message-reformatting">
+</head>
+<body style="padding:0;">
+<div class="smart-alert">
+<link href="https://example.invalid/resource" rel="stylesheet" type="text/css">
+<table align="center" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#ffffff" style="background-color:#ffffff;">
+<tbody>
+<div class="previewHeader" style="display:none;font-size:0;line-height:0;max-height:0;mso-hide:all">Account: XXXXX-0042You received the following dividend or interest payment(s) on 2026-03-16.Security: EXAMPLE FUNDAMENTAL INDEX FUND   (EXFI)
+	Amount Credited: 
+				$12.34If you're enrolled in dividend r</div>
+<tr>
+<td valign="top" align="center" bgcolor="#ffffff">
+<table width="640" border="0" cellspacing="0" cellpadding="0" style="table-layout: fixed;" class="em_main_table">
+<tbody>
+<tr>
+<td width="20px" bgcolor="#ffffff">&nbsp;</td><td valign="top" align="center">
+<table width="600" border="0" cellspacing="0" cellpadding="0" class="em_main_table" bgcolor="#ffffff">
+<tbody>
+<tr>
+<td height="12" style="line-height:1px; font-size:1px;">&nbsp;</td>
+</tr>
+<tr>
+<td valign="top" align="center">
+<table width="100%" border="0" cellspacing="0" cellpadding="0" align="center" class="em_main_table">
+<tbody>
+<tr>
+<td valign="top" align="left"><a href="https://example.invalid/resource" target="_blank" title="E*TRADE from Morgan Stanley" alias="preheader_logo" style="text-decoration:none; color:#51ae31;"><img src="https://example.invalid/resource" width="241" height="auto" alt="E*TRADE from Morgan Stanley" style="display:block; font-family:Arial, sans-serif; font-size:25px; line-height:49px; color:#51ae31; font-weight:bold; text-align:center;height:auto;width:241px" border="0" class="em_img"></a></td><td width="100" class="em_side">&nbsp;</td><td valign="bottom" align="right">
+<table width="315" border="0" cellspacing="0" cellpadding="0" align="right" class="em_hide">
+<tbody>
+<tr>
+<td valign="bottom" align="right" style="font-family: Arial, sans-serif; font-size:13px;  line-height:18px; color:#555555; text-align:right;font-weight:normal;" class="em_hide"><span class="em_hide"><a href="https://example.invalid/resource" target="_blank" alias="preheader" style="text-decoration:none; color:#6633cc;"><span style="text-decoration:none; color:#6633cc;">Alert Inbox</span></a>&nbsp;&nbsp;|&nbsp;&nbsp;</span><a href="https://example.invalid/resource" target="_blank" mcdisabled-title="" alias="preheader" style="text-decoration:none; color:#6633cc;"><span style="text-decoration:none; color:#6633cc">Log on</span></a></td>
+</tr>
+</tbody>
+</table>
+</td>
+</tr>
+</tbody>
+</table>
+</td>
+</tr>
+<tr>
+<td style="line-height:0px; font-size:0px;" height="0">&nbsp;</td>
+</tr>
+<tr>
+<td height="20" style="line-height:1px; font-size:1px;">&nbsp;</td>
+</tr>
+</tbody>
+</table>
+</td><td width="20px" bgcolor="#ffffff">&nbsp;</td>
+</tr>
+</tbody>
+</table>
+</td>
+</tr>
+<!--[if !mso]>-->
+<tr>
+<td valign="top" align="center" bgcolor="#ffffff">
+<div class="hide_disktop" style="display:none;width:0;overflow:hidden;">
+<table width="620" border="0" cellspacing="0" cellpadding="0" style="display:none;table-layout: fixed; background-color:#ffffff;" class="em_main_table_hero">
+<tbody>
+<tr>
+<td width="20px">&nbsp;</td><td height="0" valign="top" align="center" width="100%">
+<table width="100%" border="0" cellspacing="0" cellpadding="0" align="center">
+<tbody>
+<tr>
+<td valign="top" align="left" width="45%" style="font-family: Arial, sans-serif; font-size:13px; line-height:18px; color:#555; text-align:left;font-weight:normal;"><a href="https://example.invalid/resource" target="_blank" alias="preheader" style="text-decoration:none; color:#6633cc;"><span class="visited" style="color:#6633cc; text-decoration:none;">Alert Inbox</span></a></td><td valign="top" width="45%" align="right" style="font-family: Arial, sans-serif; font-size:13px; line-height:18px; color:#555; text-align:right;font-weight:normal;"><a href="https://example.invalid/resource" target="_blank" mcdisabled-title="" alias="preheader" style="text-decoration:none; color:#555;"><span class="visited" style="color:#6633cc; text-decoration:none;">Log On</span></a></td>
+</tr>
+</tbody>
+</table>
+</td><td width="20px">&nbsp;</td>
+</tr>
+<tr>
+<td style="line-height:0px; font-size:0px;" height="20px">&nbsp;</td>
+</tr>
+</tbody>
+</table>
+</div>
+</td>
+</tr>
+<!--<![endif]-->
+<tr>
+<td valign="top" align="center" height="15px" bgcolor="#241056">
+    			&nbsp;
+    		</td>
+</tr>
+<tr>
+<td align="center" bgcolor="#ffffff">
+<table valign="top" cellpadding="0" cellspacing="0" border="0" width="640" class="em_wrapper" bgcolor="#ffffff">
+<tr>
+<td height="30px">&nbsp;</td>
+</tr>
+</table>
+<table valign="top" align="center" cellpadding="0" cellspacing="0" border="0" width="640px" class="em_wrapper" bgcolor="#ffffff">
+<tr>
+<td width="20px">
+                    &nbsp;
+                </td><td valign="top" align="left" width="600" class="body-content" style="font-family: Arial, sans-serif;font-size: 18px;line-height: 24px;padding-bottom: 15px;color: #555555;">
+<p>
+<strong>Account: </strong>XXXXX-0042</p>
+<p>You received the following dividend or interest payment(s) on 2026-03-16.</p>
+<p>
+<strong>Security: </strong>EXAMPLE FUNDAMENTAL INDEX FUND   (EXFI)
+	<br>
+<strong>Amount Credited: </strong>
+				$12.34</p>
+<p>If you're enrolled in dividend reinvestment, your dividend will be automatically reinvested in the same security. Otherwise, the dividend (or any interest payment) will be credited to your account.</p>
+<p>For more information, see our <a href="https://example.invalid/resource" target="_blank" style="color:#6633cc; text-decoration:none; ">article on dividends</a>. You can also get answers to the most common questions about E*TRADE account features and services in our <a href="https://example.invalid/resource" target="_blank" style="color:#6633cc; text-decoration:none; ">comprehensive FAQs</a>.</p>
+</td><td width="20px">
+                    &nbsp;
+                </td>
+</tr>
+</table>
+</td>
+</tr>
+<tr>
+<td valign="top" align="center" bgcolor="#eeeeee"><a name="disclaimer" id="disclaimer"></a></td>
+</tr>
+<tr>
+<td valign="top" align="center" style="border-top:5px solid #dbdbdb;" bgcolor="#eeeeee"></td>
+</tr>
+<tr>
+<td bgcolor="#eeeeee" align="center" valign="top">
+<table width="640" border="0" cellspacing="0" cellpadding="0" class="em_main_table_disc">
+<tbody>
+<tr>
+<td align="center" valign="top">
+<table width="100%" border="0" cellspacing="0" cellpadding="0" align="center">
+<tbody>
+<tr>
+<td align="center" valign="top">
+<table width="100%" border="0" cellspacing="0" cellpadding="0" align="center">
+<tbody>
+<tr>
+<td align="left" valign="top" class="disclaimer_text" style="font-family: Arial, sans-serif; font-size: 11px; line-height: 16px; padding: 20px; color: #555555;">
+<p>Change or manage your alert <a href="https://example.invalid/resource" target="_blank" style="color: #555555;text-decoration: underline; ">delivery preferences</a>.</p>
+<p>
+<b>Investment Products - Not FDIC Insured - No Bank Guarantee - May Lose Value</b>
+</p>
+<p>(c) 2026<b>&nbsp;Banking products and services provided by Morgan Stanley Private Bank, National Association, Member&nbsp;<a href="https://example.invalid/resource" style="color: #555555;text-decoration: underline; ">FDIC</a>.</b>
+</p>
+<p>Securities products and investment advisory services offered by Morgan Stanley Smith Barney LLC, Member&nbsp;<a href="https://example.invalid/resource" style="color: #555555;text-decoration: underline; ">SIPC</a>&nbsp;and a Registered Investment Adviser. Commodity futures and options on futures products and services offered by E*TRADE Futures LLC, Member&nbsp;<a href="https://example.invalid/resource" style="color: #555555;text-decoration: underline; ">NFA</a>.</p>
+<p>Stock plan administration solutions and services offered by E*TRADE Financial Corporate Services, Inc., and are a part of Morgan Stanley at Work. All entities are separate but affiliated subsidiaries of Morgan Stanley. E*TRADE from Morgan Stanley and Morgan Stanley at Work are registered trademarks of Morgan Stanley.&nbsp;<a href="https://example.invalid/resource" style="color: #555555;text-decoration: underline; ">Account Agreements and Disclosures.</a>
+</p>
+</td>
+</tr>
+<tr></tr>
+<tr>
+<td height="28" class="em_height" style="line-height:1px;font-size:1px;">&nbsp;
+                                                        <div class="em_non" style=" white-space:nowrap; font:20px courier; color:#eeeeee;">
+                                                            &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;</div>
+</td>
+</tr>
+</tbody>
+</table>
+</td>
+</tr>
+</tbody>
+</table>
+</td>
+</tr>
+</tbody>
+</table>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</body>
+</html>
+

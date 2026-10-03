@@ -94,7 +94,7 @@ public func planDividendLedgerUpdate(alert: DividendAlert, sheet: SheetSnapshot)
                      typeColumn: .text(DividendLedger.paymentType), dateColumn: .date(alert.paymentDate),
                      securityColumn: .text(collapsed(payment.security)), amountColumn: .number(payment.amount)],
             displays: [dateColumn: .exact(dateStyle.display(alert.paymentDate)),
-                       amountColumn: .exact(currencyDisplay(payment.amount))]
+                       amountColumn: .currency(of: payment.amount)]
         ))
     }
     return DividendLedgerPlan(

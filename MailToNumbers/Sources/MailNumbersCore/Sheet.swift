@@ -108,14 +108,14 @@ public func currencyDisplay(_ amount: Decimal) -> String {
     return (negative ? "-$" : "$") + groups.joined(separator: ",") + "." + String(format: "%02lld", cents % 100)
 }
 
-private func matches(_ text: String, _ pattern: String) -> Bool {
+private func matchesPattern(_ text: String, _ pattern: String) -> Bool {
     text.range(of: pattern, options: .regularExpression) != nil
 }
 
 private let posix = Locale(identifier: "en_US_POSIX")
 
 private func parseWholePercent(_ text: String?) -> Decimal? {
-    guard let text, matches(text, "^-?[0-9]+%$") else { return nil }
+    guard let text, matchesPattern(text, "^-?[0-9]+%$") else { return nil }
     return Decimal(string: String(text.dropLast()), locale: posix)
 }
 
@@ -133,8 +133,14 @@ public enum DisplayExpectation: Equatable {
             guard let percent = parseWholePercent(shown) else { return false }
             let difference = percent - fraction * 100
             return difference <= Decimal(string: "0.5")! && difference >= Decimal(string: "-0.5")!
-        case .currency:
-            return false
+        case .currency(let amount):
+            guard let shown, matchesPattern(shown, "^-?\\$[0-9]{1,3}(,?[0-9]{3})*\\.[0-9]{2}$") else { return false }
+            let digits = shown.replacingOccurrences(of: "$", with: "").replacingOccurrences(of: ",", with: "")
+            guard let value = Decimal(string: digits, locale: posix) else { return false }
+            var exact = amount
+            var cents = Decimal()
+            NSDecimalRound(&cents, &exact, 2, .plain)
+            return value == cents
         }
     }
 }
@@ -150,11 +156,11 @@ public enum FormatRequirement: Equatable {
         let shown = cell.formatted ?? ""
         switch self {
         case .dateOnly(let style):
-            return cell.format == .dateAndTime && matches(shown, style.pattern)
+            return cell.format == .dateAndTime && matchesPattern(shown, style.pattern)
         case .wholePercent:
             return cell.format == .percent && (shown.isEmpty || parseWholePercent(shown) != nil)
         case .currency:
-            return cell.format == .currency && (shown.isEmpty || matches(shown, "^-?\\$[0-9,]+\\.[0-9]{2}$"))
+            return cell.format == .currency && (shown.isEmpty || matchesPattern(shown, "^-?\\$[0-9,]+\\.[0-9]{2}$"))
         }
     }
 }
@@ -346,7 +352,7 @@ public func parseSheetSnapshot(_ output: String) throws -> SheetSnapshot {
         case "T":
             value = .text(payload)
         case "N":
-            guard matches(payload, "^-?[0-9]+(\\.[0-9]+)?([Ee][+-]?[0-9]+)?$"),
+            guard matchesPattern(payload, "^-?[0-9]+(\\.[0-9]+)?([Ee][+-]?[0-9]+)?$"),
                   let number = Decimal(string: payload, locale: posix) else { throw SheetError.malformedSnapshot }
             value = .number(number)
         case "D":
@@ -475,7 +481,7 @@ private func assignment(_ value: SheetValue, column: Int, row: Int) throws -> [S
         return ["set value of \(target) to \(appleScriptString(text))"]
     case .number(let number):
         let literal = "\(number)"
-        guard matches(literal, "^-?[0-9]+(\\.[0-9]+)?$") else { throw SheetError.invalidValue(literal) }
+        guard matchesPattern(literal, "^-?[0-9]+(\\.[0-9]+)?$") else { throw SheetError.invalidValue(literal) }
         return ["set value of \(target) to \(literal)"]
     case .date(let date):
         return [
@@ -501,6 +507,10 @@ public func numbersWriteScript(workbookPath: String, sheetName: String, plan: Sh
         }
         for (column, value) in planned.values.sorted(by: { $0.key < $1.key }) {
             lines += try assignment(value, column: column, row: target)
+            // Writing a number resets an inherited currency format; percent and date formats survive.
+            if case .number = value, plan.templateRequirements[column] == .currency {
+                lines.append("set format of cell \(column) of row \(target) of t to currency")
+            }
         }
     }
     return """

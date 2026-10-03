@@ -25,6 +25,10 @@ scripts/build-app.sh            # builds App/build.noindex/Build/Products/Releas
 scripts/build-app.sh --install  # also copies it to /Applications
 ```
 
+The app icon is a layered Icon Composer document, `App/Resources/AppIcon.icon`, so macOS applies its
+Liquid Glass, dark, and tinted appearances. Regenerate its layers with
+`swift scripts/make-app-icon.swift App/Resources/AppIcon.icon/Assets`, or open it in Icon Composer.
+
 On first launch the app opens **Settings…**: choose the dividend ledger and each student's grades
 sheet, the schedule, and how many backups to keep. Saving reads every chosen sheet and refuses to save
 until its columns and formats are ready. Settings live in

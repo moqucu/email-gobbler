@@ -10,31 +10,56 @@ public struct MailQuery: Equatable, Sendable {
     }
 }
 
-public struct UseCasePlan: Equatable {
+/// A sheet in a workbook that a use case reads and may update.
+public struct SheetTarget: Hashable, Sendable, CustomStringConvertible {
+    public let workbook: URL
+    public let sheetName: String
+
+    public init(workbook: URL, sheetName: String) {
+        self.workbook = workbook
+        self.sheetName = sheetName
+    }
+
+    public var description: String { "\(workbook.lastPathComponent) › \(sheetName)" }
+}
+
+public struct TargetPlan: Equatable {
+    public let target: SheetTarget
     public let update: SheetUpdatePlan
+
+    public init(target: SheetTarget, update: SheetUpdatePlan) {
+        self.target = target
+        self.update = update
+    }
+}
+
+public struct UseCasePlan: Equatable {
+    public let targets: [TargetPlan]
     /// Human-readable notes such as ignored courses or already recorded payments.
     public let notes: [String]
 
-    public init(update: SheetUpdatePlan, notes: [String]) {
-        self.update = update
+    public init(targets: [TargetPlan], notes: [String]) {
+        self.targets = targets
         self.notes = notes
     }
 }
 
-/// One kind of email that updates one kind of Numbers sheet.
+/// One kind of email that updates one or more Numbers sheets.
 public protocol MailToNumbersUseCase {
     var mailQuery: MailQuery { get }
+    /// Sheets read before planning. Without targets a run only summarizes.
+    var targets: [SheetTarget] { get }
     func summarize(html: String) throws -> [String]
-    func plan(html: String, sheet: SheetSnapshot) throws -> UseCasePlan
+    func plan(html: String, sheets: [SheetTarget: SheetSnapshot]) throws -> UseCasePlan
 }
 
 public struct MessageActions {
-    public var readSheet: (() throws -> SheetSnapshot)?
-    public var write: ((SheetUpdatePlan, SheetSnapshot) throws -> Void)?
+    public var readSheet: ((SheetTarget) throws -> SheetSnapshot)?
+    public var write: ((TargetPlan, SheetSnapshot) throws -> Void)?
     public var consume: (() throws -> Void)?
 
-    public init(readSheet: (() throws -> SheetSnapshot)? = nil,
-                write: ((SheetUpdatePlan, SheetSnapshot) throws -> Void)? = nil,
+    public init(readSheet: ((SheetTarget) throws -> SheetSnapshot)? = nil,
+                write: ((TargetPlan, SheetSnapshot) throws -> Void)? = nil,
                 consume: (() throws -> Void)? = nil) {
         self.readSheet = readSheet
         self.write = write
@@ -42,17 +67,70 @@ public struct MessageActions {
     }
 }
 
-public enum MessageOutcome: Equatable {
-    case summarized
-    case previewed(rows: Int)
-    case written(rows: Int)
+public enum TargetStatus: Equatable {
+    case previewed
+    case written
     case nothingToWrite
+}
+
+public struct TargetReport: Equatable {
+    public let target: SheetTarget
+    public let plannedRows: Int
+    public let status: TargetStatus
+    /// Plain-text plan description; contains sheet values, so keep it out of logs.
+    public let preview: [String]
+
+    public init(target: SheetTarget, plannedRows: Int, status: TargetStatus, preview: [String]) {
+        self.target = target
+        self.plannedRows = plannedRows
+        self.status = status
+        self.preview = preview
+    }
+}
+
+public struct MessageReport: Equatable {
+    public let summary: [String]
+    public let notes: [String]
+    public let targets: [TargetReport]
+    public let consumed: Bool
+
+    public init(summary: [String], notes: [String], targets: [TargetReport], consumed: Bool) {
+        self.summary = summary
+        self.notes = notes
+        self.targets = targets
+        self.consumed = consumed
+    }
+}
+
+/// A write failed after earlier targets of the same message were saved and verified.
+/// Rerunning is safe: written targets replace their week or skip recorded payments.
+public struct PartialWriteError: Error, Equatable, CustomStringConvertible {
+    public let written: [SheetTarget]
+    public let failed: SheetTarget
+    public let reason: String
+
+    public init(written: [SheetTarget], failed: SheetTarget, reason: String) {
+        self.written = written
+        self.failed = failed
+        self.reason = reason
+    }
+
+    public var description: String {
+        let done = written.isEmpty ? "no sheet was written" : "already written: " + written.map(\.description).joined(separator: ", ")
+        return "Writing \(failed) failed (\(reason)); \(done). The message stays in the Inbox."
+    }
 }
 
 public enum WorkflowError: Error, Equatable, CustomStringConvertible {
     case invalidActions
+    case undeclaredTarget
 
-    public var description: String { "Consuming mail requires a write, and writing requires reading the sheet" }
+    public var description: String {
+        switch self {
+        case .invalidActions: return "Consuming mail requires a write, and writing requires reading the sheets"
+        case .undeclaredTarget: return "A use case planned a sheet it did not declare"
+        }
+    }
 }
 
 private func describe(_ value: SheetValue) -> String {
@@ -84,29 +162,53 @@ public func describe(_ plan: SheetUpdatePlan, headers: [String]) -> [String] {
     return lines
 }
 
-/// Summarizes one decoded email and, when actions allow, plans, writes, and
-/// consumes it. Mail is consumed only after a successful write, or when the plan
-/// is empty because the sheet already holds the email's data.
-public func processMessage(html: String, useCase: some MailToNumbersUseCase, actions: MessageActions,
-                           report: (String) -> Void) throws -> MessageOutcome {
+/// Summarizes one decoded email and, when actions allow, reads every declared
+/// sheet, plans and format-checks all updates, writes them one sheet at a time,
+/// and consumes the message only after every sheet is written and verified (or
+/// already holds the email's data).
+public func processMessage(html: String, useCase: some MailToNumbersUseCase,
+                           actions: MessageActions) throws -> MessageReport {
     guard actions.consume == nil || actions.write != nil, actions.write == nil || actions.readSheet != nil else {
         throw WorkflowError.invalidActions
     }
-    try useCase.summarize(html: html).forEach(report)
-    guard let readSheet = actions.readSheet else { return .summarized }
-
-    let sheet = try readSheet()
-    let planned = try useCase.plan(html: html, sheet: sheet)
-    planned.notes.forEach(report)
-    describe(planned.update, headers: sheet.headers).forEach(report)
-    try planned.update.validateTemplate(in: sheet)
-    guard let write = actions.write else { return .previewed(rows: planned.update.rows.count) }
-
-    if planned.update.isEmpty {
-        try actions.consume?()
-        return .nothingToWrite
+    let summary = try useCase.summarize(html: html)
+    var declared: [SheetTarget] = []
+    for target in useCase.targets where !declared.contains(target) { declared.append(target) }
+    guard let readSheet = actions.readSheet, !declared.isEmpty else {
+        return MessageReport(summary: summary, notes: [], targets: [], consumed: false)
     }
-    try write(planned.update, sheet)
+
+    var sheets: [SheetTarget: SheetSnapshot] = [:]
+    for target in declared { sheets[target] = try readSheet(target) }
+    let planned = try useCase.plan(html: html, sheets: sheets)
+    for targetPlan in planned.targets {
+        guard let sheet = sheets[targetPlan.target] else { throw WorkflowError.undeclaredTarget }
+        try targetPlan.update.validateTemplate(in: sheet)
+    }
+    func report(_ targetPlan: TargetPlan, _ status: TargetStatus) -> TargetReport {
+        TargetReport(target: targetPlan.target, plannedRows: targetPlan.update.rows.count, status: status,
+                     preview: describe(targetPlan.update, headers: sheets[targetPlan.target]?.headers ?? []))
+    }
+
+    guard let write = actions.write else {
+        return MessageReport(summary: summary, notes: planned.notes,
+                             targets: planned.targets.map { report($0, .previewed) }, consumed: false)
+    }
+    var written: [SheetTarget] = []
+    var reports: [TargetReport] = []
+    for targetPlan in planned.targets {
+        guard !targetPlan.update.isEmpty else {
+            reports.append(report(targetPlan, .nothingToWrite))
+            continue
+        }
+        do {
+            try write(targetPlan, sheets[targetPlan.target]!)
+        } catch {
+            throw PartialWriteError(written: written, failed: targetPlan.target, reason: "\(error)")
+        }
+        written.append(targetPlan.target)
+        reports.append(report(targetPlan, .written))
+    }
     try actions.consume?()
-    return .written(rows: planned.update.rows.count)
+    return MessageReport(summary: summary, notes: planned.notes, targets: reports, consumed: actions.consume != nil)
 }

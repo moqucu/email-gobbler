@@ -20,7 +20,7 @@ and add a subcommand.
 
 ## Requirements
 
-- **macOS:** 10.15 or later, with Mail and Numbers; the tool asks for Automation access.
+- **macOS:** 13 or later, with Mail and Numbers; the tool asks for Automation access.
 - **Swift Compiler:** 6.3 or later, Swift 6 language mode.
 - **Dependency:** SwiftSoup (from 2.7.0, below 3.0.0; `Package.resolved` pins 2.13.9) for HTML parsing.
 

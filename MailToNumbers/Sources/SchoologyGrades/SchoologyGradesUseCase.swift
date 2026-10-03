@@ -1,23 +1,41 @@
 import Foundation
 import MailNumbersCore
 
-public enum SchoologyGradesUseCaseError: Error, CustomStringConvertible {
-    case studentRequired
+public struct StudentRoute: Equatable, Sendable {
+    public let studentLabel: String
+    public let target: SheetTarget
 
-    public var description: String { "Updating a grades sheet requires --student" }
+    public init(studentLabel: String, target: SheetTarget) {
+        self.studentLabel = studentLabel
+        self.target = target
+    }
 }
 
-/// Weekly Schoology summary emails into one student's weekly grades sheet.
+public enum SchoologyGradesUseCaseError: Error, Equatable, CustomStringConvertible {
+    case notImplemented
+    case duplicateTarget(SheetTarget)
+
+    public var description: String {
+        switch self {
+        case .notImplemented: return "Not implemented"
+        case .duplicateTarget(let target): return "Two students are routed to the same sheet: \(target)"
+        }
+    }
+}
+
+/// Weekly Schoology summary emails into each routed student's weekly grades sheet.
 public struct SchoologyGradesUseCase: MailToNumbersUseCase {
     public static let defaultQuery = MailQuery(subjectContains: "Weekly Schoology Summary", senderContains: nil)
 
     public let mailQuery: MailQuery
-    public let studentLabel: String?
+    public let routes: [StudentRoute]
 
-    public init(studentLabel: String?, mailQuery: MailQuery = defaultQuery) {
-        self.studentLabel = studentLabel
+    public init(routes: [StudentRoute], mailQuery: MailQuery = defaultQuery) {
+        self.routes = routes
         self.mailQuery = mailQuery
     }
+
+    public var targets: [SheetTarget] { [] }
 
     public func summarize(html: String) throws -> [String] {
         let extraction = try parseSchoologyWeeklyEmail(html: html)
@@ -34,11 +52,7 @@ public struct SchoologyGradesUseCase: MailToNumbersUseCase {
         return lines
     }
 
-    public func plan(html: String, sheet: SheetSnapshot) throws -> UseCasePlan {
-        guard let studentLabel else { throw SchoologyGradesUseCaseError.studentRequired }
-        let planned = try planGradesWorkbookUpdate(report: try parseSchoologyWeeklyEmail(html: html),
-                                                   studentLabel: studentLabel, sheet: sheet)
-        return UseCasePlan(update: planned.update,
-                           notes: ["Ignored courses without grades: \(planned.ignoredMissingCourses.count)"])
+    public func plan(html: String, sheets: [SheetTarget: SheetSnapshot]) throws -> UseCasePlan {
+        throw SchoologyGradesUseCaseError.notImplemented
     }
 }

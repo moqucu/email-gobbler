@@ -7,10 +7,14 @@ public struct EtradeDividendsUseCase: MailToNumbersUseCase {
     public static let defaultSheetName = "Sheet 1"
 
     public let mailQuery: MailQuery
+    public let target: SheetTarget?
 
-    public init(mailQuery: MailQuery = defaultQuery) {
+    public init(target: SheetTarget?, mailQuery: MailQuery = defaultQuery) {
+        self.target = target
         self.mailQuery = mailQuery
     }
+
+    public var targets: [SheetTarget] { [] }
 
     public func summarize(html: String) throws -> [String] {
         let alert = try parseEtradeDividendAlert(html: html)
@@ -20,10 +24,7 @@ public struct EtradeDividendsUseCase: MailToNumbersUseCase {
             + alert.payments.map { "  \($0.security): \(currencyDisplay($0.amount))" }
     }
 
-    public func plan(html: String, sheet: SheetSnapshot) throws -> UseCasePlan {
-        let planned = try planDividendLedgerUpdate(alert: try parseEtradeDividendAlert(html: html), sheet: sheet)
-        return UseCasePlan(update: planned.update, notes: planned.alreadyRecorded.map {
-            "Already recorded: \($0.security) \(currencyDisplay($0.amount))"
-        })
+    public func plan(html: String, sheets: [SheetTarget: SheetSnapshot]) throws -> UseCasePlan {
+        throw DividendLedgerError.noTemplateRow
     }
 }

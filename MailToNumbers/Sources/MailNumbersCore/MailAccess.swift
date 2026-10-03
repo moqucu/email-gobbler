@@ -1,5 +1,7 @@
 import Foundation
 
+public func mailListingScript(_ query: MailQuery) throws -> String { "" }
+
 /// Lists matching Mail Inbox messages, oldest first.
 public func listInboxMessages(_ query: MailQuery) throws -> [MailMessageRef] {
     guard !query.subjectContains.isEmpty,

@@ -295,6 +295,14 @@ final class SheetCoreTests: XCTestCase {
         assertSheetError(.malformedMailListing, try parseMailListing("x\tACCT\t<a>\t-1"))
     }
 
+    func testMailListingIsLimitedToTheICloudAccount() throws {
+        let script = try mailListingScript(MailQuery(subjectContains: "Dividend or interest paid", senderContains: "etrade.com"))
+        XCTAssertTrue(script.contains("whose subject contains \"Dividend or interest paid\" and sender contains \"etrade.com\""))
+        XCTAssertTrue(script.contains("server name of account of mailbox of m is \"imap.mail.me.com\""))
+        XCTAssertThrowsError(try mailListingScript(MailQuery(subjectContains: "", senderContains: nil)))
+        XCTAssertThrowsError(try mailListingScript(MailQuery(subjectContains: "a\nb", senderContains: nil)))
+    }
+
     func testProcessingStopsAtTheFirstFailure() {
         struct Boom: Error {}
         var processed: [Int] = []

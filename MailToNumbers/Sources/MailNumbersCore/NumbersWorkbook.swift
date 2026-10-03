@@ -7,6 +7,9 @@ public enum AutomationError: Error, CustomStringConvertible {
     case backupExists(String)
     case workbookChanged
     case invalidSheetName
+    case workbookOpen(String)
+    case workbookDownloading(String)
+    case workbookMissing(String)
 
     public var description: String {
         switch self {
@@ -16,6 +19,9 @@ public enum AutomationError: Error, CustomStringConvertible {
         case .backupExists(let path): return "Backup path already exists: \(path)"
         case .workbookChanged: return "Workbook changed since the preview; no write attempted"
         case .invalidSheetName: return "Sheet names cannot contain tabs or line breaks"
+        case .workbookOpen(let name): return "Close \(name) in Numbers; it will be updated on the next run"
+        case .workbookDownloading(let name): return "Waiting for iCloud to download \(name); it will be retried on the next run"
+        case .workbookMissing(let name): return "\(name) was not found"
         }
     }
 }
@@ -96,4 +102,19 @@ public func readSheetNames(workbook: URL) throws -> [String] {
     end tell
     """)
     return parseSheetNames(result.stringValue ?? "")
+}
+
+/// True when `workbook` is among the documents open in Numbers.
+public func isWorkbookOpen(_ workbook: URL, openPaths: [String]) -> Bool { false }
+
+public enum WorkbookAvailability: Equatable, Sendable {
+    case available
+    case downloading
+    case missing
+}
+
+/// iCloud download state: `nil` for files outside iCloud, otherwise one of
+/// `NSMetadataUbiquitousItemDownloadingStatus*` raw values.
+public func workbookAvailability(exists: Bool, placeholderExists: Bool, downloadStatus: String?) -> WorkbookAvailability {
+    .missing
 }

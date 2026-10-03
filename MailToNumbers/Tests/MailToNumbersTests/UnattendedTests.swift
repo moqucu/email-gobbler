@@ -82,8 +82,8 @@ final class UnattendedTests: XCTestCase {
     func testNewFailureNotifiesWithoutErrorDetails() {
         let notice = failureNotice(previous: nil, current: summary([result(.schoologyGrades, error: nil),
                                                                     result(.etradeDividends, error: "Alert amount is malformed: $3.x9")]))
-        XCTAssertEqual(notice, FailureNotice(title: "Mail to Numbers needs attention",
-                                             body: "E*TRADE dividends stopped. Open the Mail to Numbers menu for details."))
+        XCTAssertEqual(notice, FailureNotice(title: "Email Gobbler needs attention",
+                                             body: "E*TRADE dividends stopped. Open the Email Gobbler menu for details."))
     }
 
     func testRepeatedSameFailureDoesNotNotifyAgainButAChangedOneDoes() {
@@ -92,7 +92,7 @@ final class UnattendedTests: XCTestCase {
         let both = summary([result(.schoologyGrades, error: "Workbook changed since the preview; no write attempted"),
                             result(.etradeDividends, error: "Close Ledger.numbers in Numbers; it will be updated on the next run")])
         XCTAssertEqual(failureNotice(previous: failing, current: both)?.body,
-                       "Schoology grades stopped. Open the Mail to Numbers menu for details.")
+                       "Schoology grades stopped. Open the Email Gobbler menu for details.")
     }
 
     func testSuccessfulRunDoesNotNotify() {
@@ -103,6 +103,6 @@ final class UnattendedTests: XCTestCase {
     func testSeveralNewFailuresAreNamedTogether() {
         let notice = failureNotice(previous: nil, current: summary([result(.schoologyGrades, error: "a"),
                                                                     result(.etradeDividends, error: "b")]))
-        XCTAssertEqual(notice?.body, "Schoology grades and E*TRADE dividends stopped. Open the Mail to Numbers menu for details.")
+        XCTAssertEqual(notice?.body, "Schoology grades and E*TRADE dividends stopped. Open the Email Gobbler menu for details.")
     }
 }

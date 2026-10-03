@@ -1,4 +1,4 @@
-# Menu bar app: implementation plan
+# EmailGobbler menu bar app: implementation plan
 
 This plan turns the `mail-to-numbers` workflow into a menu bar app that starts at
 login and processes both use cases unattended. The [design document](macOS-menu-bar-app-plan.md)
@@ -41,7 +41,7 @@ Gaps the app must close:
   - It depends on the local `MailToNumbers` package.
   - The generated `.xcodeproj` is not committed.
   - The package and app require macOS 13 or later, for `MenuBarExtra`, `SMAppService`, and Swift concurrency clocks.
-- **Settings:** a versioned `Codable` file in `~/Library/Application Support/MailToNumbers/`.
+- **Settings:** a versioned `Codable` file in `~/Library/Application Support/EmailGobbler/` (moved from the earlier `MailToNumbers` folder on first launch).
   - Paths, student labels, and sheet names stay out of the repository.
 - **Backups:** kept in the same folder under `Backups/<use case>/`.
   - The newest 30 are kept per use case, and older ones are deleted only after a newer verified write.
@@ -150,7 +150,7 @@ Implemented in the `MailToNumbersService` module: `AppSettings`, `SettingsStore`
 
 - [x] Disposable ledger runs through the CLI and the shared adapters: insert, verification, already-recorded skip, and refusal while the workbook is open in Numbers.
 - [x] Real setup saved through Settings (2026-10-02): both use cases enabled with one routed student, sheets passed the preflight, Launch at Login enabled, and Automation access granted.
-- [x] Launch and Run Now complete with "Up to date"; the unified log records only stage and outcome (`log show --predicate 'subsystem == "com.moqucu.MailToNumbers"'`).
+- [x] Launch and Run Now complete with "Up to date"; the unified log records only stage and outcome (`log show --predicate 'subsystem == "com.moqucu.EmailGobbler"'`).
 - [ ] First real dividend alert and weekly Schoology email processed by a scheduled run, written once, and archived.
 - [ ] Survives logout and login without a Dock icon or foreground window.
 - [x] Update the README and the design document.

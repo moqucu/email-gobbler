@@ -45,7 +45,7 @@ public enum LoginItemState: Equatable, Sendable {
     public var explanation: String {
         switch self {
         case .enabled: return "Starts when you log in."
-        case .requiresApproval: return "Allow Email Gobbler in System Settings › General › Login Items."
+        case .requiresApproval: return "Allow EmailGobbler in System Settings › General › Login Items."
         case .notRegistered: return "Does not start at login."
         case .notFound: return "Install the app in /Applications to start it at login."
         }

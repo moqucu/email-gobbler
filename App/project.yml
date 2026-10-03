@@ -1,4 +1,4 @@
-name: MailToNumbers
+name: EmailGobbler
 options:
   bundleIdPrefix: com.moqucu
   deploymentTarget:
@@ -7,7 +7,7 @@ packages:
   MailToNumbers:
     path: ../MailToNumbers
 targets:
-  MailToNumbersApp:
+  EmailGobbler:
     type: application
     platform: macOS
     sources:
@@ -19,8 +19,8 @@ targets:
         product: MailNumbersCore
     settings:
       base:
-        PRODUCT_NAME: MailToNumbers
-        PRODUCT_BUNDLE_IDENTIFIER: com.moqucu.MailToNumbers
+        PRODUCT_NAME: EmailGobbler
+        PRODUCT_BUNDLE_IDENTIFIER: com.moqucu.EmailGobbler
         INFOPLIST_FILE: Resources/Info.plist
         GENERATE_INFOPLIST_FILE: NO
         CODE_SIGN_ENTITLEMENTS: Resources/MailToNumbers.entitlements

@@ -51,6 +51,6 @@ public func failureNotice(previous: RunSummary?, current: RunSummary) -> Failure
     }.map(\.id.displayName)
     guard let last = newlyStopped.last else { return nil }
     let names = newlyStopped.count == 1 ? last : newlyStopped.dropLast().joined(separator: ", ") + " and " + last
-    return FailureNotice(title: "Email Gobbler needs attention",
-                         body: "\(names) stopped. Open the Email Gobbler menu for details.")
+    return FailureNotice(title: "EmailGobbler needs attention",
+                         body: "\(names) stopped. Open the EmailGobbler menu for details.")
 }

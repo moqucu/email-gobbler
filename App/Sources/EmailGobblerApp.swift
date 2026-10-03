@@ -2,15 +2,15 @@ import AppKit
 import SwiftUI
 
 @main
-struct MailToNumbersApp: App {
+struct EmailGobblerApp: App {
     @StateObject private var model = AppModel()
 
     var body: some Scene {
         MenuBarExtra {
             MenuContent(model: model)
         } label: {
-            Image(systemName: model.menu.symbol.rawValue)
-                .accessibilityLabel("Mail to Numbers: \(model.menu.headline)")
+            Image(nsImage: MenuBarIcon.image(badge: model.menu.symbol == .idle ? nil : model.menu.symbol.rawValue))
+                .accessibilityLabel("EmailGobbler: \(model.menu.headline)")
         }
         .menuBarExtraStyle(.menu)
     }
@@ -34,7 +34,7 @@ struct MenuContent: View {
             .keyboardShortcut(",")
         Button("Show Backups") { model.showBackups() }
         Divider()
-        Button("Quit Mail to Numbers") { NSApplication.shared.terminate(nil) }
+        Button("Quit EmailGobbler") { NSApplication.shared.terminate(nil) }
             .keyboardShortcut("q")
     }
 }

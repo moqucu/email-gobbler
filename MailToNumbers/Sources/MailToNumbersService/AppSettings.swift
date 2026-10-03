@@ -177,9 +177,17 @@ public struct SettingsStore: Sendable {
         fileURL = directory.appendingPathComponent("settings.json")
     }
 
+    private static var applicationSupport: URL {
+        FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+    }
+
     public static var standard: SettingsStore {
-        let support = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
-        return SettingsStore(directory: support.appendingPathComponent("MailToNumbers", isDirectory: true))
+        SettingsStore(directory: applicationSupport.appendingPathComponent("EmailGobbler", isDirectory: true))
+    }
+
+    /// Where settings and backups lived before the app was named EmailGobbler.
+    public static var legacyDirectory: URL {
+        applicationSupport.appendingPathComponent("MailToNumbers", isDirectory: true)
     }
 
     /// Returns defaults when no settings were saved yet.
@@ -232,4 +240,10 @@ public func pruneBackups(directory: URL, workbook: URL, keep: Int) throws -> [UR
 
 /// Moves the settings folder used before the app was renamed; returns whether it moved.
 @discardableResult
-public func migrateLegacyDirectory(from legacy: URL, to current: URL) throws -> Bool { false }
+public func migrateLegacyDirectory(from legacy: URL, to current: URL) throws -> Bool {
+    let manager = FileManager.default
+    guard manager.fileExists(atPath: legacy.path), !manager.fileExists(atPath: current.path) else { return false }
+    try manager.createDirectory(at: current.deletingLastPathComponent(), withIntermediateDirectories: true)
+    try manager.moveItem(at: legacy, to: current)
+    return true
+}

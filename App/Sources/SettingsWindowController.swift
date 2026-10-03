@@ -14,7 +14,7 @@ final class SettingsWindowController {
         }
         let editor = SettingsEditor(settings: settings, savedSettingsValid: savedSettingsValid, onSave: onSave)
         let window = NSWindow(contentViewController: NSHostingController(rootView: SettingsView(editor: editor)))
-        window.title = "Mail to Numbers Settings"
+        window.title = "EmailGobbler Settings"
         window.styleMask = [.titled, .closable, .resizable]
         window.isReleasedWhenClosed = false
         window.center()

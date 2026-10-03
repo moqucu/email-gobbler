@@ -105,7 +105,7 @@ final class SetupChecksTests: XCTestCase {
     func testLoginItemExplanations() {
         XCTAssertEqual(LoginItemState.enabled.explanation, "Starts when you log in.")
         XCTAssertEqual(LoginItemState.requiresApproval.explanation,
-                       "Allow Email Gobbler in System Settings › General › Login Items.")
+                       "Allow EmailGobbler in System Settings › General › Login Items.")
         XCTAssertEqual(LoginItemState.notRegistered.explanation, "Does not start at login.")
         XCTAssertEqual(LoginItemState.notFound.explanation,
                        "Install the app in /Applications to start it at login.")

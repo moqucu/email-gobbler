@@ -40,6 +40,29 @@ final class UnattendedTests: XCTestCase {
         XCTAssertEqual(foregroundActions(before: before, after: after), [.hideNumbers])
     }
 
+    private let mail: Int32 = 300
+
+    func testRunThatLaunchedMailHidesIt() {
+        let before = ForegroundSnapshot(frontmostPID: terminal, numbersPID: nil, numbersHidden: false, mailPID: nil)
+        let after = ForegroundSnapshot(frontmostPID: terminal, numbersPID: nil, numbersHidden: false, mailPID: mail)
+        XCTAssertEqual(foregroundActions(before: before, after: after), [.hideMail])
+    }
+
+    func testLaunchedMailThatTookFocusIsHiddenAndFocusReturnsOnce() {
+        let before = ForegroundSnapshot(frontmostPID: terminal, numbersPID: nil, numbersHidden: false, mailPID: nil)
+        let after = ForegroundSnapshot(frontmostPID: mail, numbersPID: numbers, numbersHidden: false, mailPID: mail)
+        XCTAssertEqual(foregroundActions(before: before, after: after), [.hideNumbers, .hideMail, .activate(pid: terminal)])
+    }
+
+    func testMailThatWasAlreadyRunningIsNeverHidden() {
+        let visible = ForegroundSnapshot(frontmostPID: terminal, numbersPID: nil, numbersHidden: false, mailPID: mail)
+        XCTAssertEqual(foregroundActions(before: visible, after: visible), [])
+        let tookFocus = ForegroundSnapshot(frontmostPID: mail, numbersPID: nil, numbersHidden: false, mailPID: mail)
+        XCTAssertEqual(foregroundActions(before: visible, after: tookFocus), [.activate(pid: terminal)])
+        let usingMail = ForegroundSnapshot(frontmostPID: mail, numbersPID: nil, numbersHidden: false, mailPID: mail)
+        XCTAssertEqual(foregroundActions(before: usingMail, after: usingMail), [])
+    }
+
     // MARK: - Open workbooks
 
     func testOpenWorkbookIsRecognizedByPathIgnoringCaseAndTrailingSlash() {

@@ -4,11 +4,13 @@ public struct ForegroundSnapshot: Equatable, Sendable {
     public let frontmostPID: Int32?
     public let numbersPID: Int32?
     public let numbersHidden: Bool
+    public let mailPID: Int32?
 
-    public init(frontmostPID: Int32?, numbersPID: Int32?, numbersHidden: Bool) {
+    public init(frontmostPID: Int32?, numbersPID: Int32?, numbersHidden: Bool, mailPID: Int32? = nil) {
         self.frontmostPID = frontmostPID
         self.numbersPID = numbersPID
         self.numbersHidden = numbersHidden
+        self.mailPID = mailPID
     }
 
     public var numbersRunning: Bool { numbersPID != nil }
@@ -16,6 +18,7 @@ public struct ForegroundSnapshot: Equatable, Sendable {
 
 public enum ForegroundAction: Equatable, Sendable {
     case hideNumbers
+    case hideMail
     case activate(pid: Int32)
 }
 

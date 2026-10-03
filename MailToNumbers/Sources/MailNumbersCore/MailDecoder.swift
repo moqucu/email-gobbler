@@ -1,14 +1,14 @@
 import Foundation
 
-enum MailDecodeError: Error {
+public enum MailDecodeError: Error {
     case malformedMessage
     case unsupportedEncoding(String)
     case unsupportedCharset(String)
     case missingHTML
 }
 
-enum MailDecoder {
-    static func html(from message: Data) throws -> String {
+public enum MailDecoder {
+    public static func html(from message: Data) throws -> String {
         guard let html = try htmlPart(in: message) else { throw MailDecodeError.missingHTML }
         return html
     }

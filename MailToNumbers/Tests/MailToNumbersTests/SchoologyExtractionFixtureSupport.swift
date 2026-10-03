@@ -1,5 +1,6 @@
 import Foundation
-@testable import SchoologyDomain
+import MailNumbersCore
+@testable import SchoologyGrades
 
 struct FixtureSetupError: Error, CustomStringConvertible {
     let description: String

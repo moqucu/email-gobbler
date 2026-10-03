@@ -1,5 +1,6 @@
 import XCTest
-@testable import SchoologyDomain
+import MailNumbersCore
+@testable import SchoologyGrades
 import Foundation
 
 final class SchoologyDomainTests: XCTestCase {

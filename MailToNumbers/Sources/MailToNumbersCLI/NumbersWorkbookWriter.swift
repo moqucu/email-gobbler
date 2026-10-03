@@ -1,5 +1,6 @@
 import Foundation
-import SchoologyDomain
+import MailNumbersCore
+import SchoologyGrades
 
 enum NumbersWriteError: Error, CustomStringConvertible {
     case backupExists

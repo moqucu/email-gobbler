@@ -1,7 +1,8 @@
 import Foundation
 import XCTest
-@testable import SchoologyMailPreview
-import SchoologyDomain
+@testable import MailToNumbersCLI
+import MailNumbersCore
+import SchoologyGrades
 
 final class NumbersFormattingTests: XCTestCase {
     private func date(_ year: Int, _ month: Int, _ day: Int) -> CalendarDate {

@@ -1,4 +1,5 @@
 import Foundation
+import MailNumbersCore
 import SwiftSoup
 
 public struct ReportingPeriod: Hashable {

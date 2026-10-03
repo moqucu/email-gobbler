@@ -1,4 +1,4 @@
-# SchoologyDomain
+# MailToNumbers
 
 A Swift library for extracting Schoology weekly overall grades from decoded HTML and validating and upserting weekly grade rows. HTML extraction uses SwiftSoup; parsing and row updates are deterministic and have no external side effects.
 
@@ -17,7 +17,7 @@ HTML extraction uses SwiftSoup. `Package.swift` allows compatible releases from 
 Run the test suite from the package directory:
 
 ```bash
-cd SchoologyDomain
+cd MailToNumbers
 swift test
 ```
 
@@ -27,7 +27,7 @@ tests are GREEN. All 118 tests pass.
 
 ## Mail preview and Numbers update
 
-The `schoology-mail-preview` Swift executable reads a message from an `.eml` file
+The `mail-to-numbers` Swift executable reads a message from an `.eml` file
 or from the macOS Mail Inbox through Mail's Apple Events interface. It decodes a
 `text/html` MIME part, extracts the Schoology weekly summary, and prints the
 reporting dates and counts of students, courses, and present grades. The Mail mode
@@ -36,9 +36,9 @@ access. It selects the newest Inbox message whose subject contains the supplied
 text.
 
 ```bash
-cd SchoologyDomain
-swift run schoology-mail-preview --eml /path/to/schoology-message.eml
-swift run schoology-mail-preview --mail-subject "Your Children's Weekly Schoology Summary"
+cd MailToNumbers
+swift run mail-to-numbers --eml /path/to/schoology-message.eml
+swift run mail-to-numbers --mail-subject "Your Children's Weekly Schoology Summary"
 ```
 
 The preview supports `text/html` with base64, quoted-printable, or unencoded
@@ -55,7 +55,7 @@ reads its headers and date rows, and prints the proposed row and cell values.
 Without `--apply`, it never writes to the source workbook.
 
 ```bash
-swift run schoology-mail-preview \
+swift run mail-to-numbers \
   --mail-subject "Your Children's Weekly Schoology Summary" \
   --numbers /path/to/trend.numbers \
   --sheet "Student 2026/27" \
@@ -113,7 +113,7 @@ Prototype rules, encoded by the tests. These are contract decisions for the anon
 - **Structure:** each student section needs a nonblank label and a summary table with at least one course row. Every course row needs a nonblank label and a grade cell. Otherwise extraction throws `unsupportedReportStructure`, and no partial result is returned. Duplicate course labels within a student stay as separate rows in document order.
 - **Errors:** error tests contain one fault each. Precedence among multiple independent faults is unspecified.
 
-Fixture provenance is described in `Tests/SchoologyDomainTests/Fixtures/README.md`.
+Fixture provenance is described in `Tests/MailToNumbersTests/Fixtures/README.md`.
 
 ## Usage
 
@@ -131,7 +131,8 @@ Input a **complete snapshot** of grades for a single student/year/sheet:
 
 ```swift
 import Foundation
-import SchoologyDomain
+import MailNumbersCore
+import SchoologyGrades
 
 let date = try CalendarDate(year: 2025, month: 3, day: 9)
 let grade = CourseGrade(courseId: "math", percentage: Decimal(string: "95.5"), letter: "A")
@@ -145,7 +146,8 @@ let report = WeeklyReport(studentId: "student-a", academicYear: "2024-25",
 ### Upsert Example
 
 ```swift
-import SchoologyDomain
+import MailNumbersCore
+import SchoologyGrades
 
 let existing = [
     WeeklyRow(studentId: "student-a", academicYear: "2024-25", 
@@ -188,7 +190,8 @@ Validation failures throw `DomainError.validationFailed(_)` or `DomainError.inva
 
 ```swift
 import Foundation
-import SchoologyDomain
+import MailNumbersCore
+import SchoologyGrades
 
 do {
     let result = try upsertWeeklyRows(existingRows: existing, report: report)

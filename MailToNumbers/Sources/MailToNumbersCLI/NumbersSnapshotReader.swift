@@ -1,5 +1,6 @@
 import Foundation
-import SchoologyDomain
+import MailNumbersCore
+import SchoologyGrades
 
 enum NumbersReadError: Error, CustomStringConvertible {
     case automation(String)

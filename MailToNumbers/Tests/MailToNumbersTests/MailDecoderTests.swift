@@ -1,6 +1,6 @@
 import Foundation
 import XCTest
-@testable import SchoologyMailPreview
+@testable import MailNumbersCore
 
 final class MailDecoderTests: XCTestCase {
     func testNestedMultipartDecodesQuotedPrintableHTML() throws {

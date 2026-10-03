@@ -18,13 +18,13 @@ to `YES` so the app has no Dock icon or ordinary app window. Apple documents
 both the [menu bar scene](https://developer.apple.com/documentation/swiftui/menubarextra)
 and the [agent-app property](https://developer.apple.com/documentation/bundleresources/information-property-list/lsuielement).
 Build the app target for macOS 13 or later, where `SMAppService` is available;
-the existing `SchoologyDomain` library can keep its lower deployment target.
+the `MailToNumbers` libraries can keep its lower deployment target.
 
 ## Proposed architecture
 
 | Component | Responsibility |
 | --- | --- |
-| `SchoologyDomain` | Keep the deterministic HTML extraction and grade types independent of Mail, Numbers, and UI. |
+| `SchoologyGrades` | Keep the deterministic HTML extraction and grade types independent of Mail, Numbers, and UI. |
 | Shared workflow module | Move MIME decoding, course/column mapping, planning, backup, verification, and consume-after-save sequencing out of the CLI into reusable Swift code. Keep the CLI as a diagnostic harness. |
 | Mail adapter | Query only the configured iCloud account and Inbox, identify messages by stable message ID, fetch source, and mark read/move to that account's `Archive` mailbox only after every workbook update verifies. |
 | Numbers adapter | Read the chosen workbook, apply validated row changes, save, and read back the result. Retain a recoverable backup before writing. |

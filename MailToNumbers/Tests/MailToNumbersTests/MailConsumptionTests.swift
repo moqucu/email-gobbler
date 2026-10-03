@@ -1,6 +1,6 @@
 import Foundation
 import XCTest
-@testable import SchoologyMailPreview
+@testable import MailNumbersCore
 
 final class MailConsumptionTests: XCTestCase {
     private enum FakeWriteError: Error { case failed }

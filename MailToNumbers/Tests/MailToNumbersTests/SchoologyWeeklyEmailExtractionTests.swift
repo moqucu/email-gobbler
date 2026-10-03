@@ -1,6 +1,7 @@
 import XCTest
 import Foundation
-@testable import SchoologyDomain
+import MailNumbersCore
+@testable import SchoologyGrades
 
 // SG-02 RED tests. The baseline is the anonymized fixture; every SyntheticDigest or
 // baselineVariant input is a CONSTRUCTED edge case, not an observed Schoology format.

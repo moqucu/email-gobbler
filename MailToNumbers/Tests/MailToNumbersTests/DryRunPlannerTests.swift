@@ -1,7 +1,8 @@
 import Foundation
 import XCTest
-@testable import SchoologyMailPreview
-import SchoologyDomain
+@testable import MailToNumbersCLI
+import MailNumbersCore
+import SchoologyGrades
 
 final class DryRunPlannerTests: XCTestCase {
     private func date(_ day: Int) throws -> CalendarDate {

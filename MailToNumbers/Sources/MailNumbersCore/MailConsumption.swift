@@ -1,17 +1,24 @@
 import Foundation
 
-struct FetchedMailMessage {
-    let source: Data
-    let id: Int32
-    let accountID: String
-    let rfcMessageID: String
+public struct FetchedMailMessage {
+    public let source: Data
+    public let id: Int32
+    public let accountID: String
+    public let rfcMessageID: String
+
+    public init(source: Data, id: Int32, accountID: String, rfcMessageID: String) {
+        self.source = source
+        self.id = id
+        self.accountID = accountID
+        self.rfcMessageID = rfcMessageID
+    }
 }
 
-enum MailConsumptionError: Error, CustomStringConvertible {
+public enum MailConsumptionError: Error, CustomStringConvertible {
     case messageChanged
     case automation(String)
 
-    var description: String {
+    public var description: String {
         switch self {
         case .messageChanged: return "The selected Mail message changed or left the iCloud Inbox"
         case .automation(let message): return "Mail consumption failed: \(message)"
@@ -19,12 +26,12 @@ enum MailConsumptionError: Error, CustomStringConvertible {
     }
 }
 
-func writeThenConsume(write: () throws -> Void, consume: () throws -> Void) throws {
+public func writeThenConsume(write: () throws -> Void, consume: () throws -> Void) throws {
     try write()
     try consume()
 }
 
-func consumeMailMessage(_ message: FetchedMailMessage) throws {
+public func consumeMailMessage(_ message: FetchedMailMessage) throws {
     let script = """
     tell application "Mail"
         set a to first account whose id is \(appleScriptString(message.accountID))

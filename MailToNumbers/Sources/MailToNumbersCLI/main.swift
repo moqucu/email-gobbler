@@ -1,5 +1,6 @@
 import Foundation
-import SchoologyDomain
+import MailNumbersCore
+import SchoologyGrades
 
 enum PreviewError: Error, CustomStringConvertible {
     case usage
@@ -8,17 +9,13 @@ enum PreviewError: Error, CustomStringConvertible {
     var description: String {
         switch self {
         case .usage:
-            return "Usage: schoology-mail-preview (--eml <path> | --mail-subject <text>) [--numbers <path> --sheet <name> --student <exact label> [--apply --backup <path> [--consume]]]"
+            return "Usage: mail-to-numbers (--eml <path> | --mail-subject <text>) [--numbers <path> --sheet <name> --student <exact label> [--apply --backup <path> [--consume]]]"
         case .mailAccess(let message):
             return "Mail access failed: \(message)"
         }
     }
 }
 
-func appleScriptString(_ text: String) -> String {
-    "\"" + text.replacingOccurrences(of: "\\", with: "\\\\")
-        .replacingOccurrences(of: "\"", with: "\\\"") + "\""
-}
 
 func messageFromMail(subject: String) throws -> FetchedMailMessage {
     guard !subject.isEmpty, !subject.contains("\n"), !subject.contains("\r") else {
@@ -140,6 +137,6 @@ func preview() throws {
 do {
     try preview()
 } catch {
-    fputs("schoology-mail-preview: \(error)\n", stderr)
+    fputs("mail-to-numbers: \(error)\n", stderr)
     exit(1)
 }

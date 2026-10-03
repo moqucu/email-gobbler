@@ -108,19 +108,17 @@ Implemented in the `MailToNumbersService` module: `AppSettings`, `SettingsStore`
 
 ### 3. App shell (XcodeGen project)
 
-- [ ] `App/project.yml`, `MailToNumbersApp` with a `MenuBarExtra` and no window scene.
+- [x] `App/project.yml`, `MailToNumbersApp` with a `MenuBarExtra` and no window scene.
   - Info.plist: `LSUIElement`, `NSAppleEventsUsageDescription`.
   - Entitlements, signing, and hardened runtime.
-- [ ] Menu items:
+- [x] Menu items:
   - Status line: idle, running with use case and step, or last success with time.
   - Last error, if any.
-  - **Run Now**, **Pause/Resume**, **Settings…**, **Show Backups**, **Quit**.
-- [ ] Automation runs off the main actor, one script at a time, with a timeout. The UI observes `RunCoordinator`.
-- [ ] `scripts/build-app.sh`: XcodeGen generate, `xcodebuild` Release, signature verification, and copy to `/Applications`.
-- [ ] Acceptance:
-  - No Dock icon.
-  - **Run Now** processes the dividend backlog exactly as the CLI does.
-  - Automation prompts name the app.
+  - **Run Now**, **Pause/Resume**, **Show Settings File** (replaced by **Settings…** in milestone 4), **Show Backups**, **Quit**.
+- [x] Automation runs off the main actor, one script at a time, with a timeout. The UI observes `RunCoordinator`.
+- [x] `scripts/build-app.sh`: XcodeGen generate, `xcodebuild` Release, signature verification, and copy to `/Applications`.
+- [x] Acceptance so far: signed with hardened runtime and the Apple Events entitlement; accessory app with no Dock icon or window; menu shows status and actions.
+- [ ] Acceptance pending real settings: **Run Now** processes the dividend backlog as the CLI does, and Automation prompts name the app.
 
 ### 4. Settings window and launch at login
 

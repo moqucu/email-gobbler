@@ -1,0 +1,33 @@
+name: MailToNumbers
+options:
+  bundleIdPrefix: com.moqucu
+  deploymentTarget:
+    macOS: "13.0"
+packages:
+  MailToNumbers:
+    path: ../MailToNumbers
+targets:
+  MailToNumbersApp:
+    type: application
+    platform: macOS
+    sources:
+      - Sources
+    dependencies:
+      - package: MailToNumbers
+        product: MailToNumbersService
+      - package: MailToNumbers
+        product: MailNumbersCore
+    settings:
+      base:
+        PRODUCT_NAME: MailToNumbers
+        PRODUCT_BUNDLE_IDENTIFIER: com.moqucu.MailToNumbers
+        INFOPLIST_FILE: Resources/Info.plist
+        GENERATE_INFOPLIST_FILE: NO
+        CODE_SIGN_ENTITLEMENTS: Resources/MailToNumbers.entitlements
+        CODE_SIGN_STYLE: Manual
+        CODE_SIGN_IDENTITY: Apple Development
+        PROVISIONING_PROFILE_SPECIFIER: ""
+        ENABLE_HARDENED_RUNTIME: YES
+        SWIFT_VERSION: "6.0"
+        MARKETING_VERSION: "0.1.0"
+        CURRENT_PROJECT_VERSION: "1"

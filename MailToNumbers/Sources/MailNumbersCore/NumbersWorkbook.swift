@@ -66,3 +66,5 @@ public func writeSheetUpdate(workbook: URL, sheetName: String, plan: SheetUpdate
     let saved = try readSheetSnapshot(workbook: workbook, sheetName: sheetName)
     try plan.verify(saved: saved, original: latest)
 }
+
+public func parseSheetNames(_ output: String) -> [String] { [] }

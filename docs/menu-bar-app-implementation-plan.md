@@ -3,8 +3,8 @@
 This plan turns the `mail-to-numbers` workflow into a menu bar app that starts at
 login and processes both use cases unattended. The [design document](macOS-menu-bar-app-plan.md)
 covers goals, permissions, and safety rules. This document turns them into
-reviewable steps against the current code. Each milestone is its own PR, written
-test-first, and keeps `swift test` green.
+reviewable steps against the current code. The milestones land on one dedicated PR
+as test-first commits (failing tests, then implementation), and each keeps `swift test` green.
 
 ## Starting point
 
@@ -46,14 +46,18 @@ Gaps the app must close:
 - **Backups:** kept in the same folder under `Backups/<use case>/`.
   - The newest 30 are kept per use case, and older ones are deleted only after a newer verified write.
   - The menu has a **Show Backups** item.
-- **Schedule:** a scan at launch, every 30 minutes, on wake, and on **Run Now**.
+- **Schedule (confirmed):** a scan at launch, every 30 minutes, on wake, and on **Run Now**.
   - Triggers that arrive during a run collapse into one follow-up run.
 - **Failure policy:** a failed message stops that use case's backlog for the run; other use cases still run.
   - The error shows in the menu, the message stays in the Inbox, and the next scheduled run retries it.
   - Reruns are safe: grades replace their week, and dividends skip identical rows.
 - **Privacy:** logs record message ID, use case, stage, outcome, and duration, through `os.Logger`.
   - They never record grades, amounts, securities, or email content.
-  - Notifications appear only on failures and contain no data.
+  - Notifications (confirmed) appear only on failures and contain no data. A daily or weekly
+    summary may follow later.
+- **Grades routing (confirmed):** one student is routed to a grades sheet. Other students in
+  the email are ignored and noted. Student labels live only in local settings.
+- **Sweep interest (confirmed):** bank sweep interest is recorded like any other payment.
 
 ## Milestones
 
@@ -67,13 +71,14 @@ Gaps the app must close:
   - If a later target fails, report which targets were already written; reruns are safe because they replace or skip.
 - [ ] Schoology routing from settings:
   - Each configured student label maps to a workbook and sheet.
-  - Every student in the email must have a route.
+  - Students without a route are ignored and noted.
   - A configured student missing from the email stops the run.
+  - Two routes to the same sheet are rejected.
 - [ ] Return a structured `RunReport` per message and per use case, instead of printing; the CLI prints it.
 - [ ] Tests (fakes, no automation):
   - Two students write two sheets, then consume.
   - The second sheet fails: no consume, and the report lists the first sheet as written.
-  - Unrouted student.
+  - An unrouted student is ignored.
   - Empty plans for all targets still consume.
   - Existing single-target behavior is unchanged.
 
@@ -148,9 +153,9 @@ Gaps the app must close:
   - Failed mail stays in the Inbox, and only verified messages are archived.
 - [ ] Update the README and the design document. Retire CLI-only guidance that the app replaces.
 
-## Open questions
+## Resolved questions
 
-1. **Students:** which student labels map to which grades sheets, and is there one workbook for all students?
-2. **Schedule:** is 30 minutes right? Dividend alerts are not time-critical; grades arrive weekly.
-3. **Notifications:** should successful runs notify (for example, "3 dividend payments recorded"), or only failures?
-4. **Sweep interest:** the Morgan Stanley Bank sweep interest rows ($0.01) are recorded like other payments. Keep them, or add a skip rule?
+- **Students:** one routed student; the others are ignored.
+- **Schedule:** every 30 minutes, plus launch, wake, and **Run Now**.
+- **Notifications:** failures only; a daily or weekly summary may come later.
+- **Sweep interest:** keep it.

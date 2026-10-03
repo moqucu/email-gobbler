@@ -18,14 +18,14 @@ to `YES` so the app has no Dock icon or ordinary app window. Apple documents
 both the [menu bar scene](https://developer.apple.com/documentation/swiftui/menubarextra)
 and the [agent-app property](https://developer.apple.com/documentation/bundleresources/information-property-list/lsuielement).
 Build the app target for macOS 13 or later, where `SMAppService` is available;
-the existing `SchoologyDomain` library can keep its lower deployment target.
+the `MailToNumbers` libraries can keep its lower deployment target.
 
 ## Proposed architecture
 
 | Component | Responsibility |
 | --- | --- |
-| `SchoologyDomain` | Keep the deterministic HTML extraction and grade types independent of Mail, Numbers, and UI. |
-| Shared workflow module | Move MIME decoding, course/column mapping, planning, backup, verification, and consume-after-save sequencing out of the CLI into reusable Swift code. Keep the CLI as a diagnostic harness. |
+| `SchoologyGrades`, `EtradeDividends` | Use cases: deterministic email extraction and sheet planning, independent of Mail, Numbers, and UI. |
+| `MailNumbersCore` | Shared workflow (`MailToNumbersUseCase`, `processMessage`), MIME decoding, sheet plans, format checks, backup, verification, and consume-after-save sequencing. The CLI remains a diagnostic harness. |
 | Mail adapter | Query only the configured iCloud account and Inbox, identify messages by stable message ID, fetch source, and mark read/move to that account's `Archive` mailbox only after every workbook update verifies. |
 | Numbers adapter | Read the chosen workbook, apply validated row changes, save, and read back the result. Retain a recoverable backup before writing. |
 | Menu bar app | Own configuration, status, scheduling, permissions, error display, and explicit user commands. It calls the same workflow used by the CLI. |
@@ -56,8 +56,8 @@ Keep detailed student grades out of notifications and routine logs.
    so only one run can access the workbook at a time. Wake detection can use
    [`NSWorkspace.didWakeNotification`](https://developer.apple.com/documentation/appkit/nsworkspace/didwakenotification).
 5. Query matching messages in the iCloud Inbox and process all eligible ones
-   **oldest first**. The current CLI picks only the newest match; the app must
-   handle a backlog. Validate sender, subject, dates, MIME, and student/course
+   **oldest first**. The CLI already processes the backlog this way; the app
+   reuses that workflow. Validate sender, subject, dates, MIME, and student/course
    mappings before any write. Route each student to a configured academic-year
    sheet rather than guessing from the email's grading-period text.
 6. For each message, plan all affected sheet updates, back up the workbook,

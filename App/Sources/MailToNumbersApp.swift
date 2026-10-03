@@ -30,7 +30,8 @@ struct MenuContent: View {
             .disabled(model.isRunning)
         Button(model.menu.pauseTitle) { model.togglePause() }
         Divider()
-        Button("Show Settings File") { model.showSettingsFile() }
+        Button("Settings…") { model.showSettings() }
+            .keyboardShortcut(",")
         Button("Show Backups") { model.showBackups() }
         Divider()
         Button("Quit Mail to Numbers") { NSApplication.shared.terminate(nil) }

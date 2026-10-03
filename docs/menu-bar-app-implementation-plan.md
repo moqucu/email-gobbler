@@ -122,17 +122,18 @@ Implemented in the `MailToNumbersService` module: `AppSettings`, `SettingsStore`
 
 ### 4. Settings window and launch at login
 
-- [ ] A settings window opened only from the menu:
+- [x] A settings window opened from the menu (**Settings…**) and on first launch:
   - Workbook pickers.
   - Sheet names, read from the workbook.
-  - Student routes, prefilled from the latest Schoology email.
+  - Student routes, entered by name as shown in the email.
   - Schedule, and **Launch at Login**.
-- [ ] Settings are checked on save by reading each sheet once, which is a format preflight using the existing template checks.
-- [ ] **Launch at Login** through `SMAppService.mainApp`:
+- [x] Settings are checked on save by reading each sheet once, which is a format preflight using the existing template checks.
+- [x] **Launch at Login** through `SMAppService.mainApp`:
   - It shows the system approval state and a link to System Settings when approval is required.
   - It is enabled only after settings are valid.
-- [ ] First launch with no settings opens the settings window once and stays paused until settings are saved.
-- [ ] Acceptance: settings survive relaunch, login item registration shows in System Settings, and the app starts after logout and login.
+- [x] First launch with no settings opens the settings window; nothing is scheduled until valid settings are saved.
+- [x] Verified: first launch opens settings; saving with a missing workbook shows the field's problem and writes nothing.
+- [ ] Acceptance with real setup (after milestone 5): settings survive relaunch, login item registration shows in System Settings, and the app starts after logout and login.
 
 ### 5. Unattended behavior hardening
 

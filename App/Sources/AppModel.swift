@@ -3,65 +3,69 @@ import Foundation
 import MailNumbersCore
 import MailToNumbersService
 
-/// Mail and Numbers scripting runs one script at a time, off the main thread.
-private let automationQueue = DispatchQueue(label: "com.moqucu.MailToNumbers.automation", qos: .utility)
-
 @MainActor
 final class AppModel: ObservableObject {
-    @Published private(set) var menu: MenuStatus
+    @Published private(set) var menu = MenuStatus(symbol: .idle, headline: "Starting…", details: [], pauseTitle: "Pause")
     @Published private(set) var isRunning = false
 
     private let store = SettingsStore.standard
-    private let settings: AppSettings
-    private let settingsIssues: [SettingsIssue]
-    private let coordinator: RunCoordinator
+    private let settingsWindow = SettingsWindowController()
+    private var settings = AppSettings.standard
+    private var settingsIssues: [SettingsIssue] = []
+    private var coordinator: RunCoordinator?
     private var status = CoordinatorStatus(state: .idle, lastSummary: nil)
+    private var paused = false
     private var tasks: [Task<Void, Never>] = []
 
     private var supportDirectory: URL { store.fileURL.deletingLastPathComponent() }
     private var canRun: Bool { settingsIssues.isEmpty && !settings.configuredUseCases().isEmpty }
 
     init() {
-        var issues: [SettingsIssue] = []
-        let loaded: AppSettings
+        let firstLaunch = !FileManager.default.fileExists(atPath: store.fileURL.path)
         do {
-            loaded = try store.load()
+            apply(try store.load())
         } catch {
-            loaded = .standard
-            issues.append(SettingsIssue(field: "settings", message: "\(error)"))
+            settingsIssues = [SettingsIssue(field: "settings", message: "\(error)")]
+            refresh()
         }
-        issues += loaded.validate()
-        settings = loaded
-        settingsIssues = issues
-
-        let runnable = issues.isEmpty ? loaded : nil
-        let backupBase = store.fileURL.deletingLastPathComponent()
-        coordinator = RunCoordinator {
-            await withCheckedContinuation { continuation in
-                automationQueue.async {
-                    let useCases = runnable?.configuredUseCases() ?? []
-                    let environment = RunEnvironment(client: LiveAutomationClient(), backupBase: backupBase,
-                                                     retention: runnable?.backupRetention ?? 1, log: unifiedLog)
-                    continuation.resume(returning: runAll(useCases, environment: environment))
-                }
-            }
+        if firstLaunch {
+            DispatchQueue.main.async { [weak self] in self?.showSettings() }
         }
-        menu = MenuStatus(symbol: .idle, headline: "Starting…", details: [], pauseTitle: "Pause")
-        refresh()
-        start()
     }
 
-    private func start() {
-        let coordinator = coordinator
+    /// Replaces the coordinator and schedule for new settings. Scripting stays
+    /// serialized on the automation queue, so an old run cannot overlap a new one.
+    private func apply(_ newSettings: AppSettings) {
+        tasks.forEach { $0.cancel() }
+        tasks = []
+        settings = newSettings
+        settingsIssues = newSettings.validate()
+        status = CoordinatorStatus(state: paused ? .paused : .idle, lastSummary: status.lastSummary)
+
+        let runnable = settingsIssues.isEmpty ? newSettings : nil
+        let backupBase = supportDirectory
+        let coordinator = RunCoordinator {
+            await onAutomationQueue {
+                let environment = RunEnvironment(client: LiveAutomationClient(), backupBase: backupBase,
+                                                 retention: runnable?.backupRetention ?? 1, log: unifiedLog)
+                return runAll(runnable?.configuredUseCases() ?? [], environment: environment)
+            }
+        }
+        self.coordinator = coordinator
+        refresh()
+
         tasks.append(Task { [weak self] in
-            for await status in coordinator.updates {
-                self?.status = status
+            for await update in coordinator.updates {
+                self?.status = update
                 self?.refresh()
             }
         })
-        guard canRun else { return }
-        let interval = Duration.seconds(settings.intervalMinutes * 60)
+        let wasPaused = paused
+        let interval = Duration.seconds(newSettings.intervalMinutes * 60)
+        let scheduled = canRun
         tasks.append(Task {
+            if wasPaused { await coordinator.pause() }
+            guard scheduled else { return }
             await runSchedule(interval: interval, wakes: wakeNotifications(),
                               sleep: { try await Task.sleep(for: $0) },
                               trigger: { await coordinator.trigger($0) })
@@ -76,22 +80,28 @@ final class AppModel: ObservableObject {
     }
 
     func runNow() {
-        let coordinator = coordinator
+        guard let coordinator else { return }
         Task { await coordinator.trigger(.manual) }
     }
 
     func togglePause() {
-        let coordinator = coordinator
-        let paused = status.state == .paused
-        Task { paused ? await coordinator.resume() : await coordinator.pause() }
+        guard let coordinator else { return }
+        paused.toggle()
+        let pause = paused
+        Task { pause ? await coordinator.pause() : await coordinator.resume() }
     }
 
-    /// Until the settings window exists, settings are edited as JSON and apply after relaunch.
-    func showSettingsFile() {
-        if !FileManager.default.fileExists(atPath: store.fileURL.path) {
-            try? store.save(settings)
+    func showSettings() {
+        settingsWindow.show(settings: settings, savedSettingsValid: canRun) { [weak self] saved in
+            guard let self else { return }
+            do {
+                try store.save(saved)
+                apply(saved)
+            } catch {
+                settingsIssues = [SettingsIssue(field: "settings", message: "Settings could not be saved: \(error)")]
+                refresh()
+            }
         }
-        NSWorkspace.shared.activateFileViewerSelecting([store.fileURL])
     }
 
     func showBackups() {

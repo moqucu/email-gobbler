@@ -25,9 +25,12 @@ scripts/build-app.sh            # builds App/build/Build/Products/Release/MailTo
 scripts/build-app.sh --install  # also copies it to /Applications
 ```
 
-Until the settings window exists, use **Show Settings File** to edit
-`~/Library/Application Support/MailToNumbers/settings.json`, then relaunch the app. The app asks for
-permission to control Mail and Numbers the first time it runs with an enabled use case.
+On first launch the app opens **Settings…**: choose the dividend ledger and each student's grades
+sheet, the schedule, and how many backups to keep. Saving reads every chosen sheet and refuses to save
+until its columns and formats are ready. Settings live in
+`~/Library/Application Support/MailToNumbers/settings.json` and apply immediately. **Launch at login**
+is available once valid settings are saved. The app asks for permission to control Mail and Numbers
+the first time it runs with an enabled use case.
 
 The next product step is a [menu bar app that starts at user login](docs/macOS-menu-bar-app-plan.md).
 That document covers the app shell, scheduling, permissions, workbook setup,

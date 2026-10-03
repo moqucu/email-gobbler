@@ -1,6 +1,6 @@
 import AppKit
 import MailToNumbersService
-import UserNotifications
+@preconcurrency import UserNotifications
 
 /// Reads and restores what is on screen around a run.
 @MainActor

@@ -21,7 +21,7 @@ window. It checks mail at launch, every 30 minutes, and after the Mac wakes, and
 (requires Xcode and XcodeGen):
 
 ```bash
-scripts/build-app.sh            # builds App/build/Build/Products/Release/MailToNumbers.app
+scripts/build-app.sh            # builds App/build.noindex/Build/Products/Release/MailToNumbers.app
 scripts/build-app.sh --install  # also copies it to /Applications
 ```
 

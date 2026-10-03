@@ -10,9 +10,9 @@ team="${DEVELOPMENT_TEAM:-$(security find-certificate -c "Apple Development" -p 
 [[ -n "$team" ]] || { print -u2 "No Apple Development certificate found; set DEVELOPMENT_TEAM"; exit 1 }
 
 xcodebuild -project MailToNumbers.xcodeproj -scheme MailToNumbersApp -configuration Release \
-  -derivedDataPath build DEVELOPMENT_TEAM="$team" -quiet build
+  -derivedDataPath build.noindex DEVELOPMENT_TEAM="$team" -quiet build
 
-app="build/Build/Products/Release/MailToNumbers.app"
+app="build.noindex/Build/Products/Release/MailToNumbers.app"
 codesign --verify --strict --verbose=1 "$app"
 codesign --display --entitlements - "$app" 2>/dev/null | grep -q "automation.apple-events" \
   || { print -u2 "Apple Events entitlement missing"; exit 1 }

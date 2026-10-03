@@ -5,4 +5,4 @@
 
 # Generated Xcode project and build output
 App/MailToNumbers.xcodeproj/
-App/build/
+App/build.noindex/

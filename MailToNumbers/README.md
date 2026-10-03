@@ -1,107 +1,102 @@
 # MailToNumbers
 
-A Swift library for extracting Schoology weekly overall grades from decoded HTML and validating and upserting weekly grade rows. HTML extraction uses SwiftSoup; parsing and row updates are deterministic and have no external side effects.
+Turns recognized emails in macOS Mail into verified rows in Numbers workbooks.
+Each kind of email is a *use case* built on one shared core:
+
+| Module | Contents |
+| --- | --- |
+| `MailNumbersCore` | Dates, MIME decoding, Mail listing/fetching/archiving, the Numbers sheet model (snapshot, plan, format checks, verification), AppleScript generation, backups, and the per-message workflow (`MailToNumbersUseCase`, `processMessage`). |
+| `SchoologyGrades` | Schoology weekly-summary extraction, the weekly grades sheet planner, and the weekly-row upsert library. |
+| `EtradeDividends` | E*TRADE "Dividend or interest paid" alert extraction and the dividend ledger planner. |
+| `mail-to-numbers` | Command-line tool that runs a use case through the shared workflow. |
+
+A use case only parses its email and turns it into a `SheetUpdatePlan`: replace one
+row, or insert rows above or below an existing *anchor row*, with typed values,
+expected displays, and formats required on the anchor row. Everything else is
+shared: reading the sheet, checking formats, backing up, writing, verifying the
+whole saved sheet, and archiving the email. To add a use case, implement
+`MailToNumbersUseCase` (a `MailQuery`, `summarize(html:)`, and `plan(html:sheet:)`)
+and add a subcommand.
 
 ## Requirements
 
-- **macOS:** 10.15 or later
-- **Swift Compiler:** 6.3 or later
-- **Language Mode:** Swift 6 (see Package.swift `swiftLanguageModes: [.v6]`)
-
-## Dependencies
-
-HTML extraction uses SwiftSoup. `Package.swift` allows compatible releases from 2.7.0 up to, but not including, 3.0.0; `Package.resolved` currently pins 2.13.9. Swift Package Manager fetches the dependency during setup. Parsing itself does not access the network.
+- **macOS:** 10.15 or later, with Mail and Numbers; the tool asks for Automation access.
+- **Swift Compiler:** 6.3 or later, Swift 6 language mode.
+- **Dependency:** SwiftSoup (from 2.7.0, below 3.0.0; `Package.resolved` pins 2.13.9) for HTML parsing.
 
 ## Testing
-
-Run the test suite from the package directory:
 
 ```bash
 cd MailToNumbers
 swift test
 ```
 
-The weekly-upsert domain tests, weekly-email extraction tests, mail-decoder tests,
-workbook planning tests, Numbers formatting tests, and mail-consumption ordering
-tests are GREEN. All 118 tests pass.
+All 148 tests are offline and use synthetic fixtures; they do not drive Mail or Numbers.
 
-## Mail preview and Numbers update
-
-The `mail-to-numbers` Swift executable reads a message from an `.eml` file
-or from the macOS Mail Inbox through Mail's Apple Events interface. It decodes a
-`text/html` MIME part, extracts the Schoology weekly summary, and prints the
-reporting dates and counts of students, courses, and present grades. The Mail mode
-uses the account already configured in macOS Mail and may prompt for Automation
-access. It selects the newest Inbox message whose subject contains the supplied
-text.
+## Command line
 
 ```bash
 cd MailToNumbers
-swift run mail-to-numbers --eml /path/to/schoology-message.eml
-swift run mail-to-numbers --mail-subject "Your Children's Weekly Schoology Summary"
+swift run mail-to-numbers etrade-dividends --mail \
+  --numbers "/path/to/Dividend or Interest Paid.numbers"
+swift run mail-to-numbers schoology-grades --mail \
+  --numbers /path/to/trend.numbers --sheet "Student 2026/27" --student "Student Full Name"
 ```
 
-The preview supports `text/html` with base64, quoted-printable, or unencoded
-content and common UTF-8/Latin-1/Windows-1252 charsets. It reports an error for
-unsupported MIME formats or Schoology layouts. Message content stays in memory;
-the program does not save a copy. The domain library remains independent of
-Mail and the filesystem.
+- **Source:** `--eml <path>` reads one saved message. `--mail` lists every Inbox
+  message matching the use case (`Dividend or interest paid` from `etrade.com`, or
+  `Weekly Schoology Summary`; override the subject with `--subject`) and processes
+  them **oldest first**, stopping at the first failure.
+- **Summary only:** without `--numbers`, the tool prints what it extracted.
+- **Preview:** with `--numbers`, it reads a disposable copy of the workbook, prints
+  the planned rows, and checks the anchor row's formats. Nothing is written.
+- **Apply:** `--apply --backup-dir <dir>` backs up the workbook to a timestamped file,
+  writes, saves, and verifies every value of the saved sheet and the written rows'
+  displays. It stops without writing if the workbook changed since it was read.
+- **Archive:** `--consume` (with `--mail --apply`) marks each message read and moves it
+  to iCloud Archive, only after its write verified, or when the sheet already holds
+  all of its data. A failed write leaves that message and later ones in the Inbox.
 
-### Preview a Numbers update
+The dividend ledger uses sheet `Sheet 1` unless `--sheet` is given. Grades require
+`--sheet` and `--student`.
 
-Supply an exact student label and target sheet to compare the extracted email
-with a Numbers workbook. The command opens a temporary copy of the workbook,
-reads its headers and date rows, and prints the proposed row and cell values.
-Without `--apply`, it never writes to the source workbook.
+### Formatting the workbooks
 
-```bash
-swift run mail-to-numbers \
-  --mail-subject "Your Children's Weekly Schoology Summary" \
-  --numbers /path/to/trend.numbers \
-  --sheet "Student 2026/27" \
-  --student "Student Full Name"
-```
+Numbers scripting cannot choose a date style, percentage decimals, or currency
+symbol, but rows added next to an existing row inherit that row's formats. So the
+tool needs at least one formatted data row and checks it before writing.
 
-The current planner expects a Date column followed by percentage/letter column
-pairs, with the course name above each percentage column. It matches the part
-of a Schoology course label before its numeric section suffix to the header.
-Every workbook course must occur in the email. A graded email course without a
-matching header stops the plan; unmatched courses with missing grades are
-reported as ignored. Percentages are displayed as Numbers fractions (for
-example, `0.8794` for `87.94%`). The planner identifies an existing week for
-replacement or a row position for insertion. It has not yet been connected to
-the domain row-upsert API.
+| Sheet | Date | Values |
+| --- | --- | --- |
+| Grades | Date & Time, date only, shown like `9/21/26` | Percentage, 0 decimal places (`0.8794` shows as `88%`) |
+| Dividend ledger | Date & Time, date only, shown like `9/21/2026` | Amount Credited: Currency (`$3.39`); the tool reapplies Currency after writing because Numbers resets it when a number is written |
 
-Before the first write, format the existing data rows in Numbers: set the Date
-cells to a date-only Date & Time style that shows `9/21/26`, and set every
-percentage column to Percentage with 0 decimal places. Numbers scripting cannot
-choose a date style or decimal places, so the writer relies on these formats. A
-replaced row keeps its own formatting. A new row is added next to a dated row and
-inherits that row's formatting. The stored values stay exact: a date at midnight
-and a fraction such as `0.8794`, displayed as `88%`. If the row being replaced,
-or the row a new week would inherit from, lacks these formats, the command stops
-before writing and names the cell to format. The sheet needs at least one dated
-row, so enter the first week by hand.
+Stored values stay exact: dates at midnight, fractions, and amounts.
 
-To save the proposed row, add `--apply --backup /path/to/backup.numbers` to the
-same command. The backup path must not exist. The writer checks that the workbook
-still matches the preview, copies the original to the backup, inserts a new row
-at the planned position or replaces the existing week, saves, and reopens a
-temporary copy to verify the date, all planned values, and how the date and
-percentages are displayed. A failed save or
-verification leaves the backup available for recovery. Repeating a run for the
-same week replaces its row rather than adding a duplicate.
+### Dividend ledger rules
 
-For a message read directly from Mail, add `--consume` alongside `--apply` to
-mark that exact message as read and move it from the iCloud Inbox to the iCloud
-Archive mailbox. The command verifies the moved message in Archive. Consumption
-runs only after the Numbers save and read-back checks pass. `.eml` input and
-preview-only commands cannot consume mail. Without `--consume`, Mail remains
-unchanged.
+- Columns are found by header: `Financial Institution`, `Account`, `Type`, `Date`,
+  `Security`, `Amount Credited`.
+- Each payment in an alert becomes one row: `E*Trade Financial`, the account as
+  `XXXX-` plus its last four digits, `Dividend or Interest Paid`, the payment date,
+  the security with whitespace collapsed, and the amount.
+- New rows are appended below the last non-empty row; the ledger is not re-sorted.
+- A payment whose account, date, security, and amount already appear in one row is
+  reported as already recorded and not written again. Two genuinely identical
+  payments from separate alerts would therefore be recorded once.
 
-## Weekly-Email Extraction (SG-02, completed)
+### Grades sheet rules
 
-`parseSchoologyWeeklyEmail(html:)` turns decoded Schoology weekly-digest HTML into `SchoologyWeeklyExtraction`: the reporting period, then each student's course labels, optional grading-period text, and overall grade. Extraction types are separate from `WeeklyReport`. Labels are not mapped to IDs, and no course is filtered out. MIME decoding, Mail access, and Numbers updates are handled by the executable.
+The grades sheet has a Date column followed by percentage/letter column pairs, with
+the course name above each percentage column. Course labels match by the part before
+a ` - <number>:` section suffix. Every workbook course must occur in the email; a
+graded email course without a column stops the plan, and ungraded unmatched courses
+are reported as ignored. Dates must run newest first from row 2. An existing week is
+replaced; a new week is inserted next to a dated row so it inherits its formats.
+
+## Schoology weekly-email extraction
+
+`parseSchoologyWeeklyEmail(html:)` turns decoded Schoology weekly-digest HTML into `SchoologyWeeklyExtraction`: the reporting period, then each student's course labels, optional grading-period text, and overall grade. Extraction types are separate from `WeeklyReport`. Labels are not mapped to IDs, and no course is filtered out. MIME decoding, Mail access, and Numbers updates are handled by `MailNumbersCore`.
 
 Prototype rules, encoded by the tests. These are contract decisions for the anonymized fixture, not claims about every format Schoology may produce:
 
@@ -115,9 +110,9 @@ Prototype rules, encoded by the tests. These are contract decisions for the anon
 
 Fixture provenance is described in `Tests/MailToNumbersTests/Fixtures/README.md`.
 
-## Usage
+## Weekly grade rows (`upsertWeeklyRows`)
 
-The examples below cover weekly grade-row validation and upserts. The caller supplies decoded HTML to the extraction API and maps the extracted student, year, and course context into `WeeklyReport` before upserting. MIME decoding and those mappings remain upstream responsibilities.
+The examples below cover weekly grade-row validation and upserts. The command-line grades workflow uses `planGradesWorkbookUpdate` instead; this API is kept for callers that map courses to stable IDs. The caller supplies decoded HTML to the extraction API and maps the extracted student, year, and course context into `WeeklyReport` before upserting. MIME decoding and those mappings remain upstream responsibilities.
 
 ### Complete-Snapshot Requirement
 
@@ -220,24 +215,13 @@ try CalendarDate(year: 1900, month: 2, day: 29)  // ✗ Invalid (century, not di
 try CalendarDate(year: 2023, month: 2, day: 29)  // ✗ Invalid (not a leap year)
 ```
 
-## Scope & Limitations
+## Scope & limitations
 
-The library provides HTML extraction and weekly grade-row processing:
-- ✓ Validates grade snapshots
-- ✓ Upserts rows without duplicates
-- ✓ Canonical course ordering
-- ✓ HTML weekly-digest extraction
-- ✓ Read-only Mail preview in a separate Swift executable
-- ✓ Numbers change preview, backed-up write, and read-back verification in the executable
-- ✓ Optional mark-read and iCloud Archive move after a verified write
-- ✗ No mapping, routing, or precedence resolution
-- ✗ No application shell or UI
+- ✓ Extraction, planning, format checks, backed-up writes, and full read-back verification
+- ✓ Oldest-first Mail backlog processing with archive-after-verify
+- ✗ No automatic student/sheet routing, report precedence, or academic-year inference
+- ✗ No menu bar app yet; see `docs/macOS-menu-bar-app-plan.md`
+- The first data row of each sheet must be entered and formatted by hand.
 
-**Not yet integrated:** Automatic student/sheet routing, report precedence, multi-sheet runs, and academic-year inference remain upstream concerns outside this library.
-
-## Guarantees
-
-- **Side-effect free:** No filesystem, network, logging, or environment access
-- **Immutable:** Input is never modified; new instances created on output
-- **Deterministic:** Same valid input always produces identical output
-- **Complete validation:** All rows and all input values validated before any modification
+Extraction and planning code is deterministic and has no side effects; only the
+Mail and Numbers adapters in `MailNumbersCore` automate other applications.

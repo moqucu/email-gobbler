@@ -1,14 +1,17 @@
 # email-gobbler
 
-A Swift package for extracting Schoology weekly overall grades and validating
-and updating weekly grade rows. See the [MailToNumbers documentation](MailToNumbers/README.md)
-for its API, requirements, and current scope.
+Turns recognized emails in macOS Mail into verified rows in Numbers workbooks.
+Two use cases run on one shared core:
 
-Run the tests from `MailToNumbers` with `swift test`. The Swift executable
-can read a Schoology `.eml` file or the newest matching message in macOS Mail,
-preview a Numbers update, apply it with a backup and read-back check, and then
-optionally mark the Mail message read and move it to iCloud Archive; see the
-package documentation for commands.
+- **Schoology grades:** weekly summary emails update a student's weekly grades sheet.
+- **E*TRADE dividends:** "Dividend or interest paid" alerts append payments to a
+  dividend ledger.
+
+The Swift package lives in [`MailToNumbers`](MailToNumbers/README.md); run its tests
+with `swift test` from that directory. The `mail-to-numbers` tool processes matching
+Inbox messages oldest first: it previews each Numbers update, applies it with a
+backup and a full read-back check, and can then mark the message read and move it to
+iCloud Archive. See the package documentation for commands and workbook formatting.
 
 The next product step is a [menu bar app that starts at user login](docs/macOS-menu-bar-app-plan.md).
 That document covers the app shell, scheduling, permissions, workbook setup,

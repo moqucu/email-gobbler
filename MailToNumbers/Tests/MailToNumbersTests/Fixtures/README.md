@@ -63,4 +63,4 @@ real "Dividend or interest paid" alert, including its hidden preview text and th
 `td.body-content` paragraphs with bold `Account:`, `Security:`, and
 `Amount Credited:` labels. The account, security, amount, payment date, headers,
 and every link are synthetic. Git stores the file byte for byte (`.gitattributes`).
-Alerts listing several payments are constructed test variants, not observed emails.
+Live alerts can list several payments; the multi-payment test markup is constructed from the single-payment layout.

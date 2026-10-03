@@ -63,19 +63,19 @@ Gaps the app must close:
 
 ### 1. Multi-target workflow (package)
 
-- [ ] Let one message produce several sheet updates: `UseCasePlan` gains a list of `(workbook, sheet, SheetUpdatePlan)` targets.
-- [ ] Extend `processMessage`:
+- [x] Let one message produce several sheet updates: `UseCasePlan` gains a list of `(workbook, sheet, SheetUpdatePlan)` targets.
+- [x] Extend `processMessage`:
   - Plan every target first.
   - Write and verify them one at a time.
   - Consume only after all targets are verified or have nothing to write.
   - If a later target fails, report which targets were already written; reruns are safe because they replace or skip.
-- [ ] Schoology routing from settings:
+- [x] Schoology routing from settings:
   - Each configured student label maps to a workbook and sheet.
   - Students without a route are ignored and noted.
   - A configured student missing from the email stops the run.
   - Two routes to the same sheet are rejected.
-- [ ] Return a structured `RunReport` per message and per use case, instead of printing; the CLI prints it.
-- [ ] Tests (fakes, no automation):
+- [x] Return a structured `MessageReport` per message instead of printing; the CLI prints it. Per-run reports for the menu follow in milestone 2.
+- [x] Tests (fakes, no automation):
   - Two students write two sheets, then consume.
   - The second sheet fails: no consume, and the report lists the first sheet as written.
   - An unrouted student is ignored.

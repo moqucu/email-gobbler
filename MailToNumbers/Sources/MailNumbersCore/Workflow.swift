@@ -122,13 +122,11 @@ public struct PartialWriteError: Error, Equatable, CustomStringConvertible {
 }
 
 public enum WorkflowError: Error, Equatable, CustomStringConvertible {
-    case notImplemented
     case invalidActions
     case undeclaredTarget
 
     public var description: String {
         switch self {
-        case .notImplemented: return "Not implemented"
         case .invalidActions: return "Consuming mail requires a write, and writing requires reading the sheets"
         case .undeclaredTarget: return "A use case planned a sheet it did not declare"
         }
@@ -164,7 +162,53 @@ public func describe(_ plan: SheetUpdatePlan, headers: [String]) -> [String] {
     return lines
 }
 
+/// Summarizes one decoded email and, when actions allow, reads every declared
+/// sheet, plans and format-checks all updates, writes them one sheet at a time,
+/// and consumes the message only after every sheet is written and verified (or
+/// already holds the email's data).
 public func processMessage(html: String, useCase: some MailToNumbersUseCase,
                            actions: MessageActions) throws -> MessageReport {
-    throw WorkflowError.notImplemented
+    guard actions.consume == nil || actions.write != nil, actions.write == nil || actions.readSheet != nil else {
+        throw WorkflowError.invalidActions
+    }
+    let summary = try useCase.summarize(html: html)
+    var declared: [SheetTarget] = []
+    for target in useCase.targets where !declared.contains(target) { declared.append(target) }
+    guard let readSheet = actions.readSheet, !declared.isEmpty else {
+        return MessageReport(summary: summary, notes: [], targets: [], consumed: false)
+    }
+
+    var sheets: [SheetTarget: SheetSnapshot] = [:]
+    for target in declared { sheets[target] = try readSheet(target) }
+    let planned = try useCase.plan(html: html, sheets: sheets)
+    for targetPlan in planned.targets {
+        guard let sheet = sheets[targetPlan.target] else { throw WorkflowError.undeclaredTarget }
+        try targetPlan.update.validateTemplate(in: sheet)
+    }
+    func report(_ targetPlan: TargetPlan, _ status: TargetStatus) -> TargetReport {
+        TargetReport(target: targetPlan.target, plannedRows: targetPlan.update.rows.count, status: status,
+                     preview: describe(targetPlan.update, headers: sheets[targetPlan.target]?.headers ?? []))
+    }
+
+    guard let write = actions.write else {
+        return MessageReport(summary: summary, notes: planned.notes,
+                             targets: planned.targets.map { report($0, .previewed) }, consumed: false)
+    }
+    var written: [SheetTarget] = []
+    var reports: [TargetReport] = []
+    for targetPlan in planned.targets {
+        guard !targetPlan.update.isEmpty else {
+            reports.append(report(targetPlan, .nothingToWrite))
+            continue
+        }
+        do {
+            try write(targetPlan, sheets[targetPlan.target]!)
+        } catch {
+            throw PartialWriteError(written: written, failed: targetPlan.target, reason: "\(error)")
+        }
+        written.append(targetPlan.target)
+        reports.append(report(targetPlan, .written))
+    }
+    try actions.consume?()
+    return MessageReport(summary: summary, notes: planned.notes, targets: reports, consumed: actions.consume != nil)
 }

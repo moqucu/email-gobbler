@@ -12,12 +12,10 @@ public struct StudentRoute: Equatable, Sendable {
 }
 
 public enum SchoologyGradesUseCaseError: Error, Equatable, CustomStringConvertible {
-    case notImplemented
     case duplicateTarget(SheetTarget)
 
     public var description: String {
         switch self {
-        case .notImplemented: return "Not implemented"
         case .duplicateTarget(let target): return "Two students are routed to the same sheet: \(target)"
         }
     }
@@ -35,7 +33,7 @@ public struct SchoologyGradesUseCase: MailToNumbersUseCase {
         self.mailQuery = mailQuery
     }
 
-    public var targets: [SheetTarget] { [] }
+    public var targets: [SheetTarget] { routes.map(\.target) }
 
     public func summarize(html: String) throws -> [String] {
         let extraction = try parseSchoologyWeeklyEmail(html: html)
@@ -52,7 +50,24 @@ public struct SchoologyGradesUseCase: MailToNumbersUseCase {
         return lines
     }
 
+    /// Plans each routed student's sheet. Students without a route are ignored.
     public func plan(html: String, sheets: [SheetTarget: SheetSnapshot]) throws -> UseCasePlan {
-        throw SchoologyGradesUseCaseError.notImplemented
+        var seen = Set<SheetTarget>()
+        for route in routes where !seen.insert(route.target).inserted {
+            throw SchoologyGradesUseCaseError.duplicateTarget(route.target)
+        }
+        let extraction = try parseSchoologyWeeklyEmail(html: html)
+        var targetPlans: [TargetPlan] = []
+        var notes: [String] = []
+        for route in routes {
+            guard let sheet = sheets[route.target] else { throw WorkflowError.undeclaredTarget }
+            let planned = try planGradesWorkbookUpdate(report: extraction, studentLabel: route.studentLabel, sheet: sheet)
+            targetPlans.append(TargetPlan(target: route.target, update: planned.update))
+            notes.append("\(route.target): ignored courses without grades: \(planned.ignoredMissingCourses.count)")
+        }
+        let routed = Set(routes.map(\.studentLabel))
+        let unrouted = extraction.students.filter { !routed.contains($0.studentLabel) }.count
+        if unrouted > 0 { notes.append("Students without a route: \(unrouted)") }
+        return UseCasePlan(targets: targetPlans, notes: notes)
     }
 }

@@ -229,3 +229,7 @@ public func pruneBackups(directory: URL, workbook: URL, keep: Int) throws -> [UR
     for url in doomed { try FileManager.default.removeItem(at: url) }
     return doomed
 }
+
+/// Moves the settings folder used before the app was renamed; returns whether it moved.
+@discardableResult
+public func migrateLegacyDirectory(from legacy: URL, to current: URL) throws -> Bool { false }

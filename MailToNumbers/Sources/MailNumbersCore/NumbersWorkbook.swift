@@ -67,4 +67,33 @@ public func writeSheetUpdate(workbook: URL, sheetName: String, plan: SheetUpdate
     try plan.verify(saved: saved, original: latest)
 }
 
-public func parseSheetNames(_ output: String) -> [String] { [] }
+public func parseSheetNames(_ output: String) -> [String] {
+    output.split(separator: "\n", omittingEmptySubsequences: true).map(String.init)
+}
+
+/// Lists a workbook's sheet names from a disposable copy.
+public func readSheetNames(workbook: URL) throws -> [String] {
+    let directory = FileManager.default.temporaryDirectory
+        .appendingPathComponent("mail-to-numbers-\(UUID().uuidString)", isDirectory: true)
+    try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+    defer { try? FileManager.default.removeItem(at: directory) }
+    let copy = directory.appendingPathComponent("Inspection.numbers")
+    try FileManager.default.copyItem(at: workbook, to: copy)
+    let result = try runAppleScript("""
+    tell application id "com.apple.Numbers"
+    \(numbersOpenDocumentScript(path: copy.resolvingSymlinksInPath().path))
+        try
+            set names to name of every sheet of d
+            close d saving no
+            set AppleScript's text item delimiters to linefeed
+            return names as text
+        on error errorText
+            try
+                close d saving no
+            end try
+            error errorText
+        end try
+    end tell
+    """)
+    return parseSheetNames(result.stringValue ?? "")
+}

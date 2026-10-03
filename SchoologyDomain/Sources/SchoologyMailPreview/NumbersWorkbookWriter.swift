@@ -36,17 +36,19 @@ func writeNumbersUpdate(
           latest.datedRows.map(\.date) == snapshot.datedRows.map(\.date) else {
         throw NumbersWriteError.workbookChanged
     }
+
+    // Numbers scripting cannot set date styles or percentage decimals, so the written
+    // row must keep or inherit formatting that the user applied to an existing row.
+    let insertion = try rowInsertion(for: plan.action, datedRows: latest.datedRows)
+    let template = try readNumbersCellDisplays(at: url, sheetName: sheetName, row: insertion.templateRow)
+    try validateTemplateFormats(template, plan: plan, row: insertion.templateRow)
+
     try FileManager.default.copyItem(at: url, to: backupURL)
 
     let row: Int
-    let insertion: String
     switch plan.action {
-    case .insert(let target):
+    case .insert(let target), .replace(let target):
         row = target
-        insertion = "add row above row \(target) of t"
-    case .replace(let target):
-        row = target
-        insertion = ""
     }
 
     let monthNames = ["January", "February", "March", "April", "May", "June",
@@ -74,7 +76,7 @@ func writeNumbersUpdate(
         set d to open POSIX file \(appleScriptString(url.path))
         try
             set t to table 1 of sheet \(appleScriptString(sheetName)) of d
-            \(insertion)
+            \(insertion.command)
             set targetDate to current date
             set day of targetDate to 1
             set year of targetDate to \(plan.weekEnd.year)
@@ -141,4 +143,6 @@ func writeNumbersUpdate(
             throw NumbersWriteError.verificationFailed("column \(cell.column) should be blank")
         }
     }
+    let shown = try readNumbersCellDisplays(at: url, sheetName: sheetName, row: row)
+    try validateWrittenDisplay(shown, plan: plan, row: row)
 }

@@ -22,8 +22,8 @@ swift test
 ```
 
 The weekly-upsert domain tests, weekly-email extraction tests, mail-decoder tests,
-workbook planning tests, and mail-consumption ordering tests are GREEN. All 100
-tests pass.
+workbook planning tests, Numbers formatting tests, and mail-consumption ordering
+tests are GREEN. All 118 tests pass.
 
 ## Mail preview and Numbers update
 
@@ -72,11 +72,23 @@ example, `0.8794` for `87.94%`). The planner identifies an existing week for
 replacement or a row position for insertion. It has not yet been connected to
 the domain row-upsert API.
 
+Before the first write, format the existing data rows in Numbers: set the Date
+cells to a date-only Date & Time style that shows `9/21/26`, and set every
+percentage column to Percentage with 0 decimal places. Numbers scripting cannot
+choose a date style or decimal places, so the writer relies on these formats. A
+replaced row keeps its own formatting. A new row is added next to a dated row and
+inherits that row's formatting. The stored values stay exact: a date at midnight
+and a fraction such as `0.8794`, displayed as `88%`. If the row being replaced,
+or the row a new week would inherit from, lacks these formats, the command stops
+before writing and names the cell to format. The sheet needs at least one dated
+row, so enter the first week by hand.
+
 To save the proposed row, add `--apply --backup /path/to/backup.numbers` to the
 same command. The backup path must not exist. The writer checks that the workbook
 still matches the preview, copies the original to the backup, inserts a new row
 at the planned position or replaces the existing week, saves, and reopens a
-temporary copy to verify the date and all planned values. A failed save or
+temporary copy to verify the date, all planned values, and how the date and
+percentages are displayed. A failed save or
 verification leaves the backup available for recovery. Repeating a run for the
 same week replaces its row rather than adding a duplicate.
 

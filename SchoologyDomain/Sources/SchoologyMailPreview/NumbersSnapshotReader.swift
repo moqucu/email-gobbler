@@ -124,3 +124,54 @@ func readNumbersRow(at url: URL, sheetName: String, row: Int) throws -> [String]
     guard let output = result.stringValue else { throw NumbersReadError.malformedSnapshot }
     return output.split(separator: "\t", omittingEmptySubsequences: false).map(String.init)
 }
+
+func readNumbersCellDisplays(at url: URL, sheetName: String, row: Int) throws -> [NumbersCellDisplay] {
+    guard row >= 2, !sheetName.isEmpty, !sheetName.contains("\n"),
+          !sheetName.contains("\r"), !sheetName.contains("\t") else {
+        throw NumbersReadError.malformedSnapshot
+    }
+    let temporaryDirectory = FileManager.default.temporaryDirectory
+        .appendingPathComponent("schoology-format-\(UUID().uuidString)", isDirectory: true)
+    try FileManager.default.createDirectory(at: temporaryDirectory, withIntermediateDirectories: true)
+    defer { try? FileManager.default.removeItem(at: temporaryDirectory) }
+    let copy = temporaryDirectory.appendingPathComponent("Inspection.numbers")
+    try FileManager.default.copyItem(at: url, to: copy)
+    let script = """
+    tell application id "com.apple.Numbers"
+        set d to open POSIX file \(appleScriptString(copy.path))
+        try
+            set t to table 1 of sheet \(appleScriptString(sheetName)) of d
+            set outputText to ""
+            repeat with c from 1 to column count of t
+                set f to formatted value of cell c of row \(row) of t
+                if f is missing value then
+                    set shown to "-" & tab
+                else
+                    set shown to "+" & tab & f
+                end if
+                set outputText to outputText & ((format of cell c of row \(row) of t) as text) & tab & shown & linefeed
+            end repeat
+            close d saving no
+            return outputText
+        on error errorText
+            try
+                close d saving no
+            end try
+            error errorText
+        end try
+    end tell
+    """
+    guard let appleScript = NSAppleScript(source: script) else {
+        throw NumbersReadError.automation("Unable to create AppleScript")
+    }
+    var errorInfo: NSDictionary?
+    let result = appleScript.executeAndReturnError(&errorInfo)
+    if let errorInfo { throw NumbersReadError.automation("\(errorInfo)") }
+    guard let output = result.stringValue else { throw NumbersReadError.malformedSnapshot }
+    return try output.split(separator: "\n", omittingEmptySubsequences: true).map { line in
+        let fields = line.split(separator: "\t", maxSplits: 2, omittingEmptySubsequences: false).map(String.init)
+        guard fields.count == 3, fields[1] == "+" || fields[1] == "-" else { throw NumbersReadError.malformedSnapshot }
+        return NumbersCellDisplay(format: NumbersCellFormat(appleScriptName: fields[0]),
+                                  formattedValue: fields[1] == "+" ? fields[2] : nil)
+    }
+}

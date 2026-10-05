@@ -46,6 +46,15 @@ public struct DividendsSettings: Codable, Equatable, Sendable {
     }
 }
 
+public struct GnuCashSettings: Codable, Equatable, Sendable {
+    /// The GnuCash XML book EmailGobbler reads and writes; `nil` until chosen.
+    public var bookPath: String?
+
+    public init(bookPath: String? = nil) {
+        self.bookPath = bookPath
+    }
+}
+
 public struct SettingsIssue: Equatable, Sendable {
     public let field: String
     public let message: String
@@ -74,14 +83,16 @@ public struct AppSettings: Codable, Equatable, Sendable {
     public var backupRetention: Int
     public var grades: GradesSettings
     public var dividends: DividendsSettings
+    public var gnuCash: GnuCashSettings
 
     public init(version: Int = AppSettings.currentVersion, intervalMinutes: Int, backupRetention: Int,
-                grades: GradesSettings, dividends: DividendsSettings) {
+                grades: GradesSettings, dividends: DividendsSettings, gnuCash: GnuCashSettings = GnuCashSettings()) {
         self.version = version
         self.intervalMinutes = intervalMinutes
         self.backupRetention = backupRetention
         self.grades = grades
         self.dividends = dividends
+        self.gnuCash = gnuCash
     }
 
     public static var standard: AppSettings {

@@ -34,7 +34,7 @@ let package = Package(
         ),
         .target(
             name: "EmailGobblerService",
-            dependencies: ["EmailGobblerCore", "SchoologyGrades", "EtradeDividends"]
+            dependencies: ["EmailGobblerCore", "SchoologyGrades", "EtradeDividends", "GnuCashBook"]
         ),
         .executableTarget(
             name: "EmailGobblerCLI",

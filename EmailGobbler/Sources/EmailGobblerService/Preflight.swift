@@ -1,12 +1,14 @@
 import EtradeDividends
 import Foundation
 import EmailGobblerCore
+import GnuCashBook
 import SchoologyGrades
 
 /// Reads each enabled sheet once and reports problems against its settings
 /// field. Sheets whose settings are already invalid are skipped.
 public func preflightIssues(_ settings: AppSettings,
-                            readSheet: (SheetTarget) throws -> SheetSnapshot) -> [SettingsIssue] {
+                            readSheet: (SheetTarget) throws -> SheetSnapshot,
+                            loadBook: (URL) throws -> GnuCashBook = { try GnuCashBookStore(url: $0).load() }) -> [SettingsIssue] {
     let invalid = settings.validate().map(\.field)
     var cache: [SheetTarget: Result<SheetSnapshot, Error>] = [:]
     func check(_ target: SheetTarget, field: String, _ checker: (SheetSnapshot) -> [String]) -> [SettingsIssue] {
@@ -51,3 +53,6 @@ public enum LoginItemState: Equatable, Sendable {
         }
     }
 }
+
+/// One line describing a GnuCash book for the settings window.
+public func gnuCashBookSummary(_ book: GnuCashBook, fileName: String) -> String { "" }

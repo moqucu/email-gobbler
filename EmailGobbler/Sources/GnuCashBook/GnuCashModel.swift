@@ -90,8 +90,14 @@ public struct GnuCashBook: Sendable {
         self.transactions = transactions
     }
 
-    public func account(named fullName: String) -> GnuCashAccount? { nil }
-    public func account(guid: String) -> GnuCashAccount? { nil }
+    /// An account below the root, by its ":"-separated full name.
+    public func account(named fullName: String) -> GnuCashAccount? {
+        accounts.first { $0.type != "ROOT" && $0.fullName == fullName }
+    }
+
+    public func account(guid: String) -> GnuCashAccount? {
+        accounts.first { $0.guid == guid }
+    }
 }
 
 /// A balanced transaction to append. Amounts are positive for debits and
@@ -123,7 +129,6 @@ public struct NewGnuCashTransaction: Equatable, Sendable {
 }
 
 public enum GnuCashError: Error, Equatable, CustomStringConvertible {
-    case notImplemented
     case corruptCompressedData
     case notAGnuCashBook
     case malformedBook(String)
@@ -139,7 +144,6 @@ public enum GnuCashError: Error, Equatable, CustomStringConvertible {
 
     public var description: String {
         switch self {
-        case .notImplemented: return "Not implemented"
         case .corruptCompressedData: return "The compressed GnuCash file is damaged"
         case .notAGnuCashBook: return "The file is not a GnuCash XML book"
         case .malformedBook(let detail): return "The GnuCash book is malformed: \(detail)"

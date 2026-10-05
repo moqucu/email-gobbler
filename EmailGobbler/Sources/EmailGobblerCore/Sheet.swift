@@ -572,5 +572,6 @@ public func backupURL(directory: URL, workbook: URL, timestamp: Date, sequence: 
     formatter.timeZone = TimeZone(identifier: "UTC")
     formatter.dateFormat = "yyyyMMdd'T'HHmmss'Z'"
     let base = workbook.deletingPathExtension().lastPathComponent
-    return directory.appendingPathComponent("\(base)-backup-\(formatter.string(from: timestamp))-\(sequence).numbers")
+    let fileExtension = workbook.pathExtension.isEmpty ? "backup" : workbook.pathExtension
+    return directory.appendingPathComponent("\(base)-backup-\(formatter.string(from: timestamp))-\(sequence).\(fileExtension)")
 }

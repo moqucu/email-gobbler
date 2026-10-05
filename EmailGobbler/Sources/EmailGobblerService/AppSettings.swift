@@ -222,7 +222,7 @@ public func pruneBackups(directory: URL, workbook: URL, keep: Int) throws -> [UR
         .contentsOfDirectory(at: directory, includingPropertiesForKeys: nil)
         .compactMap { url in
             let name = url.lastPathComponent
-            guard name.hasPrefix(prefix), url.pathExtension == "numbers" else { return nil }
+            guard name.hasPrefix(prefix), url.pathExtension == workbook.pathExtension else { return nil }
             let parts = url.deletingPathExtension().lastPathComponent.dropFirst(prefix.count).split(separator: "-")
             guard parts.count == 2, let sequence = Int(parts[1]) else { return nil }
             return (String(parts[0]), sequence, url)

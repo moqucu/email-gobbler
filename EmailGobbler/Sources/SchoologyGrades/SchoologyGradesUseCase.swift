@@ -22,7 +22,7 @@ public enum SchoologyGradesUseCaseError: Error, Equatable, CustomStringConvertib
 }
 
 /// Weekly Schoology summary emails into each routed student's weekly grades sheet.
-public struct SchoologyGradesUseCase: MailToNumbersUseCase {
+public struct SchoologyGradesUseCase: EmailUseCase {
     public static let defaultQuery = MailQuery(subjectContains: "Weekly Schoology Summary", senderContains: nil)
 
     public let mailQuery: MailQuery

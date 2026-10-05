@@ -12,7 +12,7 @@ final class WorkflowTests: XCTestCase {
     }
     private static var noRows: SheetUpdatePlan { SheetUpdatePlan(placement: .insertBelow(row: 2), rows: [], templateRequirements: [:]) }
 
-    private struct FakeUseCase: MailToNumbersUseCase {
+    private struct FakeUseCase: EmailUseCase {
         var targets: [SheetTarget] = [WorkflowTests.sheetA, WorkflowTests.sheetB]
         var updates: [SheetTarget: SheetUpdatePlan] = [WorkflowTests.sheetA: WorkflowTests.oneRow("a"),
                                                        WorkflowTests.sheetB: WorkflowTests.oneRow("b")]
@@ -113,7 +113,7 @@ final class WorkflowTests: XCTestCase {
     }
 
     func testPlanForAnUndeclaredTargetIsRejected() {
-        struct StrayUseCase: MailToNumbersUseCase {
+        struct StrayUseCase: EmailUseCase {
             let targets = [WorkflowTests.sheetA]
             let mailQuery = MailQuery(subjectContains: "Synthetic", senderContains: nil)
             func summarize(html: String) throws -> [String] { [] }

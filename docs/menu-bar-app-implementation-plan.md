@@ -41,7 +41,7 @@ Gaps the app must close:
   - It depends on the local `EmailGobbler` package.
   - The generated `.xcodeproj` is not committed.
   - The package and app require macOS 13 or later, for `MenuBarExtra`, `SMAppService`, and Swift concurrency clocks.
-- **Settings:** a versioned `Codable` file in `~/Library/Application Support/EmailGobbler/` (moved from the earlier `MailToNumbers` folder on first launch).
+- **Settings:** a versioned `Codable` file in `~/Library/Application Support/EmailGobbler/`.
   - Paths, student labels, and sheet names stay out of the repository.
 - **Backups:** kept in the same folder under `Backups/<use case>/`.
   - The newest 30 are kept per use case, and older ones are deleted only after a newer verified write.

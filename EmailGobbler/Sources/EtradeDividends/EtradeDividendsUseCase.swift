@@ -2,7 +2,7 @@ import Foundation
 import EmailGobblerCore
 
 /// E*TRADE "Dividend or interest paid" alerts into the dividend ledger.
-public struct EtradeDividendsUseCase: MailToNumbersUseCase {
+public struct EtradeDividendsUseCase: EmailUseCase {
     public static let defaultQuery = MailQuery(subjectContains: "Dividend or interest paid", senderContains: "etrade.com")
     public static let defaultSheetName = "Sheet 1"
 

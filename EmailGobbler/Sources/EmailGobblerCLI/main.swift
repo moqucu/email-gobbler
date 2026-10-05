@@ -16,7 +16,7 @@ struct UsageError: Error, CustomStringConvertible {
 }
 
 struct Options {
-    let useCase: any MailToNumbersUseCase
+    let useCase: any EmailUseCase
     let emlPath: String?
     let workbook: URL?
     let backupDirectory: URL?

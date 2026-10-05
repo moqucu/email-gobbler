@@ -58,9 +58,9 @@ public struct SettingsIssue: Equatable, Sendable {
 
 public struct ConfiguredUseCase {
     public let id: UseCaseID
-    public let useCase: any MailToNumbersUseCase
+    public let useCase: any EmailUseCase
 
-    public init(id: UseCaseID, useCase: any MailToNumbersUseCase) {
+    public init(id: UseCaseID, useCase: any EmailUseCase) {
         self.id = id
         self.useCase = useCase
     }
@@ -185,11 +185,6 @@ public struct SettingsStore: Sendable {
         SettingsStore(directory: applicationSupport.appendingPathComponent("EmailGobbler", isDirectory: true))
     }
 
-    /// Where settings and backups lived before the app was named EmailGobbler.
-    public static var legacyDirectory: URL {
-        applicationSupport.appendingPathComponent("MailToNumbers", isDirectory: true)
-    }
-
     /// Returns defaults when no settings were saved yet.
     public func load() throws -> AppSettings {
         guard FileManager.default.fileExists(atPath: fileURL.path) else { return .standard }
@@ -236,14 +231,4 @@ public func pruneBackups(directory: URL, workbook: URL, keep: Int) throws -> [UR
     let doomed = backups.dropFirst(max(keep, 1)).map(\.url)
     for url in doomed { try FileManager.default.removeItem(at: url) }
     return doomed
-}
-
-/// Moves the settings folder used before the app was renamed; returns whether it moved.
-@discardableResult
-public func migrateLegacyDirectory(from legacy: URL, to current: URL) throws -> Bool {
-    let manager = FileManager.default
-    guard manager.fileExists(atPath: legacy.path), !manager.fileExists(atPath: current.path) else { return false }
-    try manager.createDirectory(at: current.deletingLastPathComponent(), withIntermediateDirectories: true)
-    try manager.moveItem(at: legacy, to: current)
-    return true
 }

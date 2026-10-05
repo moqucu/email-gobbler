@@ -45,7 +45,7 @@ public struct UseCasePlan: Equatable {
 }
 
 /// One kind of email that updates one or more Numbers sheets.
-public protocol MailToNumbersUseCase {
+public protocol EmailUseCase {
     var mailQuery: MailQuery { get }
     /// Sheets read before planning. Without targets a run only summarizes.
     var targets: [SheetTarget] { get }
@@ -166,7 +166,7 @@ public func describe(_ plan: SheetUpdatePlan, headers: [String]) -> [String] {
 /// sheet, plans and format-checks all updates, writes them one sheet at a time,
 /// and consumes the message only after every sheet is written and verified (or
 /// already holds the email's data).
-public func processMessage(html: String, useCase: some MailToNumbersUseCase,
+public func processMessage(html: String, useCase: some EmailUseCase,
                            actions: MessageActions) throws -> MessageReport {
     guard actions.consume == nil || actions.write != nil, actions.write == nil || actions.readSheet != nil else {
         throw WorkflowError.invalidActions

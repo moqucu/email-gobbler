@@ -21,8 +21,4 @@ print "Built $root/App/$app"
 if [[ "${1:-}" == "--install" ]]; then
   ditto "$app" "/Applications/EmailGobbler.app"
   print "Installed /Applications/EmailGobbler.app"
-  if [[ -d /Applications/MailToNumbers.app ]]; then
-    rm -rf /Applications/MailToNumbers.app
-    print "Removed the app's old name, /Applications/MailToNumbers.app"
-  fi
 fi

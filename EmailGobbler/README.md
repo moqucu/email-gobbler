@@ -5,7 +5,7 @@ Each kind of email is a *use case* built on one shared core:
 
 | Module | Contents |
 | --- | --- |
-| `EmailGobblerCore` | Dates, MIME decoding, Mail listing/fetching/archiving, the Numbers sheet model (snapshot, plan, format checks, verification), AppleScript generation, backups, and the per-message workflow (`MailToNumbersUseCase`, `processMessage`). |
+| `EmailGobblerCore` | Dates, MIME decoding, Mail listing/fetching/archiving, the Numbers sheet model (snapshot, plan, format checks, verification), AppleScript generation, backups, and the per-message workflow (`EmailUseCase`, `processMessage`). |
 | `SchoologyGrades` | Schoology weekly-summary extraction, the weekly grades sheet planner, and the weekly-row upsert library. |
 | `EtradeDividends` | E*TRADE "Dividend or interest paid" alert extraction and the dividend ledger planner. |
 | `email-gobbler` | Command-line tool that runs a use case through the shared workflow. |
@@ -15,7 +15,7 @@ row, or insert rows above or below an existing *anchor row*, with typed values,
 expected displays, and formats required on the anchor row. Everything else is
 shared: reading the sheet, checking formats, backing up, writing, verifying the
 whole saved sheet, and archiving the email. To add a use case, implement
-`MailToNumbersUseCase` (a `MailQuery`, `summarize(html:)`, and `plan(html:sheet:)`)
+`EmailUseCase` (a `MailQuery`, `summarize(html:)`, and `plan(html:sheet:)`)
 and add a subcommand.
 
 ## Requirements

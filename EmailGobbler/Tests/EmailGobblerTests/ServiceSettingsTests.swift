@@ -160,41 +160,9 @@ final class ServiceSettingsTests: XCTestCase {
     }
 }
 
-final class SettingsMigrationTests: XCTestCase {
-    private var base: URL!
-
-    override func setUpWithError() throws {
-        base = FileManager.default.temporaryDirectory.appendingPathComponent("migration-\(UUID().uuidString)")
-        try FileManager.default.createDirectory(at: base, withIntermediateDirectories: true)
-    }
-
-    override func tearDownWithError() throws {
-        try? FileManager.default.removeItem(at: base)
-    }
-
+final class SettingsLocationTests: XCTestCase {
     func testStandardSettingsLiveInTheEmailGobblerFolder() {
         XCTAssertEqual(SettingsStore.standard.fileURL.deletingLastPathComponent().lastPathComponent, "EmailGobbler")
         XCTAssertEqual(SettingsStore.standard.fileURL.lastPathComponent, "settings.json")
-    }
-
-    func testLegacyFolderMovesWhenTheNewOneIsMissing() throws {
-        let legacy = base.appendingPathComponent("MailToNumbers")
-        let current = base.appendingPathComponent("EmailGobbler")
-        try FileManager.default.createDirectory(at: legacy.appendingPathComponent("Backups"), withIntermediateDirectories: true)
-        try Data("{}".utf8).write(to: legacy.appendingPathComponent("settings.json"))
-        XCTAssertTrue(try migrateLegacyDirectory(from: legacy, to: current))
-        XCTAssertFalse(FileManager.default.fileExists(atPath: legacy.path))
-        XCTAssertTrue(FileManager.default.fileExists(atPath: current.appendingPathComponent("settings.json").path))
-        XCTAssertTrue(FileManager.default.fileExists(atPath: current.appendingPathComponent("Backups").path))
-    }
-
-    func testExistingNewFolderOrMissingLegacyFolderIsLeftAlone() throws {
-        let legacy = base.appendingPathComponent("MailToNumbers")
-        let current = base.appendingPathComponent("EmailGobbler")
-        XCTAssertFalse(try migrateLegacyDirectory(from: legacy, to: current))
-        try FileManager.default.createDirectory(at: legacy, withIntermediateDirectories: true)
-        try FileManager.default.createDirectory(at: current, withIntermediateDirectories: true)
-        XCTAssertFalse(try migrateLegacyDirectory(from: legacy, to: current))
-        XCTAssertTrue(FileManager.default.fileExists(atPath: legacy.path))
     }
 }

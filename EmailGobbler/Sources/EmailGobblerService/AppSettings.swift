@@ -46,6 +46,15 @@ public struct DividendsSettings: Codable, Equatable, Sendable {
     }
 }
 
+public struct GnuCashSettings: Codable, Equatable, Sendable {
+    /// The GnuCash XML book EmailGobbler reads and writes; `nil` until chosen.
+    public var bookPath: String?
+
+    public init(bookPath: String? = nil) {
+        self.bookPath = bookPath
+    }
+}
+
 public struct SettingsIssue: Equatable, Sendable {
     public let field: String
     public let message: String
@@ -74,14 +83,31 @@ public struct AppSettings: Codable, Equatable, Sendable {
     public var backupRetention: Int
     public var grades: GradesSettings
     public var dividends: DividendsSettings
+    public var gnuCash: GnuCashSettings
 
     public init(version: Int = AppSettings.currentVersion, intervalMinutes: Int, backupRetention: Int,
-                grades: GradesSettings, dividends: DividendsSettings) {
+                grades: GradesSettings, dividends: DividendsSettings, gnuCash: GnuCashSettings = GnuCashSettings()) {
         self.version = version
         self.intervalMinutes = intervalMinutes
         self.backupRetention = backupRetention
         self.grades = grades
         self.dividends = dividends
+        self.gnuCash = gnuCash
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case version, intervalMinutes, backupRetention, grades, dividends, gnuCash
+    }
+
+    /// Settings saved before the GnuCash book existed load without it.
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        version = try container.decode(Int.self, forKey: .version)
+        intervalMinutes = try container.decode(Int.self, forKey: .intervalMinutes)
+        backupRetention = try container.decode(Int.self, forKey: .backupRetention)
+        grades = try container.decode(GradesSettings.self, forKey: .grades)
+        dividends = try container.decode(DividendsSettings.self, forKey: .dividends)
+        gnuCash = try container.decodeIfPresent(GnuCashSettings.self, forKey: .gnuCash) ?? GnuCashSettings()
     }
 
     public static var standard: AppSettings {
@@ -123,6 +149,9 @@ public struct AppSettings: Codable, Equatable, Sendable {
                     issues.append(SettingsIssue(field: "\(prefix).sheetName", message: "Another student already uses this sheet"))
                 }
             }
+        }
+        if let bookPath = gnuCash.bookPath, Self.isBlank(bookPath) {
+            issues.append(SettingsIssue(field: "gnuCash.bookPath", message: "Choose a GnuCash book"))
         }
         if dividends.enabled {
             if !Self.isWorkbookPath(dividends.workbookPath) {
@@ -222,7 +251,7 @@ public func pruneBackups(directory: URL, workbook: URL, keep: Int) throws -> [UR
         .contentsOfDirectory(at: directory, includingPropertiesForKeys: nil)
         .compactMap { url in
             let name = url.lastPathComponent
-            guard name.hasPrefix(prefix), url.pathExtension == "numbers" else { return nil }
+            guard name.hasPrefix(prefix), url.pathExtension == workbook.pathExtension else { return nil }
             let parts = url.deletingPathExtension().lastPathComponent.dropFirst(prefix.count).split(separator: "-")
             guard parts.count == 2, let sequence = Int(parts[1]) else { return nil }
             return (String(parts[0]), sequence, url)

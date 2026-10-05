@@ -7,6 +7,9 @@ Two use cases run on one shared core:
 - **E*TRADE dividends:** "Dividend or interest paid" alerts append payments to a
   dividend ledger.
 
+A GnuCash persistence layer (`GnuCashBook`) reads and appends transactions to a GnuCash XML book,
+chosen under **Settings… › GnuCash**, as the base for future spending-report use cases.
+
 The Swift package lives in [`EmailGobbler`](EmailGobbler/README.md); run its tests
 with `swift test` from that directory. The `email-gobbler` tool processes matching
 Inbox messages oldest first: it previews each Numbers update, applies it with a

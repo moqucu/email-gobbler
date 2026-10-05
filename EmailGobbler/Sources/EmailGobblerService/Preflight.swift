@@ -1,12 +1,14 @@
 import EtradeDividends
 import Foundation
 import EmailGobblerCore
+import GnuCashBook
 import SchoologyGrades
 
 /// Reads each enabled sheet once and reports problems against its settings
 /// field. Sheets whose settings are already invalid are skipped.
 public func preflightIssues(_ settings: AppSettings,
-                            readSheet: (SheetTarget) throws -> SheetSnapshot) -> [SettingsIssue] {
+                            readSheet: (SheetTarget) throws -> SheetSnapshot,
+                            loadBook: (URL) throws -> GnuCashBook = { try GnuCashBookStore(url: $0).load() }) -> [SettingsIssue] {
     let invalid = settings.validate().map(\.field)
     var cache: [SheetTarget: Result<SheetSnapshot, Error>] = [:]
     func check(_ target: SheetTarget, field: String, _ checker: (SheetSnapshot) -> [String]) -> [SettingsIssue] {
@@ -33,6 +35,14 @@ public func preflightIssues(_ settings: AppSettings,
         let target = SheetTarget(workbook: URL(fileURLWithPath: path), sheetName: settings.dividends.sheetName)
         issues += check(target, field: "dividends.sheetName", checkDividendLedger)
     }
+    if let path = settings.gnuCash.bookPath, !invalid.contains("gnuCash.bookPath") {
+        let url = URL(fileURLWithPath: path)
+        do {
+            _ = try loadBook(url)
+        } catch {
+            issues.append(SettingsIssue(field: "gnuCash.bookPath", message: "\(url.lastPathComponent): \(error)"))
+        }
+    }
     return issues
 }
 
@@ -50,4 +60,15 @@ public enum LoginItemState: Equatable, Sendable {
         case .notFound: return "Install the app in /Applications to start it at login."
         }
     }
+}
+
+/// One line describing a GnuCash book for the settings window.
+public func gnuCashBookSummary(_ book: GnuCashBook, fileName: String) -> String {
+    let accounts = book.accounts.filter { $0.type != "ROOT" }
+    let postable = accounts.filter { !$0.isPlaceholder }.count
+    let currencies = Set(accounts.compactMap { $0.commodity }.filter(\.isCurrency).map(\.id)).sorted()
+    let plural = { (count: Int, word: String) in "\(count) \(word)\(count == 1 ? "" : "s")" }
+    let currencyText = currencies.isEmpty ? "" : ", in " + currencies.joined(separator: ", ")
+    return "\(fileName): \(plural(accounts.count, "account")), \(postable) can hold transactions\(currencyText); "
+        + plural(book.transactions.count, "transaction")
 }

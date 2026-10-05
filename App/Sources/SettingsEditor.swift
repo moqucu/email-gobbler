@@ -2,6 +2,7 @@ import AppKit
 import Foundation
 import EmailGobblerCore
 import EmailGobblerService
+import GnuCashBook
 import UniformTypeIdentifiers
 
 @MainActor
@@ -13,6 +14,7 @@ final class SettingsEditor: ObservableObject {
     @Published private(set) var message: String?
     @Published private(set) var loginState = LoginItem.state
     @Published private(set) var hasValidSavedSettings: Bool
+    @Published private(set) var bookSummary: String?
 
     private let onSave: (AppSettings) -> Void
 
@@ -21,6 +23,44 @@ final class SettingsEditor: ObservableObject {
         hasValidSavedSettings = savedSettingsValid
         self.onSave = onSave
         for path in workbookPaths { loadSheetNames(path) }
+        loadBookSummary()
+    }
+
+    func chooseGnuCashBook() {
+        let panel = NSOpenPanel()
+        panel.allowedContentTypes = [UTType(filenameExtension: "gnucash") ?? .data, .xml]
+        panel.allowsMultipleSelection = false
+        panel.canChooseDirectories = false
+        panel.directoryURL = FileManager.default.urls(for: .libraryDirectory, in: .userDomainMask).first?
+            .appendingPathComponent("Mobile Documents/com~apple~CloudDocs")
+        guard panel.runModal() == .OK, let url = panel.url else { return }
+        draft.gnuCash.bookPath = url.path
+        loadBookSummary()
+    }
+
+    func removeGnuCashBook() {
+        draft.gnuCash.bookPath = nil
+        bookSummary = nil
+    }
+
+    /// Reads the chosen book in the background; GnuCash itself is not involved.
+    private func loadBookSummary() {
+        guard let path = draft.gnuCash.bookPath, !path.isEmpty else {
+            bookSummary = nil
+            return
+        }
+        bookSummary = "Reading \(URL(fileURLWithPath: path).lastPathComponent)…"
+        Task {
+            let summary = await Task.detached(priority: .utility) { () -> String in
+                let url = URL(fileURLWithPath: path)
+                do {
+                    return gnuCashBookSummary(try GnuCashBookStore(url: url).load(), fileName: url.lastPathComponent)
+                } catch {
+                    return "\(url.lastPathComponent): \(error)"
+                }
+            }.value
+            if draft.gnuCash.bookPath == path { bookSummary = summary }
+        }
     }
 
     private var workbookPaths: [String] {

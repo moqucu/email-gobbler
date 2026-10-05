@@ -64,3 +64,11 @@ real "Dividend or interest paid" alert, including its hidden preview text and th
 `Amount Credited:` labels. The account, security, amount, payment date, headers,
 and every link are synthetic. Git stores the file byte for byte (`.gitattributes`).
 Live alerts can list several payments; the multi-payment test markup is constructed from the single-payment layout.
+
+# GnuCash book fixture
+
+`gnucash-book.synthetic.xml` is a hand-written GnuCash 5.17 XML book with synthetic accounts
+(placeholders, checking, credit card, expenses, dividends), two transactions, and a template
+section, following `libgnucash/backend/xml` in GnuCash 5.17. `gnucash-cli` 5.17 loads it and reports
+the expected journal and balances. `gnucash-book.synthetic.gnucash` is the same file compressed with
+`gzip -n -9`, the way GnuCash saves compressed books. No real account data is included.

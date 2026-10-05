@@ -152,7 +152,7 @@ public enum FormatRequirement: Equatable {
     case wholePercent
     case currency
 
-    func isSatisfied(by cell: SheetCell) -> Bool {
+    public func isSatisfied(by cell: SheetCell) -> Bool {
         let shown = cell.formatted ?? ""
         switch self {
         case .dateOnly(let style):

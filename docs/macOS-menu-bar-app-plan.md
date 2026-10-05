@@ -4,7 +4,7 @@
 
 Turn the current Swift command-line workflow into a macOS app that starts when
 the user logs in, stays in the right side of the menu bar, and processes new
-Schoology mail without a main window. A menu click may open a small status and
+Schoology and E*TRADE dividend mail without a main window. A menu click may open a small status and
 settings panel. The app must not bring Mail or Numbers to the foreground during
 an automatic run.
 
@@ -17,8 +17,8 @@ Use a SwiftUI `MenuBarExtra` as the only persistent scene and set `LSUIElement`
 to `YES` so the app has no Dock icon or ordinary app window. Apple documents
 both the [menu bar scene](https://developer.apple.com/documentation/swiftui/menubarextra)
 and the [agent-app property](https://developer.apple.com/documentation/bundleresources/information-property-list/lsuielement).
-Build the app target for macOS 13 or later, where `SMAppService` is available;
-the `MailToNumbers` libraries can keep its lower deployment target.
+Build the app and the `MailToNumbers` package for macOS 13 or later, where
+`SMAppService` is available.
 
 ## Proposed architecture
 
@@ -88,6 +88,9 @@ the test. Also test iCloud Drive files that are temporarily unavailable and
 workbooks already open with unsaved edits; neither should be silently replaced.
 
 ## Implementation order and acceptance checks
+
+The [implementation plan](menu-bar-app-implementation-plan.md) breaks these steps into
+PR-sized milestones against the current `MailToNumbers` code.
 
 1. **Extract the workflow:** shared service and protocol-backed Mail/Numbers
    adapters; keep pure unit tests for message selection, multi-student routing,

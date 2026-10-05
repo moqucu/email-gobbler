@@ -1,0 +1,163 @@
+# EmailGobbler menu bar app: implementation plan
+
+This plan turns the `mail-to-numbers` workflow into a menu bar app that starts at
+login and processes both use cases unattended. The [design document](macOS-menu-bar-app-plan.md)
+covers goals, permissions, and safety rules. This document turns them into
+reviewable steps against the current code. The milestones land on one dedicated PR
+as test-first commits (failing tests, then implementation), and each keeps `swift test` green.
+
+## Starting point
+
+`MailToNumbers` already provides most of the engine:
+
+- `MailNumbersCore`:
+  - Mail listing (oldest first), fetching, and archiving.
+  - MIME decoding.
+  - Sheet snapshot, plan, format check, backup, write, and full read-back verification.
+  - `processMessage`, which never consumes mail before a verified write.
+- `SchoologyGrades` and `EtradeDividends`: email parsing and sheet planning.
+- `mail-to-numbers`: a CLI that the app replaces for routine use and that remains a diagnostic tool.
+
+Gaps the app must close:
+
+| Gap | Why it matters unattended |
+| --- | --- |
+| A Schoology email covers several students, but a run updates one `--student`/`--sheet`. | With `--consume`, the first student's write archives the email before the other students' sheets are updated. |
+| Options exist only as CLI flags. | The app needs persisted settings: workbooks, sheets, student-to-sheet routes, schedule, and backups. |
+| Mail listing uses the unified Inbox. | A match in another account would stop the backlog at consume time. Listing should be limited to the iCloud account. |
+| AppleScript runs synchronously through `NSAppleScript`. | Runs must not block the menu, must not overlap, and need a timeout. |
+| Runs report through `print`. | The app needs structured run results for its menu and a log without grades or amounts. |
+| Numbers is driven by opening documents. | It may show windows or take focus; this must be measured and contained. |
+
+## Decisions (proposed defaults)
+
+- **Distribution:** a personal, non-sandboxed app installed in `/Applications`.
+  - Signed with the existing Apple Development identity and hardened runtime.
+  - Entitlement: `com.apple.security.automation.apple-events`.
+  - Info.plist: an `NSAppleEventsUsageDescription`.
+  - Not sandboxed, because automating Mail and Numbers from a sandbox needs temporary exceptions.
+  - No App Store, no notarization.
+- **Project:** an XcodeGen spec (`App/project.yml`) for a `MailToNumbersApp` target.
+  - It depends on the local `MailToNumbers` package.
+  - The generated `.xcodeproj` is not committed.
+  - The package and app require macOS 13 or later, for `MenuBarExtra`, `SMAppService`, and Swift concurrency clocks.
+- **Settings:** a versioned `Codable` file in `~/Library/Application Support/EmailGobbler/` (moved from the earlier `MailToNumbers` folder on first launch).
+  - Paths, student labels, and sheet names stay out of the repository.
+- **Backups:** kept in the same folder under `Backups/<use case>/`.
+  - The newest 30 are kept per use case, and older ones are deleted only after a newer verified write.
+  - The menu has a **Show Backups** item.
+- **Schedule (confirmed):** a scan at launch, every 30 minutes, on wake, and on **Run Now**.
+  - Triggers that arrive during a run collapse into one follow-up run.
+- **Failure policy:** a failed message stops that use case's backlog for the run; other use cases still run.
+  - The error shows in the menu, the message stays in the Inbox, and the next scheduled run retries it.
+  - Reruns are safe: grades replace their week, and dividends skip identical rows.
+- **Privacy:** logs record message ID, use case, stage, outcome, and duration, through `os.Logger`.
+  - They never record grades, amounts, securities, or email content.
+  - Notifications (confirmed) appear only on failures and contain no data. A daily or weekly
+    summary may follow later.
+- **Grades routing (confirmed):** one student is routed to a grades sheet. Other students in
+  the email are ignored and noted. Student labels live only in local settings.
+- **Sweep interest (confirmed):** bank sweep interest is recorded like any other payment.
+
+## Milestones
+
+### 1. Multi-target workflow (package)
+
+- [x] Let one message produce several sheet updates: `UseCasePlan` gains a list of `(workbook, sheet, SheetUpdatePlan)` targets.
+- [x] Extend `processMessage`:
+  - Plan every target first.
+  - Write and verify them one at a time.
+  - Consume only after all targets are verified or have nothing to write.
+  - If a later target fails, report which targets were already written; reruns are safe because they replace or skip.
+- [x] Schoology routing from settings:
+  - Each configured student label maps to a workbook and sheet.
+  - Students without a route are ignored and noted.
+  - A configured student missing from the email stops the run.
+  - Two routes to the same sheet are rejected.
+- [x] Return a structured `MessageReport` per message instead of printing; the CLI prints it. Per-run reports for the menu follow in milestone 2.
+- [x] Tests (fakes, no automation):
+  - Two students write two sheets, then consume.
+  - The second sheet fails: no consume, and the report lists the first sheet as written.
+  - An unrouted student is ignored.
+  - Empty plans for all targets still consume.
+  - Existing single-target behavior is unchanged.
+
+### 2. Settings, run coordination, and scheduling (package, UI-free)
+
+Implemented in the `MailToNumbersService` module: `AppSettings`, `SettingsStore`, `runUseCase`/`runAll` with a swappable `AutomationClient`, `RunCoordinator`, `runSchedule`, `pruneBackups`, and content-free run log events.
+
+
+- [x] `AppSettings` (Codable, versioned):
+  - Per use case: enabled, workbook path, sheet name, routes, and subject/sender overrides.
+  - Schedule interval, backup folder, and retention count.
+  - Validation errors name the field.
+- [x] `SettingsStore`: atomic load and save in Application Support; a missing file means defaults.
+- [x] `RunCoordinator` (actor):
+  - At most one run.
+  - Triggers during a run collapse into one follow-up.
+  - Pause and resume.
+  - Publishes state (idle, running with use case and step, paused, or last result and error) for the UI.
+- [x] `Scheduler`: launch, interval, and wake triggers, with an injectable clock and wake source.
+- [x] Backup retention with an injectable file system.
+- [x] Mail listing limited to the iCloud account that archiving already requires.
+- [x] Tests:
+  - Coalescing, pause, and interval timing with a fake clock.
+  - Settings round-trip and migration.
+  - Retention never deletes the newest backup.
+  - The iCloud account filter.
+
+### 3. App shell (XcodeGen project)
+
+- [x] `App/project.yml`, `MailToNumbersApp` with a `MenuBarExtra` and no window scene.
+  - Info.plist: `LSUIElement`, `NSAppleEventsUsageDescription`.
+  - Entitlements, signing, and hardened runtime.
+- [x] Menu items:
+  - Status line: idle, running with use case and step, or last success with time.
+  - Last error, if any.
+  - **Run Now**, **Pause/Resume**, **Show Settings File** (replaced by **Settings…** in milestone 4), **Show Backups**, **Quit**.
+- [x] Automation runs off the main actor, one script at a time, with a timeout. The UI observes `RunCoordinator`.
+- [x] `scripts/build-app.sh`: XcodeGen generate, `xcodebuild` Release, signature verification, and copy to `/Applications`.
+- [x] Acceptance so far: signed with hardened runtime and the Apple Events entitlement; accessory app with no Dock icon or window; menu shows status and actions.
+- [ ] Acceptance pending real settings: **Run Now** processes the dividend backlog as the CLI does, and Automation prompts name the app.
+
+### 4. Settings window and launch at login
+
+- [x] A settings window opened from the menu (**Settings…**) and on first launch:
+  - Workbook pickers.
+  - Sheet names, read from the workbook.
+  - Student routes, entered by name as shown in the email.
+  - Schedule, and **Launch at Login**.
+- [x] Settings are checked on save by reading each sheet once, which is a format preflight using the existing template checks.
+- [x] **Launch at Login** through `SMAppService.mainApp`:
+  - It shows the system approval state and a link to System Settings when approval is required.
+  - It is enabled only after settings are valid.
+- [x] First launch with no settings opens the settings window; nothing is scheduled until valid settings are saved.
+- [x] Verified: first launch opens settings; saving with a missing workbook shows the field's problem and writes nothing.
+- [ ] Acceptance with real setup (after milestone 5): settings survive relaunch, login item registration shows in System Settings, and the app starts after logout and login.
+
+### 5. Unattended behavior hardening
+
+- [x] Measured during live reads and writes while another app was in front, using a sampler of the frontmost app and Numbers' state (no screenshots):
+  - Numbers never became active or took focus; the user's app stayed in front.
+  - When a run launches Numbers, Numbers restores its previous session's windows and stays visible afterwards.
+- [x] Containment: after each run the app hides Numbers if the run launched or unhid it, hides Mail only if the run launched it, and returns focus to the previous app if either took it (`foregroundActions`). Keep Mail running so new mail arrives between runs.
+- [x] A workbook already open in Numbers is never written. The run stops with "Close <workbook> in Numbers; it will be updated on the next run", writes no backup, and leaves the email in the Inbox. Verified live.
+- [x] An iCloud workbook that is not downloaded starts a download and reports that it will be retried; a missing workbook is reported.
+- [x] Sleep during a run: the existing changed-workbook check re-reads the sheet before writing.
+- [x] Failure notifications only for use cases that newly stopped, naming the use cases without error details or data.
+
+### 6. End-to-end acceptance
+
+- [x] Disposable ledger runs through the CLI and the shared adapters: insert, verification, already-recorded skip, and refusal while the workbook is open in Numbers.
+- [x] Real setup saved through Settings (2026-10-02): both use cases enabled with one routed student, sheets passed the preflight, Launch at Login enabled, and Automation access granted.
+- [x] Launch and Run Now complete with "Up to date"; the unified log records only stage and outcome (`log show --predicate 'subsystem == "com.moqucu.EmailGobbler"'`).
+- [ ] First real dividend alert and weekly Schoology email processed by a scheduled run, written once, and archived.
+- [ ] Survives logout and login without a Dock icon or foreground window.
+- [x] Update the README and the design document.
+
+## Resolved questions
+
+- **Students:** one routed student; the others are ignored.
+- **Schedule:** every 30 minutes, plus launch, wake, and **Run Now**.
+- **Notifications:** failures only; a daily or weekly summary may come later.
+- **Sweep interest:** keep it.

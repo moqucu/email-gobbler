@@ -6,7 +6,7 @@ public enum DomainError: Error, Equatable {
     case validationFailed(String)
 }
 
-public struct CalendarDate: Hashable, Comparable {
+public struct CalendarDate: Hashable, Comparable, Sendable {
     public let year: Int
     public let month: Int
     public let day: Int

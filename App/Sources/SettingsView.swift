@@ -1,4 +1,4 @@
-import MailToNumbersService
+import EmailGobblerService
 import SwiftUI
 
 struct SettingsView: View {

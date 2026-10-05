@@ -17,7 +17,7 @@ Use a SwiftUI `MenuBarExtra` as the only persistent scene and set `LSUIElement`
 to `YES` so the app has no Dock icon or ordinary app window. Apple documents
 both the [menu bar scene](https://developer.apple.com/documentation/swiftui/menubarextra)
 and the [agent-app property](https://developer.apple.com/documentation/bundleresources/information-property-list/lsuielement).
-Build the app and the `MailToNumbers` package for macOS 13 or later, where
+Build the app and the `EmailGobbler` package for macOS 13 or later, where
 `SMAppService` is available.
 
 ## Proposed architecture
@@ -25,7 +25,7 @@ Build the app and the `MailToNumbers` package for macOS 13 or later, where
 | Component | Responsibility |
 | --- | --- |
 | `SchoologyGrades`, `EtradeDividends` | Use cases: deterministic email extraction and sheet planning, independent of Mail, Numbers, and UI. |
-| `MailNumbersCore` | Shared workflow (`MailToNumbersUseCase`, `processMessage`), MIME decoding, sheet plans, format checks, backup, verification, and consume-after-save sequencing. The CLI remains a diagnostic harness. |
+| `EmailGobblerCore` | Shared workflow (`MailToNumbersUseCase`, `processMessage`), MIME decoding, sheet plans, format checks, backup, verification, and consume-after-save sequencing. The CLI remains a diagnostic harness. |
 | Mail adapter | Query only the configured iCloud account and Inbox, identify messages by stable message ID, fetch source, and mark read/move to that account's `Archive` mailbox only after every workbook update verifies. |
 | Numbers adapter | Read the chosen workbook, apply validated row changes, save, and read back the result. Retain a recoverable backup before writing. |
 | Menu bar app | Own configuration, status, scheduling, permissions, error display, and explicit user commands. It calls the same workflow used by the CLI. |
@@ -90,7 +90,7 @@ workbooks already open with unsaved edits; neither should be silently replaced.
 ## Implementation order and acceptance checks
 
 The [implementation plan](menu-bar-app-implementation-plan.md) breaks these steps into
-PR-sized milestones against the current `MailToNumbers` code.
+PR-sized milestones against the current `EmailGobbler` package.
 
 1. **Extract the workflow:** shared service and protocol-backed Mail/Numbers
    adapters; keep pure unit tests for message selection, multi-student routing,

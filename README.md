@@ -7,15 +7,15 @@ Two use cases run on one shared core:
 - **E*TRADE dividends:** "Dividend or interest paid" alerts append payments to a
   dividend ledger.
 
-The Swift package lives in [`MailToNumbers`](MailToNumbers/README.md); run its tests
-with `swift test` from that directory. The `mail-to-numbers` tool processes matching
+The Swift package lives in [`EmailGobbler`](EmailGobbler/README.md); run its tests
+with `swift test` from that directory. The `email-gobbler` tool processes matching
 Inbox messages oldest first: it previews each Numbers update, applies it with a
 backup and a full read-back check, and can then mark the message read and move it to
 iCloud Archive. See the package documentation for commands and workbook formatting.
 
 ## EmailGobbler menu bar app (in progress)
 
-`App/` contains EmailGobbler, the menu bar app, built on the `MailToNumbersService` library. It has no Dock icon or main
+`App/` contains EmailGobbler, the menu bar app, built on the `EmailGobblerService` library. It has no Dock icon or main
 window. It checks mail at launch, every 30 minutes, and after the Mac wakes, and offers **Run Now**,
 **Pause**, and its last result in the menu. Build and sign it with your Apple Development certificate
 (requires Xcode and XcodeGen):

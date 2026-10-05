@@ -1,5 +1,5 @@
 import AppKit
-import MailToNumbersService
+import EmailGobblerService
 import SwiftUI
 
 @MainActor

@@ -1,4 +1,4 @@
-import MailToNumbersService
+import EmailGobblerService
 import ServiceManagement
 
 enum LoginItem {

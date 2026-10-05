@@ -1,5 +1,5 @@
 import AppKit
-import MailToNumbersService
+import EmailGobblerService
 @preconcurrency import UserNotifications
 
 /// Reads and restores what is on screen around a run.

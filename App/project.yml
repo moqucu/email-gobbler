@@ -4,8 +4,8 @@ options:
   deploymentTarget:
     macOS: "13.0"
 packages:
-  MailToNumbers:
-    path: ../MailToNumbers
+  EmailGobbler:
+    path: ../EmailGobbler
 targets:
   EmailGobbler:
     type: application
@@ -16,17 +16,17 @@ targets:
         type: file
         buildPhase: resources
     dependencies:
-      - package: MailToNumbers
-        product: MailToNumbersService
-      - package: MailToNumbers
-        product: MailNumbersCore
+      - package: EmailGobbler
+        product: EmailGobblerService
+      - package: EmailGobbler
+        product: EmailGobblerCore
     settings:
       base:
         PRODUCT_NAME: EmailGobbler
         PRODUCT_BUNDLE_IDENTIFIER: com.moqucu.EmailGobbler
         INFOPLIST_FILE: Resources/Info.plist
         GENERATE_INFOPLIST_FILE: NO
-        CODE_SIGN_ENTITLEMENTS: Resources/MailToNumbers.entitlements
+        CODE_SIGN_ENTITLEMENTS: Resources/EmailGobbler.entitlements
         CODE_SIGN_STYLE: Manual
         CODE_SIGN_IDENTITY: Apple Development
         PROVISIONING_PROFILE_SPECIFIER: ""

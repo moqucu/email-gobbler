@@ -1,7 +1,7 @@
 import AppKit
 import Foundation
-import MailNumbersCore
-import MailToNumbersService
+import EmailGobblerCore
+import EmailGobblerService
 
 @MainActor
 final class AppModel: ObservableObject {
@@ -21,8 +21,6 @@ final class AppModel: ObservableObject {
     private var canRun: Bool { settingsIssues.isEmpty && !settings.configuredUseCases().isEmpty }
 
     init() {
-        _ = try? migrateLegacyDirectory(from: SettingsStore.legacyDirectory,
-                                        to: SettingsStore.standard.fileURL.deletingLastPathComponent())
         let firstLaunch = !FileManager.default.fileExists(atPath: store.fileURL.path)
         do {
             apply(try store.load())

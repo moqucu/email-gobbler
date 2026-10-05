@@ -1,7 +1,7 @@
 import AppKit
 import Foundation
-import MailNumbersCore
-import MailToNumbersService
+import EmailGobblerCore
+import EmailGobblerService
 import UniformTypeIdentifiers
 
 @MainActor

@@ -1,6 +1,6 @@
 # EmailGobbler menu bar app: implementation plan
 
-This plan turns the `mail-to-numbers` workflow into a menu bar app that starts at
+This plan turns the `email-gobbler` workflow into a menu bar app that starts at
 login and processes both use cases unattended. The [design document](macOS-menu-bar-app-plan.md)
 covers goals, permissions, and safety rules. This document turns them into
 reviewable steps against the current code. The milestones land on one dedicated PR
@@ -8,15 +8,15 @@ as test-first commits (failing tests, then implementation), and each keeps `swif
 
 ## Starting point
 
-`MailToNumbers` already provides most of the engine:
+The `EmailGobbler` package (formerly `MailToNumbers`) already provides most of the engine:
 
-- `MailNumbersCore`:
+- `EmailGobblerCore`:
   - Mail listing (oldest first), fetching, and archiving.
   - MIME decoding.
   - Sheet snapshot, plan, format check, backup, write, and full read-back verification.
   - `processMessage`, which never consumes mail before a verified write.
 - `SchoologyGrades` and `EtradeDividends`: email parsing and sheet planning.
-- `mail-to-numbers`: a CLI that the app replaces for routine use and that remains a diagnostic tool.
+- `email-gobbler`: a CLI that the app replaces for routine use and that remains a diagnostic tool.
 
 Gaps the app must close:
 
@@ -37,11 +37,11 @@ Gaps the app must close:
   - Info.plist: an `NSAppleEventsUsageDescription`.
   - Not sandboxed, because automating Mail and Numbers from a sandbox needs temporary exceptions.
   - No App Store, no notarization.
-- **Project:** an XcodeGen spec (`App/project.yml`) for a `MailToNumbersApp` target.
-  - It depends on the local `MailToNumbers` package.
+- **Project:** an XcodeGen spec (`App/project.yml`) for the `EmailGobbler` app target.
+  - It depends on the local `EmailGobbler` package.
   - The generated `.xcodeproj` is not committed.
   - The package and app require macOS 13 or later, for `MenuBarExtra`, `SMAppService`, and Swift concurrency clocks.
-- **Settings:** a versioned `Codable` file in `~/Library/Application Support/EmailGobbler/` (moved from the earlier `MailToNumbers` folder on first launch).
+- **Settings:** a versioned `Codable` file in `~/Library/Application Support/EmailGobbler/`.
   - Paths, student labels, and sheet names stay out of the repository.
 - **Backups:** kept in the same folder under `Backups/<use case>/`.
   - The newest 30 are kept per use case, and older ones are deleted only after a newer verified write.
@@ -84,7 +84,7 @@ Gaps the app must close:
 
 ### 2. Settings, run coordination, and scheduling (package, UI-free)
 
-Implemented in the `MailToNumbersService` module: `AppSettings`, `SettingsStore`, `runUseCase`/`runAll` with a swappable `AutomationClient`, `RunCoordinator`, `runSchedule`, `pruneBackups`, and content-free run log events.
+Implemented in the `EmailGobblerService` module: `AppSettings`, `SettingsStore`, `runUseCase`/`runAll` with a swappable `AutomationClient`, `RunCoordinator`, `runSchedule`, `pruneBackups`, and content-free run log events.
 
 
 - [x] `AppSettings` (Codable, versioned):
@@ -108,7 +108,7 @@ Implemented in the `MailToNumbersService` module: `AppSettings`, `SettingsStore`
 
 ### 3. App shell (XcodeGen project)
 
-- [x] `App/project.yml`, `MailToNumbersApp` with a `MenuBarExtra` and no window scene.
+- [x] `App/project.yml`, `EmailGobbler` app target with a `MenuBarExtra` and no window scene.
   - Info.plist: `LSUIElement`, `NSAppleEventsUsageDescription`.
   - Entitlements, signing, and hardened runtime.
 - [x] Menu items:

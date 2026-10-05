@@ -20,6 +20,8 @@ targets:
         product: EmailGobblerService
       - package: EmailGobbler
         product: EmailGobblerCore
+      - package: EmailGobbler
+        product: GnuCashBook
     settings:
       base:
         PRODUCT_NAME: EmailGobbler

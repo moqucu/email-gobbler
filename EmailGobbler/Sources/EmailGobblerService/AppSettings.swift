@@ -95,6 +95,21 @@ public struct AppSettings: Codable, Equatable, Sendable {
         self.gnuCash = gnuCash
     }
 
+    private enum CodingKeys: String, CodingKey {
+        case version, intervalMinutes, backupRetention, grades, dividends, gnuCash
+    }
+
+    /// Settings saved before the GnuCash book existed load without it.
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        version = try container.decode(Int.self, forKey: .version)
+        intervalMinutes = try container.decode(Int.self, forKey: .intervalMinutes)
+        backupRetention = try container.decode(Int.self, forKey: .backupRetention)
+        grades = try container.decode(GradesSettings.self, forKey: .grades)
+        dividends = try container.decode(DividendsSettings.self, forKey: .dividends)
+        gnuCash = try container.decodeIfPresent(GnuCashSettings.self, forKey: .gnuCash) ?? GnuCashSettings()
+    }
+
     public static var standard: AppSettings {
         AppSettings(intervalMinutes: 30, backupRetention: 30,
                     grades: GradesSettings(enabled: false, routes: []),
@@ -134,6 +149,9 @@ public struct AppSettings: Codable, Equatable, Sendable {
                     issues.append(SettingsIssue(field: "\(prefix).sheetName", message: "Another student already uses this sheet"))
                 }
             }
+        }
+        if let bookPath = gnuCash.bookPath, Self.isBlank(bookPath) {
+            issues.append(SettingsIssue(field: "gnuCash.bookPath", message: "Choose a GnuCash book"))
         }
         if dividends.enabled {
             if !Self.isWorkbookPath(dividends.workbookPath) {

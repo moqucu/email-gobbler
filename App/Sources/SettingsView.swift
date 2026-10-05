@@ -9,6 +9,7 @@ struct SettingsView: View {
             Form {
                 dividendsSection
                 gradesSection
+                gnuCashSection
                 scheduleSection
                 startupSection
             }
@@ -67,6 +68,30 @@ struct SettingsView: View {
         }
         SheetRow(sheet: route.sheetName, names: editor.sheetNames[route.wrappedValue.workbookPath],
                  issue: editor.issue("\(prefix).sheetName"))
+    }
+
+    private var gnuCashSection: some View {
+        Section {
+            HStack {
+                Text("Book")
+                Spacer()
+                Text(editor.draft.gnuCash.bookPath.map { URL(fileURLWithPath: $0).lastPathComponent } ?? "None")
+                    .foregroundStyle(.secondary)
+                    .help(editor.draft.gnuCash.bookPath ?? "")
+                Button("Choose…") { editor.chooseGnuCashBook() }
+                if editor.draft.gnuCash.bookPath != nil {
+                    Button("Remove") { editor.removeGnuCashBook() }
+                }
+            }
+            if let summary = editor.bookSummary {
+                Text(summary).foregroundStyle(.secondary)
+            }
+            if let issue = editor.issue("gnuCash.bookPath") { IssueText(issue) }
+        } header: {
+            Text("GnuCash")
+        } footer: {
+            Text("EmailGobbler adds transactions only while the book is closed in GnuCash, and backs it up first.")
+        }
     }
 
     private var scheduleSection: some View {

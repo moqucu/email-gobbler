@@ -8,6 +8,7 @@ Each kind of email is a *use case* built on one shared core:
 | `EmailGobblerCore` | Dates, MIME decoding, Mail listing/fetching/archiving, the Numbers sheet model (snapshot, plan, format checks, verification), AppleScript generation, backups, and the per-message workflow (`EmailUseCase`, `processMessage`). |
 | `SchoologyGrades` | Schoology weekly-summary extraction, the weekly grades sheet planner, and the weekly-row upsert library. |
 | `EtradeDividends` | E*TRADE "Dividend or interest paid" alert extraction and the dividend ledger planner. |
+| `GnuCashBook` | Reads GnuCash 5 XML books (gzip or plain) and appends balanced transactions in GnuCash's own format, safely. |
 | `email-gobbler` | Command-line tool that runs a use case through the shared workflow. |
 
 A use case only parses its email and turns it into a `SheetUpdatePlan`: replace one
@@ -31,7 +32,7 @@ cd EmailGobbler
 swift test
 ```
 
-All 148 tests are offline and use synthetic fixtures; they do not drive Mail or Numbers.
+All tests are offline and use synthetic fixtures; they do not drive Mail or Numbers.
 
 ## Command line
 
@@ -93,6 +94,32 @@ a ` - <number>:` section suffix. Every workbook course must occur in the email; 
 graded email course without a column stops the plan, and ungraded unmatched courses
 are reported as ignored. Dates must run newest first from row 2. An existing week is
 replaced; a new week is inserted next to a dated row so it inherits its formats.
+
+## GnuCash books
+
+`GnuCashBook` reads and writes the GnuCash XML file format as written by GnuCash 5.17 (see
+`libgnucash/backend/xml` in the GnuCash sources). `GnuCashBookStore(url:)` offers:
+
+- `load()`: the account tree (full names joined with `:`, such as `Expenses:Groceries`, plus type,
+  currency, and placeholder flag) and every transaction with exact split values. Template accounts
+  for scheduled transactions are left out.
+- `append(_:backupDirectory:)`: adds balanced `NewGnuCashTransaction`s, each with two or more splits
+  that name accounts by full name. Amounts are positive for debits and negative for credits.
+
+Appending follows GnuCash's own conventions: a posted date at 10:59 UTC with a `date-posted` slot, an
+entered timestamp, amounts as fractions of the account's smallest unit, new GUIDs, and an updated
+transaction count. New transactions go after the existing ones, and every other byte of the file stays
+unchanged. The store:
+
+- refuses while GnuCash has the book open (its `.LCK` file exists);
+- rejects unknown or placeholder accounts, unbalanced splits, amounts finer than the account allows,
+  and mixed currencies, without touching the file;
+- backs the book up first, keeps its gzip compression as it was, writes atomically, and re-reads the
+  saved book to verify it.
+
+The test fixture `Tests/EmailGobblerTests/Fixtures/gnucash-book.synthetic.xml` (and its gzip copy) is
+a synthetic book that `gnucash-cli` 5.17 loads; appended copies were checked the same way with the
+General Journal and Account Summary reports.
 
 ## Schoology weekly-email extraction
 

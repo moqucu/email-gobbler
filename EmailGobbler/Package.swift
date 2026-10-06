@@ -13,6 +13,7 @@ let package = Package(
         .library(name: "EtradeDividends", targets: ["EtradeDividends"]),
         .library(name: "EmailGobblerService", targets: ["EmailGobblerService"]),
         .library(name: "GnuCashBook", targets: ["GnuCashBook"]),
+        .library(name: "SpendingEmails", targets: ["SpendingEmails"]),
         .executable(name: "email-gobbler", targets: ["EmailGobblerCLI"]),
     ],
     dependencies: [
@@ -33,6 +34,10 @@ let package = Package(
             dependencies: ["EmailGobblerCore"]
         ),
         .target(
+            name: "SpendingEmails",
+            dependencies: ["EmailGobblerCore", "GnuCashBook", "SwiftSoup"]
+        ),
+        .target(
             name: "EmailGobblerService",
             dependencies: ["EmailGobblerCore", "SchoologyGrades", "EtradeDividends", "GnuCashBook"]
         ),
@@ -42,7 +47,7 @@ let package = Package(
         ),
         .testTarget(
             name: "EmailGobblerTests",
-            dependencies: ["EmailGobblerCore", "SchoologyGrades", "EtradeDividends", "GnuCashBook", "EmailGobblerService", "EmailGobblerCLI"],
+            dependencies: ["EmailGobblerCore", "SchoologyGrades", "EtradeDividends", "GnuCashBook", "SpendingEmails", "EmailGobblerService", "EmailGobblerCLI"],
             resources: [.copy("Fixtures")]
         ),
     ],

@@ -62,6 +62,9 @@ public enum LoginItemState: Equatable, Sendable {
     }
 }
 
+/// Accounts that can hold transactions, by full name, for account pickers.
+public func postableAccountNames(_ book: GnuCashBook) -> [String] { [] }
+
 /// One line describing a GnuCash book for the settings window.
 public func gnuCashBookSummary(_ book: GnuCashBook, fileName: String) -> String {
     let accounts = book.accounts.filter { $0.type != "ROOT" }

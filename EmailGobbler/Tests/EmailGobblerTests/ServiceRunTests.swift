@@ -2,6 +2,7 @@ import Foundation
 import XCTest
 import EtradeDividends
 import EmailGobblerCore
+import GnuCashBook
 @testable import EmailGobblerService
 
 final class ServiceRunTests: XCTestCase {
@@ -57,6 +58,13 @@ final class ServiceRunTests: XCTestCase {
         func consume(_ message: FetchedMailMessage) throws {
             calls.append("consume \(message.id)")
         }
+
+        func loadBook(_ url: URL) throws -> GnuCashBook {
+            XCTFail("no book")
+            throw GnuCashError.notAGnuCashBook
+        }
+
+        func appendToBook(_ url: URL, _ transactions: [NewGnuCashTransaction], backup: URL) throws { XCTFail("no book") }
     }
 
     private var base: URL!

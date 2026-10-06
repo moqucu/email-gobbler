@@ -6,6 +6,8 @@ import SchoologyGrades
 public enum UseCaseID: String, Codable, Sendable, CaseIterable {
     case schoologyGrades = "schoology-grades"
     case etradeDividends = "etrade-dividends"
+    case amexPurchases = "amex-purchases"
+    case payPalPayments = "paypal-payments"
 }
 
 public struct StudentRouteSettings: Codable, Equatable, Sendable {
@@ -46,12 +48,46 @@ public struct DividendsSettings: Codable, Equatable, Sendable {
     }
 }
 
+public struct AmexBookingSettings: Codable, Equatable, Sendable {
+    public var enabled: Bool
+    /// Full GnuCash account name, such as "Liabilities:Card".
+    public var account: String?
+
+    public init(enabled: Bool = false, account: String? = nil) {
+        self.enabled = enabled
+        self.account = account
+    }
+}
+
+public struct PayPalBookingSettings: Codable, Equatable, Sendable {
+    public var enabled: Bool
+    public var account: String?
+    public var bankFundingAccount: String?
+    public var cardFundingAccount: String?
+
+    public init(enabled: Bool = false, account: String? = nil, bankFundingAccount: String? = nil,
+                cardFundingAccount: String? = nil) {
+        self.enabled = enabled
+        self.account = account
+        self.bankFundingAccount = bankFundingAccount
+        self.cardFundingAccount = cardFundingAccount
+    }
+}
+
 public struct GnuCashSettings: Codable, Equatable, Sendable {
     /// The GnuCash XML book EmailGobbler reads and writes; `nil` until chosen.
     public var bookPath: String?
+    /// Where purchases from merchants the book has never seen are booked.
+    public var holdingAccount: String?
+    public var amex: AmexBookingSettings
+    public var payPal: PayPalBookingSettings
 
-    public init(bookPath: String? = nil) {
+    public init(bookPath: String? = nil, holdingAccount: String? = nil, amex: AmexBookingSettings = AmexBookingSettings(),
+                payPal: PayPalBookingSettings = PayPalBookingSettings()) {
         self.bookPath = bookPath
+        self.holdingAccount = holdingAccount
+        self.amex = amex
+        self.payPal = payPal
     }
 }
 

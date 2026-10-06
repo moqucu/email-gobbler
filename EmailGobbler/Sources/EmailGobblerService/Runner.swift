@@ -1,5 +1,6 @@
 import Foundation
 import EmailGobblerCore
+import GnuCashBook
 
 /// Mail and Numbers access, swappable for tests. Calls block until done.
 public protocol AutomationClient {
@@ -8,6 +9,9 @@ public protocol AutomationClient {
     func readSheet(_ target: SheetTarget) throws -> SheetSnapshot
     func writeSheet(_ plan: TargetPlan, plannedFrom: SheetSnapshot, backup: URL) throws
     func consume(_ message: FetchedMailMessage) throws
+    func loadBook(_ url: URL) throws -> GnuCashBook
+    /// Backs the book up to `backup`, then appends and verifies the transactions.
+    func appendToBook(_ url: URL, _ transactions: [NewGnuCashTransaction], backup: URL) throws
 }
 
 public struct UseCaseRunResult: Equatable, Sendable {
@@ -155,4 +159,6 @@ public struct LiveAutomationClient: AutomationClient {
                              plan: plan.update, plannedFrom: plannedFrom, backup: backup)
     }
     public func consume(_ message: FetchedMailMessage) throws { try consumeMailMessage(message) }
+    public func loadBook(_ url: URL) throws -> GnuCashBook { throw GnuCashError.notAGnuCashBook }
+    public func appendToBook(_ url: URL, _ transactions: [NewGnuCashTransaction], backup: URL) throws {}
 }

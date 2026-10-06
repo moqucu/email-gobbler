@@ -1,14 +1,24 @@
 # email-gobbler
 
-Turns recognized emails in macOS Mail into verified rows in Numbers workbooks.
-Two use cases run on one shared core:
+Turns recognized emails in macOS Mail into verified rows in Numbers workbooks and
+transactions in a GnuCash book. Four use cases run on one shared core:
 
 - **Schoology grades:** weekly summary emails update a student's weekly grades sheet.
 - **E*TRADE dividends:** "Dividend or interest paid" alerts append payments to a
   dividend ledger.
+- **AmEx purchases:** American Express purchase alerts become a transaction on the card account.
+- **PayPal payments:** PayPal receipts in USD become two transactions: the purchase from the PayPal
+  account, and a collection that moves the money into PayPal from the bank ("PayPal - Collection")
+  or from the card ("AmEx - Collection"). PayPal balance payments need no collection. The PayPal
+  transaction ID goes in the Num field.
 
-A GnuCash persistence layer (`GnuCashBook`) reads and appends transactions to a GnuCash XML book,
-chosen under **Settings… › GnuCash**, as the base for future spending-report use cases.
+The GnuCash book is chosen under **Settings… › GnuCash** (`GnuCashBook` reads and appends to the XML
+format). Spending emails are booked like the merchant's latest transaction on the same account:
+same description and expense account. Purchases from merchants the book has never seen go to a
+holding account you choose, for you to recategorize. A purchase counts as already booked when the
+account has the same amount within three days, or the same PayPal transaction ID; the email is then
+archived without a new transaction. Emails from these senders that are not purchases stay in the
+Inbox. Transactions are added only while the book is closed in GnuCash, after a backup.
 
 The Swift package lives in [`EmailGobbler`](EmailGobbler/README.md); run its tests
 with `swift test` from that directory. The `email-gobbler` tool processes matching
@@ -25,7 +35,7 @@ window. It checks mail at launch, every 30 minutes, and after the Mac wakes, and
 
 ```bash
 scripts/build-app.sh            # builds App/build.noindex/Build/Products/Release/EmailGobbler.app
-scripts/build-app.sh --install  # also copies it to /Applications
+scripts/build-app.sh --install  # also copies it to /Applications and restarts a running copy
 ```
 
 The app icon is a layered Icon Composer document, `App/Resources/AppIcon.icon`, so macOS applies its
@@ -33,8 +43,9 @@ Liquid Glass, dark, and tinted appearances. Regenerate its layers with
 `swift scripts/make-app-icon.swift App/Resources/AppIcon.icon/Assets`, or open it in Icon Composer.
 
 On first launch the app opens **Settings…**: choose the dividend ledger and each student's grades
-sheet, the schedule, and how many backups to keep. Saving reads every chosen sheet and refuses to save
-until its columns and formats are ready. Settings live in
+sheet, the GnuCash book and its accounts for AmEx and PayPal, the schedule, and how many backups to
+keep. Saving reads every chosen sheet and the book, and refuses to save until the sheets' columns and
+formats are ready and every chosen account exists and can hold transactions. Settings live in
 `~/Library/Application Support/EmailGobbler/settings.json` and apply immediately. **Launch at login**
 is available once valid settings are saved. The app asks for permission to control Mail and Numbers
 the first time it runs with an enabled use case.

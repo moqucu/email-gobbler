@@ -93,13 +93,25 @@ public struct MessageReport: Equatable {
     public let notes: [String]
     public let targets: [TargetReport]
     public let consumed: Bool
+    /// Entries added to a ledger such as a GnuCash book, and their preview lines.
+    public let ledgerEntries: Int
+    public let ledgerPreview: [String]
 
-    public init(summary: [String], notes: [String], targets: [TargetReport], consumed: Bool) {
+    public init(summary: [String], notes: [String], targets: [TargetReport], consumed: Bool,
+                ledgerEntries: Int = 0, ledgerPreview: [String] = []) {
         self.summary = summary
         self.notes = notes
         self.targets = targets
         self.consumed = consumed
+        self.ledgerEntries = ledgerEntries
+        self.ledgerPreview = ledgerPreview
     }
+}
+
+/// Errors meaning "this email is not one the use case handles": the email is
+/// left in the Inbox and the backlog continues.
+public protocol EmailApplicability: Error {
+    var leavesEmailInInbox: Bool { get }
 }
 
 /// A write failed after earlier targets of the same message were saved and verified.

@@ -5,6 +5,8 @@ extension UseCaseID {
         switch self {
         case .schoologyGrades: return "Schoology grades"
         case .etradeDividends: return "E*TRADE dividends"
+        case .amexPurchases: return "AmEx purchases"
+        case .payPalPayments: return "PayPal payments"
         }
     }
 }

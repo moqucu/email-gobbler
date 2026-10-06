@@ -72,3 +72,10 @@ Live alerts can list several payments; the multi-payment test markup is construc
 section, following `libgnucash/backend/xml` in GnuCash 5.17. `gnucash-cli` 5.17 loads it and reports
 the expected journal and balances. `gnucash-book.synthetic.gnucash` is the same file compressed with
 `gzip -n -9`, the way GnuCash saves compressed books. No real account data is included.
+
+# Spending email fixtures
+
+`amex-purchase.synthetic.eml` and `paypal-receipt.synthetic.eml` keep the HTML layout of one real
+American Express "Card may not have been present" alert and one real PayPal payment receipt. Names,
+card and account endings, merchants, amounts, dates, transaction and invoice IDs, phone numbers,
+addresses, headers, and every link are synthetic. Other formats in the tests are constructed variants.

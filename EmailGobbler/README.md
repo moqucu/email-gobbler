@@ -8,7 +8,8 @@ Each kind of email is a *use case* built on one shared core:
 | `EmailGobblerCore` | Dates, MIME decoding, Mail listing/fetching/archiving, the Numbers sheet model (snapshot, plan, format checks, verification), AppleScript generation, backups, and the per-message workflow (`EmailUseCase`, `processMessage`). |
 | `SchoologyGrades` | Schoology weekly-summary extraction, the weekly grades sheet planner, and the weekly-row upsert library. |
 | `EtradeDividends` | E*TRADE "Dividend or interest paid" alert extraction and the dividend ledger planner. |
-| `GnuCashBook` | Reads GnuCash 5 XML books (gzip or plain) and appends balanced transactions in GnuCash's own format, safely. |
+| `GnuCashBook` | Reads GnuCash 5 XML books (gzip or plain) and appends balanced transactions in GnuCash's own format, safely; the book workflow (`GnuCashUseCase`, `processBookMessage`). |
+| `SpendingEmails` | American Express purchase alerts and PayPal receipts, and how to book them from the book's history. |
 | `email-gobbler` | Command-line tool that runs a use case through the shared workflow. |
 
 A use case only parses its email and turns it into a `SheetUpdatePlan`: replace one
@@ -18,6 +19,11 @@ shared: reading the sheet, checking formats, backing up, writing, verifying the
 whole saved sheet, and archiving the email. To add a use case, implement
 `EmailUseCase` (a `MailQuery`, `summarize(html:)`, and `plan(html:sheet:)`)
 and add a subcommand.
+
+A `GnuCashUseCase` plans transactions instead (`planBook(html:book:)`). `processBookMessage` reads the
+book, appends the planned transactions through `GnuCashBookStore`, and archives the email only after
+the append was verified. A use case can throw an `EmailApplicability` error for emails it does not
+handle; the runner leaves those in the Inbox and continues with the next message.
 
 ## Requirements
 
@@ -120,6 +126,23 @@ unchanged. The store:
 The test fixture `Tests/EmailGobblerTests/Fixtures/gnucash-book.synthetic.xml` (and its gzip copy) is
 a synthetic book that `gnucash-cli` 5.17 loads; appended copies were checked the same way with the
 General Journal and Account Summary reports.
+
+### Spending emails
+
+`SpendingEmails` parses American Express "Your Card may not have been present for a purchase" alerts
+(merchant, amount, date) and PayPal receipts in USD (merchant, amount, date, transaction ID, and each
+funding source). Booking learns from the book:
+
+- The description and expense account come from the latest transaction on the same card or PayPal
+  account whose description matches the merchant, ignoring case, "www.", and endings such as ".com".
+- Unknown merchants are booked to the holding account with a readable name, and noted.
+- A transaction on the account with the same amount within three days, or with the same PayPal
+  transaction ID in Num, counts as already booked.
+- PayPal funding: a bank source books "PayPal - Collection", an American Express card "AmEx -
+  Collection", and the PayPal balance nothing. Other sources stop with an error.
+
+The fixtures `amex-purchase.synthetic.eml` and `paypal-receipt.synthetic.eml` are anonymized copies of
+real emails with synthetic merchants, amounts, and identifiers.
 
 ## Schoology weekly-email extraction
 

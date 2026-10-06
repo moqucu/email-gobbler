@@ -1,11 +1,15 @@
 import EtradeDividends
 import Foundation
 import EmailGobblerCore
+import GnuCashBook
 import SchoologyGrades
+import SpendingEmails
 
 public enum UseCaseID: String, Codable, Sendable, CaseIterable {
     case schoologyGrades = "schoology-grades"
     case etradeDividends = "etrade-dividends"
+    case amexPurchases = "amex-purchases"
+    case payPalPayments = "paypal-payments"
 }
 
 public struct StudentRouteSettings: Codable, Equatable, Sendable {
@@ -46,12 +50,73 @@ public struct DividendsSettings: Codable, Equatable, Sendable {
     }
 }
 
+public struct AmexBookingSettings: Codable, Equatable, Sendable {
+    public var enabled: Bool
+    /// Full GnuCash account name, such as "Liabilities:Card".
+    public var account: String?
+
+    public init(enabled: Bool = false, account: String? = nil) {
+        self.enabled = enabled
+        self.account = account
+    }
+}
+
+public struct PayPalBookingSettings: Codable, Equatable, Sendable {
+    public var enabled: Bool
+    public var account: String?
+    public var bankFundingAccount: String?
+    public var cardFundingAccount: String?
+
+    public init(enabled: Bool = false, account: String? = nil, bankFundingAccount: String? = nil,
+                cardFundingAccount: String? = nil) {
+        self.enabled = enabled
+        self.account = account
+        self.bankFundingAccount = bankFundingAccount
+        self.cardFundingAccount = cardFundingAccount
+    }
+}
+
 public struct GnuCashSettings: Codable, Equatable, Sendable {
     /// The GnuCash XML book EmailGobbler reads and writes; `nil` until chosen.
     public var bookPath: String?
+    /// Where purchases from merchants the book has never seen are booked.
+    public var holdingAccount: String?
+    public var amex: AmexBookingSettings
+    public var payPal: PayPalBookingSettings
 
-    public init(bookPath: String? = nil) {
+    public init(bookPath: String? = nil, holdingAccount: String? = nil, amex: AmexBookingSettings = AmexBookingSettings(),
+                payPal: PayPalBookingSettings = PayPalBookingSettings()) {
         self.bookPath = bookPath
+        self.holdingAccount = holdingAccount
+        self.amex = amex
+        self.payPal = payPal
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case bookPath, holdingAccount, amex, payPal
+    }
+
+    /// Settings saved before spending bookings existed load with them off.
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        bookPath = try container.decodeIfPresent(String.self, forKey: .bookPath)
+        holdingAccount = try container.decodeIfPresent(String.self, forKey: .holdingAccount)
+        amex = try container.decodeIfPresent(AmexBookingSettings.self, forKey: .amex) ?? AmexBookingSettings()
+        payPal = try container.decodeIfPresent(PayPalBookingSettings.self, forKey: .payPal) ?? PayPalBookingSettings()
+    }
+
+    /// Account settings in a stable order, for enabled bookings only.
+    var accountFields: [(field: String, account: String?, missing: String)] {
+        var fields: [(String, String?, String)] = []
+        guard amex.enabled || payPal.enabled else { return [] }
+        fields.append(("gnuCash.holdingAccount", holdingAccount, "Choose an account for new merchants"))
+        if amex.enabled { fields.append(("gnuCash.amex.account", amex.account, "Choose the American Express account")) }
+        if payPal.enabled {
+            fields.append(("gnuCash.payPal.account", payPal.account, "Choose the PayPal account"))
+            fields.append(("gnuCash.payPal.bankFundingAccount", payPal.bankFundingAccount, "Choose the bank account that funds PayPal"))
+            fields.append(("gnuCash.payPal.cardFundingAccount", payPal.cardFundingAccount, "Choose the card account that funds PayPal"))
+        }
+        return fields
     }
 }
 
@@ -150,8 +215,12 @@ public struct AppSettings: Codable, Equatable, Sendable {
                 }
             }
         }
-        if let bookPath = gnuCash.bookPath, Self.isBlank(bookPath) {
+        let bookingsEnabled = gnuCash.amex.enabled || gnuCash.payPal.enabled
+        if (gnuCash.bookPath != nil || bookingsEnabled) && Self.isBlank(gnuCash.bookPath) {
             issues.append(SettingsIssue(field: "gnuCash.bookPath", message: "Choose a GnuCash book"))
+        }
+        for (field, account, missing) in gnuCash.accountFields where Self.isBlank(account) {
+            issues.append(SettingsIssue(field: field, message: missing))
         }
         if dividends.enabled {
             if !Self.isWorkbookPath(dividends.workbookPath) {
@@ -181,6 +250,20 @@ public struct AppSettings: Codable, Equatable, Sendable {
             let query = dividends.subject.map { MailQuery(subjectContains: $0, senderContains: defaults.senderContains) } ?? defaults
             let target = SheetTarget(workbook: URL(fileURLWithPath: path), sheetName: dividends.sheetName)
             result.append(ConfiguredUseCase(id: .etradeDividends, useCase: EtradeDividendsUseCase(target: target, mailQuery: query)))
+        }
+        if let path = gnuCash.bookPath, let holding = gnuCash.holdingAccount {
+            let book = URL(fileURLWithPath: path)
+            if gnuCash.amex.enabled, let account = gnuCash.amex.account {
+                result.append(ConfiguredUseCase(id: .amexPurchases, useCase: AmexPurchasesUseCase(
+                    bookURL: book, amexAccount: account, holdingAccount: holding)))
+            }
+            let payPal = gnuCash.payPal
+            if payPal.enabled, let account = payPal.account, let bank = payPal.bankFundingAccount,
+               let card = payPal.cardFundingAccount {
+                result.append(ConfiguredUseCase(id: .payPalPayments, useCase: PayPalPaymentsUseCase(
+                    bookURL: book, accounts: PayPalAccounts(payPal: account, bankFunding: bank, cardFunding: card),
+                    holdingAccount: holding)))
+            }
         }
         return result
     }

@@ -38,7 +38,17 @@ public func preflightIssues(_ settings: AppSettings,
     if let path = settings.gnuCash.bookPath, !invalid.contains("gnuCash.bookPath") {
         let url = URL(fileURLWithPath: path)
         do {
-            _ = try loadBook(url)
+            let book = try loadBook(url)
+            for (field, name, _) in settings.gnuCash.accountFields where !invalid.contains(field) {
+                guard let name else { continue }
+                if let account = book.accounts.first(where: { $0.fullName == name && $0.type != "ROOT" }) {
+                    if account.isPlaceholder {
+                        issues.append(SettingsIssue(field: field, message: "\(name) is a placeholder and can't hold transactions"))
+                    }
+                } else {
+                    issues.append(SettingsIssue(field: field, message: "\(name) is not in \(url.lastPathComponent)"))
+                }
+            }
         } catch {
             issues.append(SettingsIssue(field: "gnuCash.bookPath", message: "\(url.lastPathComponent): \(error)"))
         }
@@ -60,6 +70,11 @@ public enum LoginItemState: Equatable, Sendable {
         case .notFound: return "Install the app in /Applications to start it at login."
         }
     }
+}
+
+/// Accounts that can hold transactions, by full name, for account pickers.
+public func postableAccountNames(_ book: GnuCashBook) -> [String] {
+    book.accounts.filter { $0.type != "ROOT" && !$0.isPlaceholder && !$0.fullName.isEmpty }.map(\.fullName).sorted()
 }
 
 /// One line describing a GnuCash book for the settings window.

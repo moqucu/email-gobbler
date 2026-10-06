@@ -1,5 +1,6 @@
 import Foundation
 import EmailGobblerCore
+import GnuCashBook
 
 /// Mail and Numbers access, swappable for tests. Calls block until done.
 public protocol AutomationClient {
@@ -8,6 +9,9 @@ public protocol AutomationClient {
     func readSheet(_ target: SheetTarget) throws -> SheetSnapshot
     func writeSheet(_ plan: TargetPlan, plannedFrom: SheetSnapshot, backup: URL) throws
     func consume(_ message: FetchedMailMessage) throws
+    func loadBook(_ url: URL) throws -> GnuCashBook
+    /// Backs the book up to `backup`, then appends and verifies the transactions.
+    func appendToBook(_ url: URL, _ transactions: [NewGnuCashTransaction], backup: URL) throws
 }
 
 public struct UseCaseRunResult: Equatable, Sendable {
@@ -106,6 +110,31 @@ public func runUseCase(_ configured: ConfiguredUseCase, environment: RunEnvironm
         do {
             let fetched = try client.fetchMessage(ref)
             let html = try MailDecoder.html(from: fetched.source)
+            if let bookUseCase = configured.useCase as? any GnuCashUseCase {
+                let actions = BookActions(
+                    readBook: { try client.loadBook($0) },
+                    append: { url, transactions in
+                        sequence += 1
+                        let backup = backupURL(directory: directory, workbook: url, timestamp: environment.now(), sequence: sequence)
+                        try client.appendToBook(url, transactions, backup: backup)
+                        try pruneBackups(directory: directory, workbook: url, keep: environment.retention)
+                    },
+                    consume: { try client.consume(fetched) }
+                )
+                let report: MessageReport
+                do {
+                    report = try processBookMessage(html: html, useCase: bookUseCase, actions: actions)
+                } catch let error as any EmailApplicability where error.leavesEmailInInbox {
+                    log(ref.rfcMessageID, "process", "skipped (not applicable)")
+                    continue
+                }
+                rowsWritten += report.ledgerEntries
+                log(ref.rfcMessageID, "process", "\(report.ledgerEntries) transactions added")
+                log(ref.rfcMessageID, "consume", "archived")
+                processed += 1
+                lastProcessedAt = environment.now()
+                continue
+            }
             let actions = MessageActions(
                 readSheet: { try client.readSheet($0) },
                 write: { plan, sheet in
@@ -155,4 +184,8 @@ public struct LiveAutomationClient: AutomationClient {
                              plan: plan.update, plannedFrom: plannedFrom, backup: backup)
     }
     public func consume(_ message: FetchedMailMessage) throws { try consumeMailMessage(message) }
+    public func loadBook(_ url: URL) throws -> GnuCashBook { try GnuCashBookStore(url: url).load() }
+    public func appendToBook(_ url: URL, _ transactions: [NewGnuCashTransaction], backup: URL) throws {
+        try GnuCashBookStore(url: url).append(transactions, backupDirectory: backup.deletingLastPathComponent())
+    }
 }

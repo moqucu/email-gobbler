@@ -17,13 +17,17 @@ public struct UseCaseRunResult: Equatable, Sendable {
     public let rowsWritten: Int
     /// Present when the use case stopped; later messages stay in the Inbox.
     public let error: String?
+    /// When the last email of this run was processed and archived.
+    public let lastProcessedAt: Date?
 
-    public init(id: UseCaseID, messagesFound: Int, messagesProcessed: Int, rowsWritten: Int, error: String?) {
+    public init(id: UseCaseID, messagesFound: Int, messagesProcessed: Int, rowsWritten: Int, error: String?,
+                lastProcessedAt: Date? = nil) {
         self.id = id
         self.messagesFound = messagesFound
         self.messagesProcessed = messagesProcessed
         self.rowsWritten = rowsWritten
         self.error = error
+        self.lastProcessedAt = lastProcessedAt
     }
 }
 

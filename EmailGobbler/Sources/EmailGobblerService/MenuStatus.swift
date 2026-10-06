@@ -46,8 +46,9 @@ private func describe(_ result: UseCaseRunResult) -> String {
 
 /// Settings problems come first, then a running or paused state, then the last
 /// run's outcome. Details may include error text but never reach the log.
-public func menuStatus(status: CoordinatorStatus, settingsIssues: [SettingsIssue], hasEnabledUseCases: Bool,
-                       formatTime: (Date) -> String) -> MenuStatus {
+public func menuStatus(status: CoordinatorStatus, settingsIssues: [SettingsIssue], enabledUseCases: [UseCaseID],
+                       history: ProcessingHistory, formatTime: (Date) -> String) -> MenuStatus {
+    let hasEnabledUseCases = !enabledUseCases.isEmpty
     let pauseTitle = status.state == .paused ? "Resume" : "Pause"
     if !settingsIssues.isEmpty {
         return MenuStatus(symbol: .attention, headline: "Settings need attention",

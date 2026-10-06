@@ -110,7 +110,8 @@ final class ServiceRunTests: XCTestCase {
         client.messages = [ref(7, age: -7200), ref(8, age: -60)]
         client.sources = [7: try alertSource(), 8: try alertSource()]
         let result = runUseCase(dividends(), environment: environment(client))
-        XCTAssertEqual(result, UseCaseRunResult(id: .etradeDividends, messagesFound: 2, messagesProcessed: 2, rowsWritten: 1, error: nil))
+        XCTAssertEqual(result, UseCaseRunResult(id: .etradeDividends, messagesFound: 2, messagesProcessed: 2, rowsWritten: 1, error: nil,
+                                                lastProcessedAt: Date(timeIntervalSince1970: 1_790_000_003)))
         XCTAssertEqual(client.calls, ["list", "fetch 7", "read", "write", "consume 7", "fetch 8", "read", "consume 8"])
         XCTAssertEqual(client.sheet.rowCount, 3)
         XCTAssertEqual(client.backups.map { $0.deletingLastPathComponent().path },
@@ -124,7 +125,7 @@ final class ServiceRunTests: XCTestCase {
         client.failFetchOf = 8
         let result = runUseCase(dividends(), environment: environment(client))
         XCTAssertEqual(result, UseCaseRunResult(id: .etradeDividends, messagesFound: 3, messagesProcessed: 1, rowsWritten: 1,
-                                                error: "Message moved"))
+                                                error: "Message moved", lastProcessedAt: Date(timeIntervalSince1970: 1_790_000_002)))
         XCTAssertEqual(client.calls, ["list", "fetch 7", "read", "write", "consume 7", "fetch 8"])
     }
 

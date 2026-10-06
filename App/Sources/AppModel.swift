@@ -83,7 +83,7 @@ final class AppModel: ObservableObject {
     private func refresh() {
         isRunning = status.state == .running
         menu = menuStatus(status: status, settingsIssues: settingsIssues,
-                          hasEnabledUseCases: !settings.configuredUseCases().isEmpty,
+                          enabledUseCases: settings.configuredUseCases().map(\.id), history: ProcessingHistory(),
                           formatTime: { $0.formatted(date: .abbreviated, time: .shortened) })
     }
 

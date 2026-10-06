@@ -35,7 +35,7 @@ window. It checks mail at launch, every 30 minutes, and after the Mac wakes, and
 
 ```bash
 scripts/build-app.sh            # builds App/build.noindex/Build/Products/Release/EmailGobbler.app
-scripts/build-app.sh --install  # also copies it to /Applications
+scripts/build-app.sh --install  # also copies it to /Applications and restarts a running copy
 ```
 
 The app icon is a layered Icon Composer document, `App/Resources/AppIcon.icon`, so macOS applies its

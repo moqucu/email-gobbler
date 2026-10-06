@@ -58,6 +58,8 @@ final class SpendingEmailsTests: XCTestCase {
         assertSpendingError(.unsupportedCurrency("EUR"), try parsePayPalReceipt(html: euro))
         let noID = try html("paypal-receipt.synthetic").replacingOccurrences(of: "Transaction ID", with: "Reference")
         assertSpendingError(.missingField("Transaction ID"), try parsePayPalReceipt(html: noID))
+        let noFunding = try html("paypal-receipt.synthetic").replacingOccurrences(of: "Paid Example Streaming with", with: "Details")
+        assertSpendingError(.missingField("payment method"), try parsePayPalReceipt(html: noFunding))
     }
 
     // MARK: - Booking

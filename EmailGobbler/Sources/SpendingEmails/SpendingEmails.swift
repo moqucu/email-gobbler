@@ -177,6 +177,7 @@ public func parsePayPalReceipt(html: String) throws -> PayPalPayment {
             funding.append(PayPalFunding(source: source, amount: value))
         }
     }
+    guard !funding.isEmpty else { throw SpendingEmailError.missingField("payment method") }
     return PayPalPayment(merchant: merchant, amount: amount, currency: currency, date: try emailDate(dateText),
                          transactionID: transactionID, funding: funding)
 }

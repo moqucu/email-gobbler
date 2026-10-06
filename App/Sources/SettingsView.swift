@@ -10,6 +10,7 @@ struct SettingsView: View {
                 dividendsSection
                 gradesSection
                 gnuCashSection
+                spendingSection
                 scheduleSection
                 startupSection
             }
@@ -94,6 +95,35 @@ struct SettingsView: View {
         }
     }
 
+    private var spendingSection: some View {
+        Section {
+            Toggle("Book AmEx purchase alerts", isOn: $editor.draft.gnuCash.amex.enabled)
+            if editor.draft.gnuCash.amex.enabled {
+                account("American Express account", $editor.draft.gnuCash.amex.account, field: "gnuCash.amex.account")
+            }
+            Toggle("Book PayPal payment receipts", isOn: $editor.draft.gnuCash.payPal.enabled)
+            if editor.draft.gnuCash.payPal.enabled {
+                account("PayPal account", $editor.draft.gnuCash.payPal.account, field: "gnuCash.payPal.account")
+                account("Paid from bank", $editor.draft.gnuCash.payPal.bankFundingAccount,
+                        field: "gnuCash.payPal.bankFundingAccount")
+                account("Paid from card", $editor.draft.gnuCash.payPal.cardFundingAccount,
+                        field: "gnuCash.payPal.cardFundingAccount")
+            }
+            if editor.draft.gnuCash.amex.enabled || editor.draft.gnuCash.payPal.enabled {
+                account("New merchants", $editor.draft.gnuCash.holdingAccount, field: "gnuCash.holdingAccount")
+            }
+        } header: {
+            Text("Spending")
+        } footer: {
+            Text("Each purchase is booked like the merchant's latest transaction in the book. "
+                 + "Purchases from new merchants go to the New merchants account for you to recategorize.")
+        }
+    }
+
+    private func account(_ title: String, _ selection: Binding<String?>, field: String) -> some View {
+        AccountRow(title: title, account: selection, names: editor.bookAccounts, issue: editor.issue(field))
+    }
+
     private var scheduleSection: some View {
         Section("Schedule and backups") {
             Stepper("Check mail every \(editor.draft.intervalMinutes) minutes",
@@ -123,7 +153,7 @@ struct SettingsView: View {
         HStack {
             if editor.isChecking {
                 ProgressView().controlSize(.small)
-                Text("Checking sheets in Numbers…").foregroundStyle(.secondary)
+                Text("Checking settings…").foregroundStyle(.secondary)
             } else if let message = editor.message {
                 Text(message).foregroundStyle(editor.issues.isEmpty ? Color.secondary : Color.red)
             }
@@ -167,6 +197,27 @@ private struct SheetRow: View {
             }
         } else {
             TextField("Sheet", text: $sheet)
+        }
+        if let issue { IssueText(issue) }
+    }
+}
+
+private struct AccountRow: View {
+    let title: String
+    @Binding var account: String?
+    let names: [String]
+    let issue: String?
+
+    var body: some View {
+        if names.isEmpty {
+            TextField(title, text: Binding(get: { account ?? "" }, set: { account = $0.isEmpty ? nil : $0 }),
+                      prompt: Text("Full account name, such as Expenses:Groceries"))
+        } else {
+            Picker(title, selection: $account) {
+                Text("Choose an account").tag(String?.none)
+                if let account, !names.contains(account) { Text(account).tag(String?.some(account)) }
+                ForEach(names, id: \.self) { Text($0).tag(String?.some($0)) }
+            }
         }
         if let issue { IssueText(issue) }
     }

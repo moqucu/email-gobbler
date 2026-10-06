@@ -15,6 +15,8 @@ final class SettingsEditor: ObservableObject {
     @Published private(set) var loginState = LoginItem.state
     @Published private(set) var hasValidSavedSettings: Bool
     @Published private(set) var bookSummary: String?
+    /// Accounts in the chosen book that can hold transactions, for the pickers.
+    @Published private(set) var bookAccounts: [String] = []
 
     private let onSave: (AppSettings) -> Void
 
@@ -41,25 +43,30 @@ final class SettingsEditor: ObservableObject {
     func removeGnuCashBook() {
         draft.gnuCash.bookPath = nil
         bookSummary = nil
+        bookAccounts = []
     }
 
     /// Reads the chosen book in the background; GnuCash itself is not involved.
     private func loadBookSummary() {
         guard let path = draft.gnuCash.bookPath, !path.isEmpty else {
             bookSummary = nil
+            bookAccounts = []
             return
         }
         bookSummary = "Reading \(URL(fileURLWithPath: path).lastPathComponent)…"
         Task {
-            let summary = await Task.detached(priority: .utility) { () -> String in
+            let (summary, accounts) = await Task.detached(priority: .utility) { () -> (String, [String]) in
                 let url = URL(fileURLWithPath: path)
                 do {
-                    return gnuCashBookSummary(try GnuCashBookStore(url: url).load(), fileName: url.lastPathComponent)
+                    let book = try GnuCashBookStore(url: url).load()
+                    return (gnuCashBookSummary(book, fileName: url.lastPathComponent), postableAccountNames(book))
                 } catch {
-                    return "\(url.lastPathComponent): \(error)"
+                    return ("\(url.lastPathComponent): \(error)", [])
                 }
             }.value
-            if draft.gnuCash.bookPath == path { bookSummary = summary }
+            guard draft.gnuCash.bookPath == path else { return }
+            bookSummary = summary
+            bookAccounts = accounts
         }
     }
 
@@ -118,7 +125,7 @@ final class SettingsEditor: ObservableObject {
             isChecking = false
             issues = found
             guard found.isEmpty else {
-                message = "Some sheets need attention in Numbers. Nothing was saved."
+                message = "Some settings need attention. Nothing was saved."
                 return
             }
             onSave(settings)

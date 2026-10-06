@@ -164,7 +164,7 @@ public func parsePayPalReceipt(html: String) throws -> PayPalPayment {
 
     var funding: [PayPalFunding] = []
     let header = ((try? document.select("td").array()) ?? []).first {
-        collapsed((try? $0.ownText()) ?? "") == "Paid \(merchant) with"
+        collapsed($0.ownText()) == "Paid \(merchant) with"
     }
     if let headerRow = header?.parent(), let detailRow = try? headerRow.nextElementSibling() {
         for row in (try? detailRow.select("tr").array()) ?? [] {

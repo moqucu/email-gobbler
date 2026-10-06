@@ -9,6 +9,8 @@ final class AppModel: ObservableObject {
     @Published private(set) var isRunning = false
 
     private let store = SettingsStore.standard
+    private let historyStore = ProcessingHistoryStore.standard
+    private lazy var history = historyStore.load()
     private let settingsWindow = SettingsWindowController()
     private var settings = AppSettings.standard
     private var settingsIssues: [SettingsIssue] = []
@@ -60,9 +62,12 @@ final class AppModel: ObservableObject {
         tasks.append(Task { [weak self] in
             for await update in coordinator.updates {
                 guard let self else { return }
-                if update.state != .running, let finished = update.lastSummary, finished != status.lastSummary,
-                   let notice = failureNotice(previous: status.lastSummary, current: finished) {
-                    FailureNotifier.post(notice)
+                if update.state != .running, let finished = update.lastSummary, finished != status.lastSummary {
+                    if let notice = failureNotice(previous: status.lastSummary, current: finished) {
+                        FailureNotifier.post(notice)
+                    }
+                    history = history.recording(finished)
+                    try? historyStore.save(history)
                 }
                 status = update
                 refresh()
@@ -83,7 +88,7 @@ final class AppModel: ObservableObject {
     private func refresh() {
         isRunning = status.state == .running
         menu = menuStatus(status: status, settingsIssues: settingsIssues,
-                          enabledUseCases: settings.configuredUseCases().map(\.id), history: ProcessingHistory(),
+                          enabledUseCases: settings.configuredUseCases().map(\.id), history: history,
                           formatTime: { $0.formatted(date: .abbreviated, time: .shortened) })
     }
 

@@ -31,19 +31,6 @@ public struct MenuStatus: Equatable, Sendable {
     }
 }
 
-private func plural(_ count: Int, _ word: String) -> String {
-    "\(count) \(word)\(count == 1 ? "" : "s")"
-}
-
-private func describe(_ result: UseCaseRunResult) -> String {
-    let name = result.id.displayName
-    if let error = result.error {
-        return "\(name): stopped after \(result.messagesProcessed) of \(result.messagesFound) emails: \(error)"
-    }
-    guard result.messagesFound > 0 else { return "\(name): no new email" }
-    return "\(name): \(plural(result.messagesProcessed, "email")), \(plural(result.rowsWritten, "row")) written"
-}
-
 /// Settings problems come first, then a running or paused state, then the last
 /// run's outcome. Details may include error text but never reach the log.
 public func menuStatus(status: CoordinatorStatus, settingsIssues: [SettingsIssue], enabledUseCases: [UseCaseID],
@@ -58,9 +45,17 @@ public func menuStatus(status: CoordinatorStatus, settingsIssues: [SettingsIssue
         return MenuStatus(symbol: .attention, headline: "Not set up",
                           details: ["Open Settings… to choose workbooks"], pauseTitle: pauseTitle)
     }
-    let details = status.lastSummary.map { summary in
-        ["Last run: \(formatTime(summary.finishedAt))"] + summary.results.map(describe)
-    } ?? []
+    var details = status.lastSummary.map { ["Last run: \(formatTime($0.finishedAt))"] } ?? []
+    for id in enabledUseCases {
+        let name = id.displayName
+        if let result = status.lastSummary?.results.first(where: { $0.id == id }), let error = result.error {
+            details.append("\(name): stopped after \(result.messagesProcessed) of \(result.messagesFound) emails: \(error)")
+        } else if let date = history.lastProcessed(id) {
+            details.append("\(name): last email \(formatTime(date))")
+        } else {
+            details.append("\(name): no email processed yet")
+        }
+    }
     switch status.state {
     case .running:
         return MenuStatus(symbol: .running, headline: "Checking mail…", details: details, pauseTitle: pauseTitle)
@@ -68,7 +63,7 @@ public func menuStatus(status: CoordinatorStatus, settingsIssues: [SettingsIssue
         return MenuStatus(symbol: .paused, headline: "Paused", details: details, pauseTitle: pauseTitle)
     case .idle:
         guard let summary = status.lastSummary else {
-            return MenuStatus(symbol: .idle, headline: "Waiting for the first run", details: [], pauseTitle: pauseTitle)
+            return MenuStatus(symbol: .idle, headline: "Waiting for the first run", details: details, pauseTitle: pauseTitle)
         }
         return summary.succeeded
             ? MenuStatus(symbol: .idle, headline: "Up to date", details: details, pauseTitle: pauseTitle)

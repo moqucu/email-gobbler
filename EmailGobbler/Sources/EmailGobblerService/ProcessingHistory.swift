@@ -9,9 +9,15 @@ public struct ProcessingHistory: Codable, Equatable, Sendable {
         self.lastProcessed = lastProcessed
     }
 
-    public func lastProcessed(_ id: UseCaseID) -> Date? { nil }
+    public func lastProcessed(_ id: UseCaseID) -> Date? { lastProcessed[id.rawValue] }
 
-    public func recording(_ summary: RunSummary) -> ProcessingHistory { self }
+    public func recording(_ summary: RunSummary) -> ProcessingHistory {
+        var updated = self
+        for result in summary.results {
+            if let date = result.lastProcessedAt { updated.lastProcessed[result.id.rawValue] = date }
+        }
+        return updated
+    }
 }
 
 public struct ProcessingHistoryStore: Sendable {
@@ -25,6 +31,24 @@ public struct ProcessingHistoryStore: Sendable {
         ProcessingHistoryStore(directory: SettingsStore.standard.fileURL.deletingLastPathComponent())
     }
 
-    public func load() -> ProcessingHistory { ProcessingHistory() }
-    public func save(_ history: ProcessingHistory) throws {}
+    /// Missing or unreadable history starts empty; it only feeds the menu.
+    public func load() -> ProcessingHistory {
+        guard let data = try? Data(contentsOf: fileURL),
+              let history = try? Self.decoder.decode(ProcessingHistory.self, from: data) else { return ProcessingHistory() }
+        return history
+    }
+
+    private static var decoder: JSONDecoder {
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        return decoder
+    }
+
+    public func save(_ history: ProcessingHistory) throws {
+        try FileManager.default.createDirectory(at: fileURL.deletingLastPathComponent(), withIntermediateDirectories: true)
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
+        encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+        try encoder.encode(history).write(to: fileURL, options: .atomic)
+    }
 }

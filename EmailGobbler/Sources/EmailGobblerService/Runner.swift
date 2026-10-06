@@ -101,6 +101,7 @@ public func runUseCase(_ configured: ConfiguredUseCase, environment: RunEnvironm
     var processed = 0
     var rowsWritten = 0
     var sequence = 0
+    var lastProcessedAt: Date?
     for ref in messages {
         do {
             let fetched = try client.fetchMessage(ref)
@@ -122,14 +123,15 @@ public func runUseCase(_ configured: ConfiguredUseCase, environment: RunEnvironm
             log(ref.rfcMessageID, "process", "\(written.count) of \(report.targets.count) sheets written")
             log(ref.rfcMessageID, "consume", "archived")
             processed += 1
+            lastProcessedAt = environment.now()
         } catch {
             log(ref.rfcMessageID, "process", failure(error))
             return UseCaseRunResult(id: id, messagesFound: messages.count, messagesProcessed: processed,
-                                    rowsWritten: rowsWritten, error: "\(error)")
+                                    rowsWritten: rowsWritten, error: "\(error)", lastProcessedAt: lastProcessedAt)
         }
     }
     return UseCaseRunResult(id: id, messagesFound: messages.count, messagesProcessed: processed,
-                            rowsWritten: rowsWritten, error: nil)
+                            rowsWritten: rowsWritten, error: nil, lastProcessedAt: lastProcessedAt)
 }
 
 /// Runs every use case; one failing does not stop the others.

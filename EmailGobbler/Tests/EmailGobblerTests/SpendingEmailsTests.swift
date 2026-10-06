@@ -51,10 +51,10 @@ final class SpendingEmailsTests: XCTestCase {
     }
 
     func testPayPalEmailsThatAreNotPaymentsOrNotUSDAreRejected() throws {
-        let received = try html("paypal-receipt.synthetic").replacingOccurrences(of: "You paid $15.49 USD to Example Streaming",
-                                                                                 with: "You received $15.49 USD from Example Streaming")
+        let received = try html("paypal-receipt.synthetic").replacingOccurrences(of: "You paid $15.49\u{00A0}USD to Example Streaming",
+                                                                                 with: "You received $15.49\u{00A0}USD from Example Streaming")
         assertSpendingError(.notApplicable("Not a PayPal payment receipt"), try parsePayPalReceipt(html: received))
-        let euro = try html("paypal-receipt.synthetic").replacingOccurrences(of: "You paid $15.49 USD", with: "You paid €15.49 EUR")
+        let euro = try html("paypal-receipt.synthetic").replacingOccurrences(of: "You paid $15.49\u{00A0}USD", with: "You paid €15.49\u{00A0}EUR")
         assertSpendingError(.unsupportedCurrency("EUR"), try parsePayPalReceipt(html: euro))
         let noID = try html("paypal-receipt.synthetic").replacingOccurrences(of: "Transaction ID", with: "Reference")
         assertSpendingError(.missingField("Transaction ID"), try parsePayPalReceipt(html: noID))

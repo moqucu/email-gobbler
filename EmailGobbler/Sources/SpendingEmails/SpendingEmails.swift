@@ -264,10 +264,35 @@ public enum SpendingAccountRole: Sendable, CaseIterable {
     /// Categories, including the holding account.
     case expense
 
-    public var accountTypes: Set<String> { [] }
+    public var accountTypes: Set<String> {
+        switch self {
+        case .billPayment: return ["BANK", "ASSET", "CASH", "CREDIT", "LIABILITY"]
+        case .bank: return ["BANK", "ASSET", "CASH"]
+        case .card: return ["CREDIT", "LIABILITY"]
+        case .wallet: return ["ASSET", "BANK"]
+        case .expense: return ["EXPENSE"]
+        }
+    }
+
+    private var choice: String {
+        switch self {
+        case .billPayment: return "choose a bank, asset, or card account"
+        case .bank: return "choose a bank, asset, or cash account"
+        case .card: return "choose a credit card or liability account"
+        case .wallet: return "choose an asset or bank account"
+        case .expense: return "choose an expense account"
+        }
+    }
 
     /// Why `account` does not fit this role, or `nil` when it does.
-    public func problem(with account: GnuCashAccount) -> String? { nil }
+    public func problem(with account: GnuCashAccount) -> String? {
+        guard !accountTypes.contains(account.type) else { return nil }
+        let kinds = ["CREDIT": "credit card", "MUTUAL": "mutual fund", "RECEIVABLE": "accounts receivable",
+                     "PAYABLE": "accounts payable"]
+        let kind = kinds[account.type] ?? account.type.lowercased()
+        let article = "aeiou".contains(kind.first ?? "x") ? "an" : "a"
+        return "\(account.fullName) is \(article) \(kind) account; \(choice)"
+    }
 }
 
 private func normalized(_ name: String) -> String {
@@ -291,9 +316,10 @@ private func readable(_ merchant: String) -> String {
     }.joined(separator: " ")
 }
 
-private func requireAccount(_ name: String, in book: GnuCashBook) throws -> GnuCashAccount {
+private func requireAccount(_ name: String, in book: GnuCashBook, as role: SpendingAccountRole) throws -> GnuCashAccount {
     guard let account = book.account(named: name) else { throw GnuCashError.unknownAccount(name) }
     guard !account.isPlaceholder else { throw GnuCashError.placeholderAccount(name) }
+    if let problem = role.problem(with: account) { throw SpendingEmailError.unsuitableAccount(problem) }
     return account
 }
 
@@ -322,27 +348,37 @@ private func alreadyBooked(_ transaction: GnuCashTransaction, _ amount: Decimal)
     "Already booked: \(transaction.description) \(currencyDisplay(abs(amount))) on \(shown(transaction.datePosted))"
 }
 
+/// The expense account a booking of the merchant used: its largest other split.
+private func expenseAccount(of transaction: GnuCashTransaction, against account: GnuCashAccount,
+                            in book: GnuCashBook) -> GnuCashAccount? {
+    guard let split = transaction.splits.filter({ $0.accountGUID != account.guid }).max(by: { abs($0.value) < abs($1.value) }),
+          let expense = book.account(guid: split.accountGUID), !expense.isPlaceholder,
+          SpendingAccountRole.expense.problem(with: expense) == nil else { return nil }
+    return expense
+}
+
 /// The description and expense account of the latest booking of this merchant
-/// against `account`, or a readable name and the holding account.
+/// against `account` that went to an expense account, or a readable name and
+/// the holding account. Transfers, such as card payments, are never learned.
 private func categorize(_ merchant: String, against account: GnuCashAccount, in book: GnuCashBook,
                         holdingAccount: String) throws -> (description: String, expense: String, note: String?) {
-    let candidates = book.transactions.enumerated().filter { _, transaction in
-        transaction.splits.contains { $0.accountGUID == account.guid } && sameMerchant(transaction.description, merchant)
+    let candidates = book.transactions.enumerated().compactMap { offset, transaction -> (Int, GnuCashTransaction, GnuCashAccount)? in
+        guard transaction.splits.contains(where: { $0.accountGUID == account.guid }),
+              sameMerchant(transaction.description, merchant),
+              let expense = expenseAccount(of: transaction, against: account, in: book) else { return nil }
+        return (offset, transaction, expense)
     }
-    let latest = candidates.max { ($0.element.datePosted, $0.offset) < ($1.element.datePosted, $1.offset) }?.element
-    if let latest,
-       let split = latest.splits.filter({ $0.accountGUID != account.guid }).max(by: { abs($0.value) < abs($1.value) }),
-       let expense = book.account(guid: split.accountGUID), !expense.isPlaceholder, expense.type != "ROOT" {
-        return (latest.description, expense.fullName, nil)
+    if let latest = candidates.max(by: { ($0.1.datePosted, $0.0) < ($1.1.datePosted, $1.0) }) {
+        return (latest.1.description, latest.2.fullName, nil)
     }
-    let holding = try requireAccount(holdingAccount, in: book)
+    let holding = try requireAccount(holdingAccount, in: book, as: .expense)
     let name = readable(merchant)
     return (name, holding.fullName, "New merchant \"\(name)\" booked to \(holding.fullName)")
 }
 
 public func planAmexPurchase(_ purchase: AmexPurchase, book: GnuCashBook, amexAccount: String,
                              holdingAccount: String) throws -> SpendingPlan {
-    let card = try requireAccount(amexAccount, in: book)
+    let card = try requireAccount(amexAccount, in: book, as: .card)
     if let existing = existingBooking(in: book, account: card, amount: -purchase.amount, date: purchase.date) {
         return SpendingPlan(transactions: [], notes: [alreadyBooked(existing, purchase.amount)])
     }
@@ -359,7 +395,7 @@ public func planAmexPurchase(_ purchase: AmexPurchase, book: GnuCashBook, amexAc
 /// each funding source moving the money into PayPal.
 public func planPayPalPayment(_ payment: PayPalPayment, book: GnuCashBook, accounts: PayPalAccounts,
                               holdingAccount: String) throws -> SpendingPlan {
-    let payPal = try requireAccount(accounts.payPal, in: book)
+    let payPal = try requireAccount(accounts.payPal, in: book, as: .wallet)
     var transactions: [NewGnuCashTransaction] = []
     var notes: [String] = []
 
@@ -380,16 +416,17 @@ public func planPayPalPayment(_ payment: PayPalPayment, book: GnuCashBook, accou
         let source = funding.source.uppercased()
         let description: String
         let sourceAccount: String
+        let role: SpendingAccountRole
         if source.contains("AMERICAN EXPRESS") || source.contains("AMEX") {
-            (description, sourceAccount) = ("AmEx - Collection", accounts.cardFunding)
+            (description, sourceAccount, role) = ("AmEx - Collection", accounts.cardFunding, .card)
         } else if source.contains("BALANCE") {
             continue
         } else if source.contains("BANK") || source.contains("CHECKING") || source.contains("SAVINGS") {
-            (description, sourceAccount) = ("PayPal - Collection", accounts.bankFunding)
+            (description, sourceAccount, role) = ("PayPal - Collection", accounts.bankFunding, .bank)
         } else {
             throw SpendingEmailError.unsupportedFunding(funding.source)
         }
-        let from = try requireAccount(sourceAccount, in: book)
+        let from = try requireAccount(sourceAccount, in: book, as: role)
         if let existing = existingBooking(in: book, account: payPal, amount: funding.amount, date: payment.date,
                                           num: payment.transactionID) {
             notes.append(alreadyBooked(existing, funding.amount))
@@ -408,7 +445,7 @@ public func planPayPalPayment(_ payment: PayPalPayment, book: GnuCashBook, accou
 /// bill paid from the same account.
 public func planVerizonBill(_ bill: VerizonBill, book: GnuCashBook, paymentAccount: String,
                             holdingAccount: String) throws -> SpendingPlan {
-    let payer = try requireAccount(paymentAccount, in: book)
+    let payer = try requireAccount(paymentAccount, in: book, as: .billPayment)
     guard bill.amountDue > 0 else {
         return SpendingPlan(transactions: [], notes: ["Nothing to pay on \(shown(bill.autoPayDate))"])
     }

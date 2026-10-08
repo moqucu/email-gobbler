@@ -1,4 +1,5 @@
 import EmailGobblerService
+import SpendingEmails
 import SwiftUI
 
 struct SettingsView: View {
@@ -105,22 +106,22 @@ struct SettingsView: View {
         Section {
             Toggle("Book AmEx purchase alerts", isOn: $editor.draft.gnuCash.amex.enabled)
             if editor.draft.gnuCash.amex.enabled {
-                account("American Express account", $editor.draft.gnuCash.amex.account, field: "gnuCash.amex.account")
+                account("American Express account", $editor.draft.gnuCash.amex.account, field: "gnuCash.amex.account", role: .card)
             }
             Toggle("Book PayPal payment receipts", isOn: $editor.draft.gnuCash.payPal.enabled)
             if editor.draft.gnuCash.payPal.enabled {
-                account("PayPal account", $editor.draft.gnuCash.payPal.account, field: "gnuCash.payPal.account")
+                account("PayPal account", $editor.draft.gnuCash.payPal.account, field: "gnuCash.payPal.account", role: .wallet)
                 account("Paid from bank", $editor.draft.gnuCash.payPal.bankFundingAccount,
-                        field: "gnuCash.payPal.bankFundingAccount")
+                        field: "gnuCash.payPal.bankFundingAccount", role: .bank)
                 account("Paid from card", $editor.draft.gnuCash.payPal.cardFundingAccount,
-                        field: "gnuCash.payPal.cardFundingAccount")
+                        field: "gnuCash.payPal.cardFundingAccount", role: .card)
             }
             Toggle("Book Verizon bills on their Auto Pay date", isOn: $editor.draft.gnuCash.verizon.enabled)
             if editor.draft.gnuCash.verizon.enabled {
-                account("Paid from", $editor.draft.gnuCash.verizon.account, field: "gnuCash.verizon.account")
+                account("Paid from", $editor.draft.gnuCash.verizon.account, field: "gnuCash.verizon.account", role: .billPayment)
             }
             if editor.draft.gnuCash.amex.enabled || editor.draft.gnuCash.payPal.enabled || editor.draft.gnuCash.verizon.enabled {
-                account("New merchants", $editor.draft.gnuCash.holdingAccount, field: "gnuCash.holdingAccount")
+                account("New merchants", $editor.draft.gnuCash.holdingAccount, field: "gnuCash.holdingAccount", role: .expense)
             }
         } header: {
             Text("Spending")
@@ -130,8 +131,8 @@ struct SettingsView: View {
         }
     }
 
-    private func account(_ title: String, _ selection: Binding<String?>, field: String) -> some View {
-        AccountRow(title: title, account: selection, names: editor.bookAccounts, issue: editor.issue(field))
+    private func account(_ title: String, _ selection: Binding<String?>, field: String, role: SpendingAccountRole) -> some View {
+        AccountRow(title: title, account: selection, names: editor.bookAccounts[role] ?? [], issue: editor.issue(field))
     }
 
     private var scheduleSection: some View {

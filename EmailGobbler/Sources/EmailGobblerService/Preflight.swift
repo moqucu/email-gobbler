@@ -40,11 +40,13 @@ public func preflightIssues(_ settings: AppSettings,
         let url = URL(fileURLWithPath: path)
         do {
             let book = try loadBook(url)
-            for (field, name, _) in settings.gnuCash.accountFields where !invalid.contains(field) {
+            for (field, name, _, role) in settings.gnuCash.accountFields where !invalid.contains(field) {
                 guard let name else { continue }
                 if let account = book.accounts.first(where: { $0.fullName == name && $0.type != "ROOT" }) {
                     if account.isPlaceholder {
                         issues.append(SettingsIssue(field: field, message: "\(name) is a placeholder and can't hold transactions"))
+                    } else if let problem = role.problem(with: account) {
+                        issues.append(SettingsIssue(field: field, message: problem))
                     }
                 } else {
                     issues.append(SettingsIssue(field: field, message: "\(name) is not in \(url.lastPathComponent)"))
@@ -78,7 +80,9 @@ public func postableAccountNames(_ book: GnuCashBook) -> [String] {
     book.accounts.filter { $0.type != "ROOT" && !$0.isPlaceholder && !$0.fullName.isEmpty }.map(\.fullName).sorted()
 }
 
-public func postableAccountNames(_ book: GnuCashBook, for role: SpendingAccountRole) -> [String] { [] }
+public func postableAccountNames(_ book: GnuCashBook, for role: SpendingAccountRole) -> [String] {
+    book.accounts.filter { !$0.isPlaceholder && !$0.fullName.isEmpty && role.problem(with: $0) == nil }.map(\.fullName).sorted()
+}
 
 /// One line describing a GnuCash book for the settings window.
 public func gnuCashBookSummary(_ book: GnuCashBook, fileName: String) -> String {

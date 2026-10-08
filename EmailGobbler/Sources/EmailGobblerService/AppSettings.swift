@@ -122,18 +122,20 @@ public struct GnuCashSettings: Codable, Equatable, Sendable {
     }
 
     /// Account settings in a stable order, for enabled bookings only.
-    var accountFields: [(field: String, account: String?, missing: String)] {
-        var fields: [(String, String?, String)] = []
+    var accountFields: [(field: String, account: String?, missing: String, role: SpendingAccountRole)] {
+        var fields: [(String, String?, String, SpendingAccountRole)] = []
         guard amex.enabled || payPal.enabled || verizon.enabled else { return [] }
-        fields.append(("gnuCash.holdingAccount", holdingAccount, "Choose an account for new merchants"))
-        if amex.enabled { fields.append(("gnuCash.amex.account", amex.account, "Choose the American Express account")) }
+        fields.append(("gnuCash.holdingAccount", holdingAccount, "Choose an account for new merchants", .expense))
+        if amex.enabled { fields.append(("gnuCash.amex.account", amex.account, "Choose the American Express account", .card)) }
         if payPal.enabled {
-            fields.append(("gnuCash.payPal.account", payPal.account, "Choose the PayPal account"))
-            fields.append(("gnuCash.payPal.bankFundingAccount", payPal.bankFundingAccount, "Choose the bank account that funds PayPal"))
-            fields.append(("gnuCash.payPal.cardFundingAccount", payPal.cardFundingAccount, "Choose the card account that funds PayPal"))
+            fields.append(("gnuCash.payPal.account", payPal.account, "Choose the PayPal account", .wallet))
+            fields.append(("gnuCash.payPal.bankFundingAccount", payPal.bankFundingAccount,
+                           "Choose the bank account that funds PayPal", .bank))
+            fields.append(("gnuCash.payPal.cardFundingAccount", payPal.cardFundingAccount,
+                           "Choose the card account that funds PayPal", .card))
         }
         if verizon.enabled {
-            fields.append(("gnuCash.verizon.account", verizon.account, "Choose the account that pays the Verizon bill"))
+            fields.append(("gnuCash.verizon.account", verizon.account, "Choose the account that pays the Verizon bill", .billPayment))
         }
         return fields
     }
@@ -238,7 +240,7 @@ public struct AppSettings: Codable, Equatable, Sendable {
         if (gnuCash.bookPath != nil || bookingsEnabled) && Self.isBlank(gnuCash.bookPath) {
             issues.append(SettingsIssue(field: "gnuCash.bookPath", message: "Choose a GnuCash book"))
         }
-        for (field, account, missing) in gnuCash.accountFields where Self.isBlank(account) {
+        for (field, account, missing, _) in gnuCash.accountFields where Self.isBlank(account) {
             issues.append(SettingsIssue(field: field, message: missing))
         }
         if dividends.enabled {

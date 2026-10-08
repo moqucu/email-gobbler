@@ -3,6 +3,7 @@ import Foundation
 import EmailGobblerCore
 import EmailGobblerService
 import GnuCashBook
+import SpendingEmails
 import UniformTypeIdentifiers
 
 @MainActor
@@ -15,8 +16,8 @@ final class SettingsEditor: ObservableObject {
     @Published private(set) var loginState = LoginItem.state
     @Published private(set) var hasValidSavedSettings: Bool
     @Published private(set) var bookSummary: String?
-    /// Accounts in the chosen book that can hold transactions, for the pickers.
-    @Published private(set) var bookAccounts: [String] = []
+    /// Accounts in the chosen book that fit each role, for the pickers.
+    @Published private(set) var bookAccounts: [SpendingAccountRole: [String]] = [:]
     @Published var isConfirmingDiscard = false
 
     /// The settings as last saved; the draft differs from them while there are unsaved changes.
@@ -49,25 +50,28 @@ final class SettingsEditor: ObservableObject {
     func removeGnuCashBook() {
         draft.gnuCash.bookPath = nil
         bookSummary = nil
-        bookAccounts = []
+        bookAccounts = [:]
     }
 
     /// Reads the chosen book in the background; GnuCash itself is not involved.
     private func loadBookSummary() {
         guard let path = draft.gnuCash.bookPath, !path.isEmpty else {
             bookSummary = nil
-            bookAccounts = []
+            bookAccounts = [:]
             return
         }
         bookSummary = "Reading \(URL(fileURLWithPath: path).lastPathComponent)…"
         Task {
-            let (summary, accounts) = await Task.detached(priority: .utility) { () -> (String, [String]) in
+            let (summary, accounts) = await Task.detached(priority: .utility) { () -> (String, [SpendingAccountRole: [String]]) in
                 let url = URL(fileURLWithPath: path)
                 do {
                     let book = try GnuCashBookStore(url: url).load()
-                    return (gnuCashBookSummary(book, fileName: url.lastPathComponent), postableAccountNames(book))
+                    let accounts = Dictionary(uniqueKeysWithValues: SpendingAccountRole.allCases.map {
+                        ($0, postableAccountNames(book, for: $0))
+                    })
+                    return (gnuCashBookSummary(book, fileName: url.lastPathComponent), accounts)
                 } catch {
-                    return ("\(url.lastPathComponent): \(error)", [])
+                    return ("\(url.lastPathComponent): \(error)", [:])
                 }
             }.value
             guard draft.gnuCash.bookPath == path else { return }

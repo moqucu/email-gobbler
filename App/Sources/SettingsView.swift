@@ -109,7 +109,11 @@ struct SettingsView: View {
                 account("Paid from card", $editor.draft.gnuCash.payPal.cardFundingAccount,
                         field: "gnuCash.payPal.cardFundingAccount")
             }
-            if editor.draft.gnuCash.amex.enabled || editor.draft.gnuCash.payPal.enabled {
+            Toggle("Book Verizon bills on their Auto Pay date", isOn: $editor.draft.gnuCash.verizon.enabled)
+            if editor.draft.gnuCash.verizon.enabled {
+                account("Paid from", $editor.draft.gnuCash.verizon.account, field: "gnuCash.verizon.account")
+            }
+            if editor.draft.gnuCash.amex.enabled || editor.draft.gnuCash.payPal.enabled || editor.draft.gnuCash.verizon.enabled {
                 account("New merchants", $editor.draft.gnuCash.holdingAccount, field: "gnuCash.holdingAccount")
             }
         } header: {

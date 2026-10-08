@@ -19,6 +19,12 @@ struct SettingsView: View {
         }
         .frame(minWidth: 560, minHeight: 600)
         .onAppear { editor.refreshLoginState() }
+        .alert("Discard your changes?", isPresented: $editor.isConfirmingDiscard) {
+            Button("Discard Changes", role: .destructive) { editor.discardChanges() }
+            Button("Keep Editing", role: .cancel) {}
+        } message: {
+            Text("The settings stay as they were last saved.")
+        }
     }
 
     private var dividendsSection: some View {
@@ -162,9 +168,11 @@ struct SettingsView: View {
                 Text(message).foregroundStyle(editor.issues.isEmpty ? Color.secondary : Color.red)
             }
             Spacer()
+            Button("Cancel") { editor.cancel() }
+                .keyboardShortcut(.cancelAction)
             Button("Save") { editor.save() }
                 .keyboardShortcut(.defaultAction)
-                .disabled(editor.isChecking)
+                .disabled(!editor.hasChanges || editor.isChecking)
         }
         .padding()
     }

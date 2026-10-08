@@ -17,11 +17,17 @@ final class SettingsEditor: ObservableObject {
     @Published private(set) var bookSummary: String?
     /// Accounts in the chosen book that can hold transactions, for the pickers.
     @Published private(set) var bookAccounts: [String] = []
+    @Published var isConfirmingDiscard = false
 
+    /// The settings as last saved; the draft differs from them while there are unsaved changes.
+    private var saved: AppSettings
     private let onSave: (AppSettings) -> Void
+    /// Closes the settings window.
+    var onClose: () -> Void = {}
 
     init(settings: AppSettings, savedSettingsValid: Bool, onSave: @escaping (AppSettings) -> Void) {
         draft = settings
+        saved = settings
         hasValidSavedSettings = savedSettingsValid
         self.onSave = onSave
         for path in workbookPaths { loadSheetNames(path) }
@@ -72,6 +78,23 @@ final class SettingsEditor: ObservableObject {
 
     private var workbookPaths: [String] {
         (draft.grades.routes.map(\.workbookPath) + [draft.dividends.workbookPath ?? ""]).filter { !$0.isEmpty }
+    }
+
+    var hasChanges: Bool { draft != saved }
+
+    /// Closes at once without changes; otherwise asks whether to discard them.
+    func cancel() {
+        if hasChanges {
+            isConfirmingDiscard = true
+        } else {
+            onClose()
+        }
+    }
+
+    func discardChanges() {
+        draft = saved
+        isConfirmingDiscard = false
+        onClose()
     }
 
     func issue(_ field: String) -> String? {
@@ -129,8 +152,14 @@ final class SettingsEditor: ObservableObject {
                 return
             }
             onSave(settings)
+            saved = settings
             hasValidSavedSettings = true
-            message = "Saved. The new settings are active."
+            // Edits made while the check ran stay open for another save.
+            guard draft == settings else {
+                message = "Saved. You changed more since; save again to keep those changes."
+                return
+            }
+            onClose()
         }
     }
 

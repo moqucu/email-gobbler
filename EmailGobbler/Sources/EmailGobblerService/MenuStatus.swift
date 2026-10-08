@@ -7,7 +7,7 @@ extension UseCaseID {
         case .etradeDividends: return "E*TRADE dividends"
         case .amexPurchases: return "AmEx purchases"
         case .payPalPayments: return "PayPal payments"
-        case .verizonBills: return ""
+        case .verizonBills: return "Verizon bills"
         }
     }
 }

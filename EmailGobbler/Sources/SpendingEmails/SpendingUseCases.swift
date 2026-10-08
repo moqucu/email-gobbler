@@ -79,7 +79,7 @@ public struct PayPalPaymentsUseCase: GnuCashUseCase {
 
 /// Verizon "Your Verizon bill is ready" emails, booked on the Auto Pay date against the paying account.
 public struct VerizonBillsUseCase: GnuCashUseCase {
-    public static let defaultQuery = MailQuery(subjectContains: "", senderContains: nil)
+    public static let defaultQuery = MailQuery(subjectContains: "Verizon bill", senderContains: "verizonwireless.com")
 
     public let mailQuery: MailQuery
     public let bookURL: URL?
@@ -94,7 +94,18 @@ public struct VerizonBillsUseCase: GnuCashUseCase {
     }
 
     public var targets: [SheetTarget] { [] }
-    public func summarize(html: String) throws -> [String] { [] }
+
+    public func summarize(html: String) throws -> [String] {
+        let bill = try parseVerizonBill(html: html)
+        return ["Amount due: \(currencyDisplay(bill.amountDue))",
+                "Auto Pay date: \(DateDisplayStyle.monthDayFullYear.display(bill.autoPayDate))"]
+    }
+
     public func plan(html: String, sheets: [SheetTarget: SheetSnapshot]) throws -> UseCasePlan { UseCasePlan(targets: [], notes: []) }
-    public func planBook(html: String, book: GnuCashBook) throws -> GnuCashPlan { GnuCashPlan(transactions: [], notes: []) }
+
+    public func planBook(html: String, book: GnuCashBook) throws -> GnuCashPlan {
+        let planned = try planVerizonBill(try parseVerizonBill(html: html), book: book, paymentAccount: paymentAccount,
+                                          holdingAccount: holdingAccount)
+        return GnuCashPlan(transactions: planned.transactions, notes: planned.notes)
+    }
 }

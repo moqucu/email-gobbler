@@ -194,8 +194,33 @@ public struct VerizonBill: Equatable, Sendable {
     }
 }
 
+/// Reads "3/18/2026".
+private func numericDate(_ text: String) throws -> CalendarDate {
+    let parts = text.split(separator: "/").map { Int($0) }
+    guard parts.count == 3, let month = parts[0], let day = parts[1], let year = parts[2], year >= 1000,
+          let date = try? CalendarDate(year: year, month: month, day: day) else {
+        throw SpendingEmailError.invalidDate(text)
+    }
+    return date
+}
+
+/// Verizon "Your Verizon bill is ready." emails for Auto Pay accounts list the
+/// amount due and the Auto Pay date, each in the paragraph after its label.
 public func parseVerizonBill(html: String) throws -> VerizonBill {
-    throw SpendingEmailError.notApplicable("")
+    let lines = (try? SwiftSoup.parse(html)).map(paragraphs) ?? []
+    func value(after label: String) -> String? {
+        guard let index = lines.firstIndex(of: label), index + 1 < lines.count else { return nil }
+        return lines[index + 1]
+    }
+    guard let amountText = value(after: "Total amount due:") else {
+        throw SpendingEmailError.notApplicable("Not a Verizon bill")
+    }
+    guard let dateText = value(after: "Auto Pay date:") else {
+        throw SpendingEmailError.notApplicable("Verizon bill without Auto Pay")
+    }
+    let prefix = "Account number ending in:"
+    let ending = lines.first { $0.hasPrefix(prefix) }.map { $0.dropFirst(prefix.count).trimmingCharacters(in: .whitespaces) }
+    return VerizonBill(amountDue: try dollars(amountText), autoPayDate: try numericDate(dateText), accountEnding: ending)
 }
 
 /// What to add to the book for one email, and what was skipped.
@@ -357,7 +382,22 @@ public func planPayPalPayment(_ payment: PayPalPayment, book: GnuCashBook, accou
     return SpendingPlan(transactions: transactions, notes: notes)
 }
 
+/// A Verizon bill is booked ahead, on its Auto Pay date, like the last Verizon
+/// bill paid from the same account.
 public func planVerizonBill(_ bill: VerizonBill, book: GnuCashBook, paymentAccount: String,
                             holdingAccount: String) throws -> SpendingPlan {
-    SpendingPlan(transactions: [], notes: [])
+    let payer = try requireAccount(paymentAccount, in: book)
+    guard bill.amountDue > 0 else {
+        return SpendingPlan(transactions: [], notes: ["Nothing to pay on \(shown(bill.autoPayDate))"])
+    }
+    if let existing = existingBooking(in: book, account: payer, amount: -bill.amountDue, date: bill.autoPayDate) {
+        return SpendingPlan(transactions: [], notes: [alreadyBooked(existing, bill.amountDue)])
+    }
+    let category = try categorize("Verizon", against: payer, in: book, holdingAccount: holdingAccount)
+    return SpendingPlan(transactions: [
+        NewGnuCashTransaction(date: bill.autoPayDate, description: category.description, splits: [
+            NewGnuCashSplit(accountName: category.expense, amount: bill.amountDue),
+            NewGnuCashSplit(accountName: payer.fullName, amount: -bill.amountDue),
+        ]),
+    ], notes: category.note.map { [$0] } ?? [])
 }

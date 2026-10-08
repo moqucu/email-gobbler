@@ -118,19 +118,22 @@ public struct GnuCashSettings: Codable, Equatable, Sendable {
         holdingAccount = try container.decodeIfPresent(String.self, forKey: .holdingAccount)
         amex = try container.decodeIfPresent(AmexBookingSettings.self, forKey: .amex) ?? AmexBookingSettings()
         payPal = try container.decodeIfPresent(PayPalBookingSettings.self, forKey: .payPal) ?? PayPalBookingSettings()
-        verizon = VerizonBookingSettings()
+        verizon = try container.decodeIfPresent(VerizonBookingSettings.self, forKey: .verizon) ?? VerizonBookingSettings()
     }
 
     /// Account settings in a stable order, for enabled bookings only.
     var accountFields: [(field: String, account: String?, missing: String)] {
         var fields: [(String, String?, String)] = []
-        guard amex.enabled || payPal.enabled else { return [] }
+        guard amex.enabled || payPal.enabled || verizon.enabled else { return [] }
         fields.append(("gnuCash.holdingAccount", holdingAccount, "Choose an account for new merchants"))
         if amex.enabled { fields.append(("gnuCash.amex.account", amex.account, "Choose the American Express account")) }
         if payPal.enabled {
             fields.append(("gnuCash.payPal.account", payPal.account, "Choose the PayPal account"))
             fields.append(("gnuCash.payPal.bankFundingAccount", payPal.bankFundingAccount, "Choose the bank account that funds PayPal"))
             fields.append(("gnuCash.payPal.cardFundingAccount", payPal.cardFundingAccount, "Choose the card account that funds PayPal"))
+        }
+        if verizon.enabled {
+            fields.append(("gnuCash.verizon.account", verizon.account, "Choose the account that pays the Verizon bill"))
         }
         return fields
     }
@@ -231,7 +234,7 @@ public struct AppSettings: Codable, Equatable, Sendable {
                 }
             }
         }
-        let bookingsEnabled = gnuCash.amex.enabled || gnuCash.payPal.enabled
+        let bookingsEnabled = gnuCash.amex.enabled || gnuCash.payPal.enabled || gnuCash.verizon.enabled
         if (gnuCash.bookPath != nil || bookingsEnabled) && Self.isBlank(gnuCash.bookPath) {
             issues.append(SettingsIssue(field: "gnuCash.bookPath", message: "Choose a GnuCash book"))
         }
@@ -279,6 +282,10 @@ public struct AppSettings: Codable, Equatable, Sendable {
                 result.append(ConfiguredUseCase(id: .payPalPayments, useCase: PayPalPaymentsUseCase(
                     bookURL: book, accounts: PayPalAccounts(payPal: account, bankFunding: bank, cardFunding: card),
                     holdingAccount: holding)))
+            }
+            if gnuCash.verizon.enabled, let account = gnuCash.verizon.account {
+                result.append(ConfiguredUseCase(id: .verizonBills, useCase: VerizonBillsUseCase(
+                    bookURL: book, paymentAccount: account, holdingAccount: holding)))
             }
         }
         return result

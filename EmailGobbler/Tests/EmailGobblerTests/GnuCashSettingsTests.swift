@@ -138,6 +138,20 @@ final class GnuCashSettingsTests: XCTestCase {
         ])
     }
 
+    func testPreflightRefusesAccountsOfTheWrongKind() {
+        var swapped = spending()
+        swapped.gnuCash.verizon.account = "Expenses:Uncategorized"
+        swapped.gnuCash.holdingAccount = "Assets:Checking"
+        swapped.gnuCash.amex.account = "Assets:PayPal"
+        XCTAssertEqual(preflightIssues(swapped, readSheet: { _ in SheetSnapshot(rows: []) }, loadBook: { _ in self.spendingBook() }), [
+            SettingsIssue(field: "gnuCash.holdingAccount", message: "Assets:Checking is a bank account; choose an expense account"),
+            SettingsIssue(field: "gnuCash.amex.account",
+                          message: "Assets:PayPal is an asset account; choose a credit card or liability account"),
+            SettingsIssue(field: "gnuCash.verizon.account",
+                          message: "Expenses:Uncategorized is an expense account; choose a bank, asset, or card account"),
+        ])
+    }
+
     func testEnabledBookingsBecomeUseCases() {
         XCTAssertEqual(spending().configuredUseCases().map(\.id), [.amexPurchases, .payPalPayments, .verizonBills])
         XCTAssertEqual(spending(amex: false, verizon: false).configuredUseCases().map(\.id), [.payPalPayments])
@@ -148,5 +162,11 @@ final class GnuCashSettingsTests: XCTestCase {
     func testPostableAccountNamesForPickers() {
         XCTAssertEqual(postableAccountNames(spendingBook(placeholder: "Assets:Checking")),
                        ["Assets:PayPal", "Expenses:Uncategorized", "Liabilities:Example Card"])
+        let book = spendingBook()
+        XCTAssertEqual(postableAccountNames(book, for: .expense), ["Expenses:Uncategorized"])
+        XCTAssertEqual(postableAccountNames(book, for: .card), ["Liabilities:Example Card"])
+        XCTAssertEqual(postableAccountNames(book, for: .bank), ["Assets:Checking", "Assets:PayPal"])
+        XCTAssertEqual(postableAccountNames(book, for: .billPayment), ["Assets:Checking", "Assets:PayPal", "Liabilities:Example Card"])
+        XCTAssertEqual(postableAccountNames(book, for: .wallet), ["Assets:Checking", "Assets:PayPal"])
     }
 }

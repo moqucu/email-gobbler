@@ -229,6 +229,32 @@ final class SpendingEmailsTests: XCTestCase {
         }
     }
 
+    func testAccountsOfTheWrongKindAreRefusedBeforeBooking() {
+        let bill = VerizonBill(amountDue: dec("87.65"), autoPayDate: date(2026, 3, 18), accountEnding: nil)
+        assertSpendingError(.unsuitableAccount("Expenses:Phone is an expense account; choose a bank, asset, or card account"),
+                            try planVerizonBill(bill, book: book(), paymentAccount: "Expenses:Phone",
+                                                holdingAccount: "Expenses:Uncategorized"))
+        assertSpendingError(.unsuitableAccount("Assets:Checking is a bank account; choose an expense account"),
+                            try planVerizonBill(bill, book: book(extra: []), paymentAccount: "Liabilities:Example Card",
+                                                holdingAccount: "Assets:Checking"))
+        let purchase = AmexPurchase(merchant: "EXAMPLE PROPANE CO", amount: dec("42.17"), date: date(2026, 3, 12), accountEnding: nil)
+        assertSpendingError(.unsuitableAccount("Assets:Checking is a bank account; choose a credit card or liability account"),
+                            try planAmexPurchase(purchase, book: book(), amexAccount: "Assets:Checking",
+                                                 holdingAccount: "Expenses:Uncategorized"))
+        let swapped = PayPalAccounts(payPal: "Assets:PayPal", bankFunding: "Liabilities:Example Card", cardFunding: "Assets:Checking")
+        assertSpendingError(.unsuitableAccount("Liabilities:Example Card is a credit card account; choose a bank, asset, or cash account"),
+                            try planPayPalPayment(payment(), book: book(), accounts: swapped, holdingAccount: "Expenses:Uncategorized"))
+    }
+
+    func testOnlyExpenseAccountsAreLearnedAsCategories() throws {
+        // The card's latest "Example Propane Co" entry is a transfer, not a purchase.
+        let transfer = booking("x", date(2026, 3, 1), "Example Propane Co", [("bank", "50.00"), ("amex", "-50.00")])
+        let purchase = AmexPurchase(merchant: "EXAMPLE PROPANE CO", amount: dec("42.17"), date: date(2026, 3, 12), accountEnding: nil)
+        let plan = try planAmexPurchase(purchase, book: book(extra: [transfer]), amexAccount: "Liabilities:Example Card",
+                                        holdingAccount: "Expenses:Uncategorized")
+        XCTAssertEqual(plan.transactions.first?.splits.map(\.accountName), ["Expenses:Utilities:Gas", "Liabilities:Example Card"])
+    }
+
     func testMisconfiguredAccountsAreReported() {
         let purchase = AmexPurchase(merchant: "EXAMPLE PROPANE CO", amount: dec("42.17"), date: date(2026, 3, 12), accountEnding: nil)
         XCTAssertThrowsError(try planAmexPurchase(purchase, book: book(), amexAccount: "Liabilities:Missing Card",

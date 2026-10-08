@@ -3,6 +3,7 @@ import Foundation
 import EmailGobblerCore
 import GnuCashBook
 import SchoologyGrades
+import SpendingEmails
 
 /// Reads each enabled sheet once and reports problems against its settings
 /// field. Sheets whose settings are already invalid are skipped.
@@ -76,6 +77,8 @@ public enum LoginItemState: Equatable, Sendable {
 public func postableAccountNames(_ book: GnuCashBook) -> [String] {
     book.accounts.filter { $0.type != "ROOT" && !$0.isPlaceholder && !$0.fullName.isEmpty }.map(\.fullName).sorted()
 }
+
+public func postableAccountNames(_ book: GnuCashBook, for role: SpendingAccountRole) -> [String] { [] }
 
 /// One line describing a GnuCash book for the settings window.
 public func gnuCashBookSummary(_ book: GnuCashBook, fileName: String) -> String {

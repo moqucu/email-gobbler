@@ -54,6 +54,8 @@ public enum SpendingEmailError: Error, Equatable, CustomStringConvertible {
     case invalidDate(String)
     case unsupportedCurrency(String)
     case unsupportedFunding(String)
+    /// A configured account of the wrong kind, such as an expense account paying a bill.
+    case unsuitableAccount(String)
 
     public var description: String {
         switch self {
@@ -63,6 +65,7 @@ public enum SpendingEmailError: Error, Equatable, CustomStringConvertible {
         case .invalidDate(let text): return "The date \"\(text)\" could not be read"
         case .unsupportedCurrency(let code): return "Payments in \(code) are not supported yet"
         case .unsupportedFunding(let source): return "Unknown PayPal funding source \"\(source)\""
+        case .unsuitableAccount(let problem): return problem
         }
     }
 }
@@ -247,6 +250,25 @@ public struct PayPalAccounts: Equatable, Sendable {
 }
 
 // MARK: - Booking
+
+/// What a configured account is for, and which GnuCash account types fit.
+public enum SpendingAccountRole: Sendable, CaseIterable {
+    /// Pays bills: a bank, asset, cash, or card account.
+    case billPayment
+    /// Funds PayPal from the bank.
+    case bank
+    /// A credit card.
+    case card
+    /// The PayPal account itself.
+    case wallet
+    /// Categories, including the holding account.
+    case expense
+
+    public var accountTypes: Set<String> { [] }
+
+    /// Why `account` does not fit this role, or `nil` when it does.
+    public func problem(with account: GnuCashAccount) -> String? { nil }
+}
 
 private func normalized(_ name: String) -> String {
     var text = name.lowercased().replacingOccurrences(of: "www.", with: "")

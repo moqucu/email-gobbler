@@ -9,7 +9,7 @@ Each kind of email is a *use case* built on one shared core:
 | `SchoologyGrades` | Schoology weekly-summary extraction, the weekly grades sheet planner, and the weekly-row upsert library. |
 | `EtradeDividends` | E*TRADE "Dividend or interest paid" alert extraction and the dividend ledger planner. |
 | `GnuCashBook` | Reads GnuCash 5 XML books (gzip or plain) and appends balanced transactions in GnuCash's own format, safely; the book workflow (`GnuCashUseCase`, `processBookMessage`). |
-| `SpendingEmails` | American Express purchase alerts and PayPal receipts, and how to book them from the book's history. |
+| `SpendingEmails` | American Express purchase alerts, PayPal receipts, and Verizon bills, and how to book them from the book's history. |
 | `email-gobbler` | Command-line tool that runs a use case through the shared workflow. |
 
 A use case only parses its email and turns it into a `SheetUpdatePlan`: replace one
@@ -129,7 +129,7 @@ General Journal and Account Summary reports.
 
 ### Spending emails
 
-`SpendingEmails` parses American Express "Your Card may not have been present for a purchase" alerts
+`SpendingEmails` parses Verizon bills, American Express "Your Card may not have been present for a purchase" alerts
 (merchant, amount, date) and PayPal receipts in USD (merchant, amount, date, transaction ID, and each
 funding source). Booking learns from the book:
 
@@ -140,8 +140,10 @@ funding source). Booking learns from the book:
   transaction ID in Num, counts as already booked.
 - PayPal funding: a bank source books "PayPal - Collection", an American Express card "AmEx -
   Collection", and the PayPal balance nothing. Other sources stop with an error.
+- Verizon bills ("Total amount due" and "Auto Pay date") are booked on the Auto Pay date against the
+  paying account, like its latest "Verizon" transaction. Nothing is booked when nothing is due.
 
-The fixtures `amex-purchase.synthetic.eml` and `paypal-receipt.synthetic.eml` are anonymized copies of
+The fixtures `amex-purchase.synthetic.eml`, `paypal-receipt.synthetic.eml`, and `verizon-bill.synthetic.eml` are anonymized copies of
 real emails with synthetic merchants, amounts, and identifiers.
 
 ## Schoology weekly-email extraction

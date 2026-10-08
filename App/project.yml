@@ -22,6 +22,8 @@ targets:
         product: EmailGobblerCore
       - package: EmailGobbler
         product: GnuCashBook
+      - package: EmailGobbler
+        product: SpendingEmails
     settings:
       base:
         PRODUCT_NAME: EmailGobbler

@@ -1,7 +1,7 @@
 # email-gobbler
 
 Turns recognized emails in macOS Mail into verified rows in Numbers workbooks and
-transactions in a GnuCash book. Four use cases run on one shared core:
+transactions in a GnuCash book. Five use cases run on one shared core:
 
 - **Schoology grades:** weekly summary emails update a student's weekly grades sheet.
 - **E*TRADE dividends:** "Dividend or interest paid" alerts append payments to a
@@ -11,6 +11,9 @@ transactions in a GnuCash book. Four use cases run on one shared core:
   account, and a collection that moves the money into PayPal from the bank ("PayPal - Collection")
   or from the card ("AmEx - Collection"). PayPal balance payments need no collection. The PayPal
   transaction ID goes in the Num field.
+- **Verizon bills:** "Your Verizon bill is ready." emails for Auto Pay accounts become a transaction
+  dated on the Auto Pay date, paid from the account you choose (booked ahead, as the bill is due later).
+  Bills without Auto Pay stay in the Inbox.
 
 The GnuCash book is chosen under **Settings… › GnuCash** (`GnuCashBook` reads and appends to the XML
 format). Spending emails are booked like the merchant's latest transaction on the same account:

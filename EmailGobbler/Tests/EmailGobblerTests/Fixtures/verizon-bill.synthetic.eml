@@ -1,0 +1,651 @@
+From: "Verizon" <billing@example.invalid>
+To: owner@example.invalid
+Subject: Your Verizon bill is ready.
+MIME-Version: 1.0
+Content-Type: text/html; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
+Message-Id: <synthetic-verizon-bill@example.invalid>
+Date: Fri, 06 Mar 2026 15:55:23 -0500
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "https://example.invalid/resource">
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "https://example.invalid/resource"><html xmlns="https://example.invalid/resource" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
+ <head>
+  <title>Verizon</title><!-- Outlook DPI FIX --><!--[if gte mso 9]><noscript><xml><o:OfficeDocumentSettings><o:PixelsPerInch>96</o:PixelsPerInch></o:OfficeDocumentSettings></xml></noscript><![endif]-->
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="x-apple-disable-message-reformatting">
+  <link type="text/css" rel="stylesheet" href="https://example.invalid/resource">
+  <style type="text/css">
+        * {padding: 0px; margin: 0px; line-height: 100%;}
+        html {-webkit-text-size-adjust: none; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;}
+        body {padding: 0px; width: 100%; background-color: #ffffff !important;}
+        table, td {border-collapse: collapse; border-spacing: 0; border: 0; padding: 0px; mso-table-lspace: 0pt !important; mso-table-rspace: 0pt !important;}
+        br, td {mso-line-height-rule: exactly;}
+        img {display: block;border: 0;}
+        img + div { display:none; }
+        strong, em {line-height: inherit;}
+
+        u ~ div .fontVeTX_10 {font-family: Helvetica, Arial !important; letter-spacing: 0.1px !important; font-size: 11px !important; line-height: 13px !important;}
+        u ~ div .fontVeTX_11 {font-family: Helvetica, Arial !important; letter-spacing: 0.6px !important;}
+        u ~ div .fontVeDS_14 {font-family: Helvetica, Arial !important; letter-spacing: -0.1px !important;}
+        u ~ div .fontVeDS_16 {font-family: Helvetica, Arial !important; letter-spacing: -0.1px !important;}
+        u ~ div .fontVeDS_18 {font-family: Helvetica, Arial !important; letter-spacing: -0.1px !important;}
+        u ~ div .fontVeDS_20 {font-family: Helvetica, Arial !important; letter-spacing: -0.6px !important;}
+        u ~ div .fontVeDS_22 {font-family: Helvetica, Arial !important; letter-spacing: -0.9px !important;}
+        u ~ div .fontVeDS_24 {font-family: Helvetica, Arial !important; letter-spacing: -0.9px !important;}
+        u ~ div .fontVeDS_26 {font-family: Helvetica, Arial !important; letter-spacing: -0.9px !important;}
+        u ~ div .fontVeDS_28 {font-family: Helvetica, Arial !important; letter-spacing: -0.9px !important;}
+        u ~ div .fontVeDS_30 {font-family: Helvetica, Arial !important; letter-spacing: -1px !important;}
+        u ~ div .fontVeDS_32_42 {font-family: Helvetica, Arial !important; letter-spacing: -1.25px !important;}
+        u ~ div .fontVeDS_44_52 {font-family: Helvetica, Arial !important; letter-spacing: -1.8px !important;}
+        u ~ div .fontVeDS_54_60 {font-family: Helvetica, Arial !important; letter-spacing: -1.8px !important;}
+        u ~ div .fontVeDS_62_70 {font-family: Helvetica, Arial !important; letter-spacing: -2.3px !important;}
+        u ~ div .fontVeDS_72_84 {font-family: Helvetica, Arial !important; letter-spacing: -2.8px !important;}
+        u ~ div .fontVeDS_86_96 {font-family: Helvetica, Arial !important; letter-spacing: -3.3px !important;}
+        u ~ div .fontVeDS_98_122 {font-family: Helvetica, Arial !important; letter-spacing: -3.6px !important;}
+        u ~ div .fontVeDS_124_140 {font-family: Helvetica, Arial !important; letter-spacing: -4.6px !important;}
+
+        u ~ div li {margin-left: 0px !important;}
+
+
+          .wayfinder .fontVeDS_24 span {
+              line-height: 28px !important;
+            }
+            .fontVeDS_16 {
+font-family: Helvetica, Arial !important;
+letter-spacing: -0.1px !important;
+}
+        @media (max-width:540px) {
+          .mobileContainer {min-width:360px !important; max-width:360px !important; width:360px !important;}
+          .fullWidth {width: 100% !important;}
+          .fontweightBold {font-weight: bold !important;}
+          .displayBlock {display: block !important;}
+          .displayTable {display: table !important;}
+          .centerBlock {margin: 0 auto !important;}
+          .txtAlignCenter {text-align: center !important;}
+          .txtAlignLeft {text-align: left !important;}
+          .txtAlignRight {text-align: right !important;}
+          .hAuto {height: auto !important; max-height: none !important;}
+
+          .hideInMobile {display:none !important;}
+          .showInMobile {width: 100% !important; display: block !important; float: none !important; max-height: none !important; height: auto !important;}
+          .showInMobileWidth {display: block !important; float: none !important;}
+
+          .mobilePods {width: 100% !important; display: table !important; margin: 0 auto !important;}
+
+          .gblFtrQuickLinks .mobilePods {display: block !important;}
+
+          .w6 {width: 6px !important;}
+          .w12 {width: 12px !important;}
+          .w18 {width: 18px !important;}
+          .w24 {width: 24px !important;}
+          .w136 {width: 136px !important;}
+          .w142 {width: 142px !important;}
+          .w358 {width: 358px !important;}
+          .h21 {height: 21px !important;}
+           .padB8 {
+        padding-bottom: 8px !important;
+        display: block !important;
+    }
+    .padB18 {
+        padding-bottom: 18px !important;
+        display: block !important;
+    }
+    .padB24 {
+        padding-bottom: 24px !important;
+        display: block !important;
+    }
+
+        .hdrSpacer {width: 50px !important;}
+        .hdrSpacerImg {width: 50px !important;}
+        .hdrLogoTd {width: 260px !important;}
+        .hdrProfileTd {width: 32px !important;padding-right: 18px !important;}
+        .mobPad18 {padding: 0px 18px !important;}
+    }
+    </style><!--[if mso]>
+    <link type="text/css" rel="stylesheet" href="https://example.invalid/resource">
+    <![endif]-->
+  <style type="text/css">
+        @media (max-width:540px) {
+          .sup24 {font-size: 24px !important; line-height: 34px !important;}
+          .padR0 {padding-right: 0px !important;}
+
+          u ~ div .mobFontVeDS_24 {font-family: Helvetica, Arial !important; letter-spacing: -0.9px !important; font-size: 24px !important; line-height: 26px !important;}
+          .mobFontVeDS_24 {font-family: eDS, Helvetica, Arial !important; letter-spacing: 0px !important; font-size: 24px !important; line-height: 26px !important;}
+          u ~ div .mobFontVeDS_52 {font-family: Helvetica, Arial !important; letter-spacing: -1.8px !important; font-size: 52px !important; line-height: 52px !important;}
+          .mobFontVeDS_52 {font-family: eDS, Helvetica, Arial !important; letter-spacing: 0px !important; font-size: 52px !important; line-height: 52px !important;}
+          u ~ div .mobFontVeDS_56 {font-family: Helvetica, Arial !important; letter-spacing: -1.8px !important; font-size: 56px !important; line-height: 56px !important;}
+          .mobFontVeDS_56 {font-family: eDS, Helvetica, Arial !important; letter-spacing: 0px !important; font-size: 56px !important; line-height: 56px !important;}
+          u ~ div .mobFontVeDS_60 {font-family: Helvetica, Arial !important; letter-spacing: -1.8px !important; font-size: 60px !important; line-height: 60px !important;}
+          .mobFontVeDS_60 {font-family: eDS, Helvetica, Arial !important; letter-spacing: 0px !important; font-size: 60px !important; line-height: 60px !important;}
+          u ~ div .mobFontVeDS_68 {font-family: Helvetica, Arial !important; letter-spacing: -2.3px !important; font-size: 68px !important; line-height: 68px !important;}
+          .mobFontVeDS_68 {font-family: eDS, Helvetica, Arial !important; letter-spacing: 0px !important; font-size: 68px !important; line-height: 68px !important;}
+        }
+    </style>
+ </head>
+ <body style="padding:0px; margin:0 auto;">
+  <style type="text/css">
+		.& .btnCTA {
+			border-color: #808080 !important;
+		}/* Fix for Pill buttons in Yahoo App Android Dark Mode */
+	</style>
+  <div style="display: none; max-height: 0px; overflow: hidden;">
+   Your Auto Pay is scheduled.
+  </div>
+  <div style="display: none; max-height: 0px; overflow: hidden;">
+   &nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌ &nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;
+  </div>
+  <table width="100%" border="0" cellspacing="0" cellpadding="0" lang="en" role="presentation">
+   <tbody>
+    <tr>
+     <td valign="top" align="center" style="background-color:#ffffff">
+      <table border="0" cellspacing="0" cellpadding="0" width="720" align="center" style="margin:0 auto;" class="mobileContainer" role="presentation">
+       <!-- BODY START --> <!-- HEADER START -->
+       <tbody>
+        <tr>
+         <td align="left" valign="top" bgcolor="#ffffff" style="background-color: #ffffff;max-width: 720px;">
+          <table width="100%" border="0" cellspacing="0" cellpadding="0" role="presentation">
+           <tbody>
+            <tr>
+             <td width="100" height="68" style="width:100px;" class="hdrSpacer"><img src="https://example.invalid/resource" width="100" height="1" alt="" border="0" style="display:block;" class="hdrSpacerImg"></td>
+             <td width="520" align="center" valign="middle" height="68" style="width:520px;" class="hdrLogoTd"><a href="https://example.invalid/resource" _label="gbl_header_verizon" aria-label="Verizon Homepage" target="_blank"> <img src="https://example.invalid/resource" width="89" height="20" alt="Verizon Homepage" border="0" style="display:block; margin:0 auto;"> </a></td>
+             <td width="100" align="right" valign="middle" height="68" style="width:76px; padding-right:24px;" class="hdrProfileTd"><a href="https://example.invalid/resource" _label="gbl_header_signin" aria-label="Sign In" target="_blank"> <img src="https://example.invalid/resource" width="20" height="20" alt="Sign In" border="0" style="display:block;"> </a></td>
+            </tr>
+           </tbody>
+          </table></td>
+        </tr><!-- B2C HEADERS end --> <!-- BANNER START --> <!-- BANNER END --> <!-- TRX HEADER END --> <!-- TEXT CTA FULL WIDTH START -->
+        <tr>
+         <td align="left" valign="top">
+          <table width="100%" border="0" cellspacing="0" cellpadding="0" role="presentation" style="background-color: #000000;">
+           <tbody>
+            <tr>
+             <td width="24" class="w18"></td>
+             <td align="left" valign="top" style="padding-top: 24px">
+              <table width="100%" border="0" cellspacing="0" cellpadding="0" role="presentation">
+               <!-- CHILD TEXT START -->
+               <tbody>
+                <tr>
+                 <td align="left" valign="top" style="padding-bottom: 24px; padding-right: 0px"><!-- Heading 1 - 52 :: START -->
+                  <h1 id="lineheight_52" style="font-family: Helvetica, Arial; font-size: 52px; line-height: 52px; letter-spacing: -1.9px; color:#FFFFFF; font-weight:bold; -webkit-text-size-adjust:none; margin: 0;" class="fontVeDS_44_52 mobFontVeDS_40">Your bill is set for payment with Auto Pay</h1><!-- Heading 1 - 52 :: END --></td>
+                </tr><!-- CHILD TEXT END --> <!-- CHILD BUTTON START -->
+                <tr>
+                 <td align="left" valign="top" style="padding-bottom: 48px; padding-top: 7px;">
+                  <table border="0" cellspacing="0" cellpadding="0" role="presentation" style="border-collapse: separate;">
+                   <tbody>
+                    <tr>
+                     <td align="center" valign="middle" style="text-align: center; vertical-align: middle;" id="CTAFillWhite">
+                      <p style="font-family: Helvetica, Arial; font-size: 16px; line-height: 100%; letter-spacing: -0.1px; color: #FFFFFF; font-weight:bold; -webkit-text-size-adjust:none; margin:0;" class="fontVeDS_16"><a _label="View my bill" href="https://example.invalid/resource" target="_blank" style="text-decoration:none; display: block; padding: 13px 24px; border: 1px solid #000000; background-color: #FFFFFF; border-radius: 50px; min-width: 0px" class="btnCTA" aria-label="View my bill"> <span tabindex="0" style="color: #000000" class="outlookFix">View my bill</span> </a></p></td>
+                    </tr>
+                   </tbody>
+                  </table></td>
+                </tr><!-- CHILD BUTTON END -->
+               </tbody>
+              </table></td>
+             <td width="198" class="w18"></td>
+            </tr>
+           </tbody>
+          </table></td>
+        </tr><!-- TEXT CTA FULL WIDTH END --> <!-- TEXT CTA FULL WIDTH START -->
+        <tr>
+         <td align="left" valign="top">
+          <table width="100%" border="0" cellspacing="0" cellpadding="0" role="presentation" style="background-color: #FFFFFF;">
+           <tbody>
+            <tr>
+             <td width="24" class="w18"></td>
+             <td align="left" valign="top" style="padding-top: 24px">
+              <table width="100%" border="0" cellspacing="0" cellpadding="0" role="presentation">
+               <!-- CHILD TEXT START -->
+               <tbody>
+                <tr>
+                 <td align="left" valign="top" style="padding-bottom: 20px; padding-right: 0px"><!-- Body Copy - 16 :: START -->
+                  <p style="font-family: Helvetica, Arial; font-size: 16px; line-height: 20px; letter-spacing: -0.1px; color:#000000; font-weight:normal; -webkit-text-size-adjust:none; margin: 0;" class="fontVeDS_16">Here’s a quick view of your bill this month. Since you have Auto Pay, there's nothing else you need to do.</p><!-- Body Copy - 16 :: END --></td>
+                </tr><!-- CHILD TEXT END -->
+               </tbody>
+              </table></td>
+             <td width="198" class="w18"></td>
+            </tr>
+           </tbody>
+          </table></td>
+        </tr><!-- TEXT CTA FULL WIDTH END --> <!-- BASE START -->
+        <tr>
+         <td>
+          <table width="100%" border="0" cellpadding="0" cellspacing="0" role="presentation" bgcolor="#FFFFFF">
+           <tbody>
+            <tr>
+             <td align="left" valign="top" width="24"></td>
+             <td align="left" valign="top" class="w312">
+              <table width="100%" border="0" cellspacing="0" cellpadding="0" role="presentation">
+               <tbody>
+                <tr>
+                 <td height="20" align="left" valign="top"></td>
+                </tr>
+                <tr>
+                 <td align="left" valign="top" style="padding-bottom: 16px;" class="padB18">
+                  <h2 style="font-family: Helvetica, Arial; font-size: 32px; line-height: 36px; letter-spacing: -1.2px; color:#000000; font-weight:bold; -webkit-text-size-adjust:none; margin: 0;" class="fontVeDS_32_42" id="lineheight_32">Bill summary</h2></td>
+                </tr>
+                <tr>
+                 <td align="left" valign="top">
+                  <table width="100%" border="0" cellpadding="0" cellspacing="0" role="presentation">
+                   <tbody>
+                    <tr>
+                     <td align="left" valign="top">
+                      <table border="0" cellspacing="0" cellpadding="0" role="presentation" width="100%">
+                       <tbody>
+                        <tr>
+                         <td width="324" align="left" valign="top" style="padding-bottom: 16px;" class="mobilePods padB8">
+                          <p style="font-family: Helvetica, Arial; font-size: 16px; line-height: 20px; letter-spacing: -0.1px; color:#000000; font-weight:bold; -webkit-text-size-adjust:none; margin: 0;" class="fontVeDS_16">Total amount due:</p></td>
+                         <td width="24" class="hideInMobile"></td>
+                         <td align="left" valign="top" style="padding-bottom: 16px;" class="mobilePods displayBlock padB8">
+                          <table border="0" cellspacing="0" cellpadding="0" role="presentation" width="100%">
+                           <tbody>
+                            <tr>
+                             <td align="left" valign="top">
+                              <p style="font-family: Helvetica, Arial; font-size: 16px; line-height: 20px; letter-spacing: -0.1px; color:#000000; font-weight:normal; -webkit-text-size-adjust:none; margin: 0;" class="fontVeDS_16">$87.65 &nbsp;</p></td>
+                            </tr>
+                           </tbody>
+                          </table></td>
+                        </tr>
+                       </tbody>
+                      </table></td>
+                    </tr>
+                   </tbody>
+                  </table></td>
+                </tr>
+                <tr>
+                 <td align="left" valign="top">
+                  <table width="100%" border="0" cellpadding="0" cellspacing="0" role="presentation">
+                   <tbody>
+                    <tr>
+                     <td align="left" valign="top">
+                      <table border="0" cellspacing="0" cellpadding="0" role="presentation" width="100%">
+                       <tbody>
+                        <tr>
+                         <td width="324" align="left" valign="top" style="padding-bottom: 16px;" class="mobilePods padB8">
+                          <p style="font-family: Helvetica, Arial; font-size: 16px; line-height: 20px; letter-spacing: -0.1px; color:#000000; font-weight:bold; -webkit-text-size-adjust:none; margin: 0;" class="fontVeDS_16">Auto Pay date:</p></td>
+                         <td width="24" class="hideInMobile"></td>
+                         <td align="left" valign="top" style="padding-bottom: 16px;" class="mobilePods displayBlock padB8">
+                          <table border="0" cellspacing="0" cellpadding="0" role="presentation" width="100%">
+                           <tbody>
+                            <tr>
+                             <td align="left" valign="top">
+                              <p style="font-family: Helvetica, Arial; font-size: 16px; line-height: 20px; letter-spacing: -0.1px; color:#000000; font-weight:normal; -webkit-text-size-adjust:none; margin: 0;" class="fontVeDS_16">3/18/2026</p></td>
+                            </tr>
+                           </tbody>
+                          </table></td>
+                        </tr>
+                       </tbody>
+                      </table></td>
+                    </tr>
+                   </tbody>
+                  </table></td>
+                </tr>
+                <tr>
+                </tr>
+                <tr>
+                 <td align="left" valign="top" height="24"></td>
+                </tr>
+               </tbody>
+              </table></td>
+             <td align="left" valign="top" width="24"></td>
+            </tr>
+           </tbody>
+          </table></td>
+        </tr><!-- BASE END --> <!-- IF/ELSE LOGIC START --> <!-- TEXT CTA FULL WIDTH START -->
+        <tr>
+         <td align="left" valign="top">
+          <table width="100%" border="0" cellspacing="0" cellpadding="0" role="presentation" style="background-color: #FFFFFF;">
+           <tbody>
+            <tr>
+             <td width="24" class="w18"></td>
+             <td align="left" valign="top" style="padding-top: 0px">
+              <table width="100%" border="0" cellspacing="0" cellpadding="0" role="presentation">
+               <!-- CHILD TEXT START -->
+               <tbody>
+                <tr>
+                 <td align="left" valign="top" style="padding-bottom: 44px; padding-right: 0px"><!-- Body Copy - 16 :: START -->
+                  <p style="font-family: Helvetica, Arial; font-size: 16px; line-height: 20px; letter-spacing: -0.1px; color:#000000; font-weight:normal; -webkit-text-size-adjust:none; margin: 0;" class="fontVeDS_16">You can see your bill details on <a href="https://example.invalid/resource" target="_blank" style="color:#000000; text-decoration:underline;" class="outlookFix"><span style="color:#000000; text-decoration:underline;" class="outlookFix">My Verizon</span></a> where you’ll find bill history and manage payment settings.</p><!-- Body Copy - 16 :: END --></td>
+                </tr><!-- CHILD TEXT END -->
+               </tbody>
+              </table></td>
+             <td width="198" class="w18"></td>
+            </tr>
+           </tbody>
+          </table></td>
+        </tr><!-- TEXT CTA FULL WIDTH END --> <!-- IF/ELSE LOGIC END --> <!-- XF START --> <!-- XF START --> <!-- HTML Snippet START --><!-- HTML Snippet END --> <!-- HTML Snippet START --> <!-- HTML Snippet END --> <!-- XF END --> <!-- HTML Snippet START --> <!-- HTML Snippet END --> <!-- IF/ELSE LOGIC START --> <!-- XF START --> <!-- HTML Snippet START --> <!-- HTML Snippet END --> <!-- HTML Snippet START --><!-- OnlyImg -->
+        <tr>
+         <td align="left" valign="top">
+          <table width="100%" border="0" cellspacing="0" cellpadding="0" role="presentation">
+           <tbody>
+            <tr>
+             <td width="24" class="w18"></td>
+             <td align="left" valign="top" class="wayfinderPOD displayBlock"><!-- HTML Snippet END --> <!-- XF START --> <!-- IF/ELSE LOGIC START --> <!-- XF START --> <!-- HTML Snippet START -->
+              <table width="324" border="0" cellspacing="0" cellpadding="0" role="presentation">
+               <tbody>
+                <tr>
+                 <!-- start xf -->
+                 <td width="324" align="left" valign="top" class="mobilePods" bgcolor="#f6f0e2" style="border-radius: 12px;">
+                  <table width="100%" border="0" cellspacing="0" cellpadding="0" role="presentation">
+                   <tbody>
+                    <tr>
+                     <td width="324" align="left" valign="top" class="mobilePods" style="border-radius: 12px;">
+                      <table width="100%" border="0" cellspacing="0" cellpadding="0" role="presentation">
+                       <tbody>
+                        <tr>
+                         <td width="324" align="left" valign="top" class="mobilePods" style="border-radius: 12px;">
+                          <table width="100%" border="0" cellspacing="0" cellpadding="0" role="presentation">
+                           <tbody>
+                            <tr>
+                             <td align="left" valign="top"><a href="https://example.invalid/resource" target="_blank"><img src="https://example.invalid/resource" alt="" width="324" border="0" style="display:block;" tabindex="-1"></a></td>
+                            </tr>
+                           </tbody>
+                          </table></td>
+                        </tr>
+                       </tbody>
+                      </table></td>
+                    </tr>
+                   </tbody>
+                  </table></td><!-- end xf -->
+                </tr>
+               </tbody>
+              </table><!-- HTML Snippet END --> <!-- XF END --> <!-- IF/ELSE LOGIC END --> <!-- XF END --> <!-- HTML Snippet START --></td>
+             <td width="24" height="24" class="mobilePods displayBlock"></td><!-- OnlyImg -->
+             <td align="left" valign="top" class="wayfinderPOD displayBlock"><!-- HTML Snippet END --> <!-- XF START --> <!-- IF/ELSE LOGIC START --> <!-- XF START --> <!-- HTML Snippet START -->
+              <table width="324" border="0" cellspacing="0" cellpadding="0" role="presentation">
+               <tbody>
+                <tr>
+                 <!-- start xf -->
+                 <td width="324" align="left" valign="top" class="mobilePods" bgcolor="#f6f0e2" style="border-radius: 12px;">
+                  <table width="100%" border="0" cellspacing="0" cellpadding="0" role="presentation">
+                   <tbody>
+                    <tr>
+                     <td width="324" align="left" valign="top" class="mobilePods" style="border-radius: 12px;">
+                      <table width="100%" border="0" cellspacing="0" cellpadding="0" role="presentation">
+                       <tbody>
+                        <tr>
+                         <td width="324" align="left" valign="top" class="mobilePods" style="border-radius: 12px;">
+                          <table width="100%" border="0" cellspacing="0" cellpadding="0" role="presentation">
+                           <tbody>
+                            <tr>
+                             <td align="left" valign="top"><a href="https://example.invalid/resource" target="_blank"><img src="https://example.invalid/resource" alt="" width="324" border="0" style="display:block;" tabindex="-1"></a></td>
+                            </tr>
+                           </tbody>
+                          </table></td>
+                        </tr>
+                       </tbody>
+                      </table></td>
+                    </tr>
+                   </tbody>
+                  </table></td><!-- end xf -->
+                </tr>
+               </tbody>
+              </table><!-- HTML Snippet END --> <!-- XF END --> <!-- IF/ELSE LOGIC END --> <!-- XF END --> <!-- HTML Snippet START --></td>
+             <td width="24" class="w18"></td>
+            </tr>
+           </tbody>
+          </table></td>
+        </tr>
+        <tr>
+         <td height="48" width="100%"></td>
+        </tr><!-- HTML Snippet END --> <!-- XF END --> <!-- IF/ELSE LOGIC END --> <!-- XF END --> <!-- XF START --> <!-- WIDE IMAGE - MARQUEE - START -->
+        <tr>
+         <td align="left" valign="top" style=" padding-bottom: 0px;">
+          <table width="100%" border="0" cellspacing="0" cellpadding="0" role="presentation">
+           <tbody>
+            <tr>
+             <td align="left" valign="top" class="hideInMobile" style="display:block;"><!-- IMAGE DESKTOP --> <a href="https://example.invalid/resource" target="_blank"> <img tabindex="0" src="https://example.invalid/resource" width="720" alt="America's Best 5G Network" border="0" style="display:block;"> </a></td>
+            </tr>
+            <tr>
+             <td align="left" valign="top" style="display:none" class="showInMobile"><!-- IMAGE MOBILE --> <a href="https://example.invalid/resource" target="_blank"><!--[if !mso]><!--><img tabindex="0" src="https://example.invalid/resource" width="360" alt="America's Best 5G Network" border="0" style="display:block;"><!--<![endif]--> </a></td>
+            </tr>
+           </tbody>
+          </table></td>
+        </tr><!-- WIDE IMAGE - MARQUEE - END --> <!-- TEXT CTA FULL WIDTH START -->
+        <tr>
+         <td align="left" valign="top">
+          <table width="100%" border="0" cellspacing="0" cellpadding="0" role="presentation" style="background-color: #FFFFFF;">
+           <tbody>
+            <tr>
+             <td width="24" class="w18"></td>
+             <td align="left" valign="top" style="padding-top: 0px">
+              <table width="100%" border="0" cellspacing="0" cellpadding="0" role="presentation">
+               <!-- HTML Snippet START -->
+               <tbody>
+                <tr>
+                 <td height="1" bgcolor="#D8DADA" width="100%" style="border-collapse:collapse; mso-table-lspace:0pt; mso-table-rspace:0pt; mso-line-height-rule:exactly; line-height:1px;"><img src="https://example.invalid/resource" width="720" height="1" alt="" style="display:block;max-height:1px;" border="0" class="mobileContainer"></td>
+                </tr><!-- HTML Snippet END -->
+               </tbody>
+              </table></td>
+             <td width="198" class="w18"></td>
+            </tr>
+           </tbody>
+          </table></td>
+        </tr><!-- TEXT CTA FULL WIDTH END --> <!-- XF END --> <!-- TRX RECOVERY BAR START -->
+        <tr>
+         <td height="1" bgcolor="#D8DADA" width="100%" style="border-collapse:collapse; mso-table-lspace:0pt; mso-table-rspace:0pt; mso-line-height-rule:exactly; line-height:1px;"><img src="https://example.invalid/resource" width="720" height="1" alt="" style="display:block;max-height:1px;" border="0" class="mobileContainer"></td>
+        </tr>
+        <tr>
+         <td height="24" width="100%"></td>
+        </tr>
+        <tr>
+         <td align="left" valign="top" class="recoveryPod">
+          <div style="background:#FFFFFF; color:#000000;">
+           <div style="xmix-blend-mode:difference;" class="xgmailHackBM">
+            <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" bgcolor="#FFFFFF">
+             <tbody>
+              <tr>
+               <td width="24" class="w18"></td>
+               <td align="left" valign="top" style="padding-top: 24px; padding-bottom: 24px;">
+                <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0">
+                 <tbody>
+                  <tr>
+                   <td align="left" valign="top">
+                    <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="border-collapse: separate;">
+                     <tbody>
+                      <tr>
+                       <td bgcolor="#000000" align="left" valign="middle" width="208" height="60" style="text-indent: 24px; height: 60px; border-radius: 12px; border-style: solid; border-color: #333333; border-width: 1px; border-collapse: separate;" class="mobilePods">
+                        <p style="font-family: Helvetica, Arial; font-size: 16px; line-height: 20px; letter-spacing: -0.1px; color:#FFFFFF; font-weight:bold; -webkit-text-size-adjust:none; margin:0;" class="fontVeDS_16"><a _label="gbl_recovery_left" href="https://example.invalid/resource" target="_blank" style="text-decoration:none; display: block; width: 208px; height: 58px;" class="w324"> <span style="color:#FFFFFF; display:inline-block; margin-top: 21px; text-indent: 0px;" class="outlookFix"> Manage Auto Pay </span> <img src="https://example.invalid/resource" alt="Manage Auto Pay" height="20" style="display:inline-block; margin-top: 19px;" border="0" align="right"> </a></p></td>
+                       <td width="24" height="24" class="mobilePods"></td>
+                       <td bgcolor="#000000" align="left" valign="middle" width="208" height="60" style="text-indent: 24px; height: 60px; border-radius: 12px; border-style: solid; border-color: #333333; border-width: 1px; border-collapse: separate;" class="mobilePods">
+                        <p style="font-family: Helvetica, Arial; font-size: 16px; line-height: 20px; letter-spacing: -0.1px; color:#FFFFFF; font-weight:bold; -webkit-text-size-adjust:none; margin:0;" class="fontVeDS_16"><a _label="gbl_recovery_center" href="https://example.invalid/resource" target="_blank" style="text-decoration:none; display: block; width: 208px; height: 58px;" class="w324"> <span style="color:#FFFFFF; display:inline-block; margin-top: 21px; text-indent: 0px;" class="outlookFix"> Manage alerts </span> <img src="https://example.invalid/resource" alt="Manage alerts" height="20" style="display:inline-block; margin-top: 19px;" border="0" align="right"> </a></p></td>
+                       <td width="24" height="24" class="mobilePods"></td>
+                       <td bgcolor="#000000" align="left" valign="middle" width="208" height="60" style="text-indent: 24px; height: 60px; border-radius: 12px; border-style: solid; border-color: #333333; border-width: 1px; border-collapse: separate;" class="mobilePods">
+                        <p style="font-family: Helvetica, Arial; font-size: 16px; line-height: 20px; letter-spacing: -0.1px; color:#FFFFFF; font-weight:bold; -webkit-text-size-adjust:none; margin:0;" class="fontVeDS_16"><a _label="gbl_recovery_right" href="https://example.invalid/resource" target="_blank" style="text-decoration:none; display: block; width: 208px; height: 58px;" class="w324"> <span style="color:#FFFFFF; display:inline-block; margin-top: 21px; text-indent: 0px;" class="outlookFix"> Shop deals </span> <img src="https://example.invalid/resource" alt="Shop deals" height="20" style="display:inline-block; margin-top: 19px;" border="0" align="right"> </a></p></td>
+                      </tr>
+                     </tbody>
+                    </table></td>
+                  </tr>
+                 </tbody>
+                </table></td>
+               <td width="24" class="w18"></td>
+              </tr>
+             </tbody>
+            </table>
+           </div>
+          </div></td>
+        </tr><!-- TRX RECOVERY BAR END --> <!-- TRX FOOTER START -->
+        <tr>
+         <td valign="top" align="left">
+          <table width="100%" border="0" cellspacing="0" cellpadding="0" bgcolor="#ffffff" role="presentation">
+           <tbody>
+            <tr>
+             <td height="11" width="100%" style="border-collapse:collapse; mso-table-lspace:0pt; mso-table-rspace:0pt; mso-line-height-rule: exactly; line-height:11px;"><!--[if gte mso 15]>&nbsp;<![endif]--></td>
+            </tr>
+            <tr>
+             <td align="left" valign="top">
+              <table width="100%" border="0" cellspacing="0" cellpadding="0" role="presentation">
+               <tbody>
+                <tr>
+                 <td width="24"></td>
+                 <td align="left" valign="top">
+                  <table width="100%" border="0" cellspacing="0" cellpadding="0" role="presentation">
+                   <tbody>
+                    <tr>
+                     <td height="11" width="100%" style="border-collapse:collapse; mso-table-lspace:0pt; mso-table-rspace:0pt; mso-line-height-rule: exactly; line-height:11px;"><!--[if gte mso 15]>&nbsp;<![endif]--></td>
+                    </tr><!-- QUICK LINKS START -->
+                    <tr>
+                     <td align="left" valign="top">
+                      <table border="0" cellspacing="0" cellpadding="0">
+                       <tbody>
+                        <tr>
+                         <td align="left" valign="top" class="mobilePods">
+                          <table width="100%" border="0" cellspacing="0" cellpadding="0">
+                           <tbody>
+                            <tr>
+                             <td align="left" valign="top">
+                              <p style="font-family: Helvetica, Arial; font-size: 16px; line-height: 20px; letter-spacing: -0.1px; color:#000000; font-weight:bold; -webkit-text-size-adjust:none; margin: 0; padding-bottom:32px;" class="fontVeDS_14"><a href="https://example.invalid/resource" target="_blank" style="color:#000000; text-decoration:none;"> <span style="color:#000000; text-decoration:none;">Phones</span></a></p></td>
+                             <td width="16"></td>
+                            </tr>
+                           </tbody>
+                          </table></td>
+                         <td align="left" valign="top" class="mobilePods">
+                          <table width="100%" border="0" cellspacing="0" cellpadding="0">
+                           <tbody>
+                            <tr>
+                             <td align="left" valign="top">
+                              <p style="font-family: Helvetica, Arial; font-size: 16px; line-height: 20px; letter-spacing: -0.1px; color:#000000; font-weight:bold; -webkit-text-size-adjust:none; margin: 0; padding-bottom:32px;" class="fontVeDS_14"><a href="https://example.invalid/resource" target="_blank" style="color:#000000; text-decoration:none;"> <span style="color:#000000; text-decoration:none;">Accessories</span></a></p></td>
+                             <td width="16"></td>
+                            </tr>
+                           </tbody>
+                          </table></td>
+                         <td align="left" valign="top" class="mobilePods">
+                          <table width="100%" border="0" cellspacing="0" cellpadding="0">
+                           <tbody>
+                            <tr>
+                             <td align="left" valign="top">
+                              <p style="font-family: Helvetica, Arial; font-size: 16px; line-height: 20px; letter-spacing: -0.1px; color:#000000; font-weight:bold; -webkit-text-size-adjust:none; margin: 0; padding-bottom:32px;" class="fontVeDS_14"><a href="https://example.invalid/resource" target="_blank" style="color:#000000; text-decoration:none;"> <span style="color:#000000; text-decoration:none;">Plans</span></a></p></td>
+                             <td width="16"></td>
+                            </tr>
+                           </tbody>
+                          </table></td>
+                         <td align="left" valign="top" class="mobilePods">
+                          <table width="100%" border="0" cellspacing="0" cellpadding="0">
+                           <tbody>
+                            <tr>
+                             <td align="left" valign="top">
+                              <p style="font-family: Helvetica, Arial; font-size: 16px; line-height: 20px; letter-spacing: -0.1px; color:#000000; font-weight:bold; -webkit-text-size-adjust:none; margin: 0; padding-bottom:32px;" class="fontVeDS_14"><a href="https://example.invalid/resource" target="_blank" style="color:#000000; text-decoration:none;"> <span style="color:#000000; text-decoration:none;">Verizon Access</span></a></p></td>
+                             <td width="16"></td>
+                            </tr>
+                           </tbody>
+                          </table></td>
+                         <td align="left" valign="top" class="mobilePods">
+                          <table width="100%" border="0" cellspacing="0" cellpadding="0">
+                           <tbody>
+                            <tr>
+                             <td align="left" valign="top">
+                              <p style="font-family: Helvetica, Arial; font-size: 16px; line-height: 20px; letter-spacing: -0.1px; color:#000000; font-weight:bold; -webkit-text-size-adjust:none; margin: 0; padding-bottom:32px;" class="fontVeDS_14"><a href="https://example.invalid/resource" target="_blank" style="color:#000000; text-decoration:none;"> <span style="color:#000000; text-decoration:none;">My Verizon app</span></a></p></td>
+                             <td width="16"></td>
+                            </tr>
+                           </tbody>
+                          </table></td>
+                         <td align="left" valign="top" class="mobilePods">
+                          <table width="100%" border="0" cellspacing="0" cellpadding="0">
+                           <tbody>
+                            <tr>
+                             <td align="left" valign="top">
+                              <p style="font-family: Helvetica, Arial; font-size: 16px; line-height: 20px; letter-spacing: -0.1px; color:#000000; font-weight:bold; -webkit-text-size-adjust:none; margin: 0; padding-bottom:32px;" class="fontVeDS_14"><a href="https://example.invalid/resource" target="_blank" style="color:#000000; text-decoration:none;"> <span style="color:#000000; text-decoration:none;">Contact us</span></a></p></td>
+                             <td width="16"></td>
+                            </tr>
+                           </tbody>
+                          </table></td>
+                        </tr>
+                       </tbody>
+                      </table></td>
+                    </tr><!-- QUICK LINKS END --> <!-- SOCIAL LINKS START -->
+                    <tr>
+                     <td align="left" valign="top">
+                      <table width="100%" border="0" cellspacing="0" cellpadding="0" role="presentation">
+                       <tbody>
+                        <tr>
+                         <td align="left" valign="top">
+                          <table border="0" cellspacing="0" cellpadding="0" role="presentation">
+                           <tbody>
+                            <tr>
+                             <td align="left" valign="top"><a href="https://example.invalid/resource" target="_blank" class="ignoreTracking"><img src="https://example.invalid/resource" alt="Fios on Facebook" border="0" style="display:block;margin-right:24px;"></a></td>
+                             <td align="left" valign="top"><a href="https://example.invalid/resource" target="_blank" class="ignoreTracking"><img src="https://example.invalid/resource" alt="Verizon Twitter" border="0" style="display:block;;margin-right:24px;"></a></td>
+                             <td align="left" valign="top"><a href="https://example.invalid/resource" target="_blank" class="ignoreTracking"><img src="https://example.invalid/resource" alt="Verizon YouTube" border="0" style="display:block;;margin-right:24px;"></a></td>
+                             <td align="left" valign="top"><a href="https://example.invalid/resource" target="_blank" class="ignoreTracking"><img src="https://example.invalid/resource" alt="Verizon Instagram" border="0" style="display:block;;margin-right:24px;"></a></td>
+                            </tr>
+                           </tbody>
+                          </table></td>
+                        </tr>
+                       </tbody>
+                      </table></td>
+                    </tr><!-- SOCIAL LINKS END --> <!-- campaing html snippet -->
+                    <tr>
+                     <td align="left" valign="top">
+                      <table width="100%" border="0" cellpadding="0" cellspacing="0" role="presentation">
+                       <tbody>
+                        <tr>
+                         <td height="23"></td>
+                        </tr>
+                        <tr>
+                         <td height="23">
+                          <table width="100%" border="0" cellspacing="0" cellpadding="0">
+                           <tbody>
+                            <tr>
+                             <td>
+                              <table width="100%" border="0" cellspacing="0" cellpadding="0">
+                              <tbody>
+                              <tr>
+                              <td align="left" valign="middle">
+                              <p style="font-family: Helvetica, Arial; font-size: 11px; line-height: 16px;  letter-spacing: 0.1px; color:#000000; font-weight:bold; -webkit-text-size-adjust:none;" class="fontVeTX_11">Account number ending in: 0000-00042</p></td><!-- <td width="1" bgcolor="#d8dada"></td> -->
+                              </tr>
+                              </tbody>
+                              </table></td>
+                            </tr>
+                           </tbody>
+                          </table></td>
+                        </tr><!-- CAMPAIGN LEGAL START -->
+                        <tr>
+                         <td align="left" valign="top">
+                          <table width="100%" border="0" cellspacing="0" cellpadding="0" role="presentation">
+                           <tbody>
+                            <tr>
+                             <td valign="top" align="left" style="padding-top: 20px; font-family: Helvetica, Arial; font-size: 11px; line-height: 16px;  letter-spacing: 0.1px; color:#6F7171; font-weight:normal; -webkit-text-size-adjust:none;" class="fontVeTX_11"><!-- XF START --> <!-- HTML Snippet START --> <sup style="font-size:10px; line-height:10px;">1</sup>Based on RootMetrics<sup style="font-size:10px; line-height:10px;">®</sup> United States RootScore<sup style="font-size:10px; line-height:10px;">®</sup> Report: 1H 2025. Tested with best commercially available smartphones on three national mobile networks across all available network types. Your experiences may vary. RootMetrics rankings are not an endorsement of Verizon.<br><br><sup style="font-size:10px; line-height:10px;">2</sup>Based on analysis by Verizon of Ookla<sup style="font-size:10px; line-height:10px;">®</sup> Speedtest Intelligence<sup style="font-size:10px; line-height:10px;">®</sup> data for Verizon 5G UWB median download speeds vs U.S. 4G LTE median download speeds of all other providers, United States, Q1-Q2 2025. Ookla trademarks used under license and reprinted with permission.<br><br><sup style="font-size:10px; line-height:10px;">3</sup>HD availability may depend on the specific Verizon data plan in which a customer is enrolled. <br><br><!-- HTML Snippet END --> <!-- XF END --></td>
+                            </tr>
+                           </tbody>
+                          </table></td>
+                        </tr><!-- CAMPAIGN LEGAL END --> <!-- DEFAULT FOOTER XF START -->
+                        <tr>
+                         <td valign="top" align="left" style="padding-top: 20px; font-family: Helvetica, Arial; font-size: 11px; line-height: 16px;  letter-spacing: 0.1px; color:#6F7171; font-weight:normal; -webkit-text-size-adjust:none;" class="fontVeTX_11"><!-- XF START --> <!-- HTML Snippet START -->~Based on RootMetrics® United States RootScore® Report: 2H 2025. Tested with best commercially available smartphones on three national mobile networks across all available network types. Your Experiences may vary. RootMetrics rankings are not an endorsement of Verizon. All rights reserved.<!-- HTML Snippet END --> <!-- XF END --></td>
+                        </tr><!-- DEFAULT FOOTER XF END -->
+                        <tr>
+                         <td valign="top" align="left" style="padding-top: 20px;">
+                          <p style="font-family: Helvetica, Arial; font-size: 11px; line-height: 16px;  letter-spacing: 0.1px; color:#6F7171; font-weight:normal; -webkit-text-size-adjust:none;" class="fontVeTX_11">© 2026 Verizon</p></td>
+                        </tr><!-- STANDARD LEGAL START -->
+                        <tr>
+                         <td valign="top" align="left" style="padding-top: 20px;">
+                          <p style="font-family: Helvetica, Arial; font-size: 11px; line-height: 16px; letter-spacing: 0.1px; color:#6F7171; font-weight:normal; -webkit-text-size-adjust:none;" class="fontVeTX_11">This email was sent to <a href="https://example.invalid/resource" style="color:#6F7171; text-decoration:none; line-height: 16px;  cursor:default;" class="fontVeTX_11 ignoreUrl" target="_blank"><span style="color:#6F7171; text-decoration:none; line-height: 16px; " class="fontVeTX_11 ignoreUrl"> OWNER@EXAMPLE.INVALID</span></a>. If you think it was sent in error or you’d like to update your contact information, please visit our <a href="https://example.invalid/resource" target="_blank" style="color:#6F7171; text-decoration:underline; line-height: 16px; " class="fontVeTX_11"><span style="color:#6F7171; text-decoration:underline; line-height: 16px; " class="fontVeTX_11">preference center</span></a>. We respect your privacy. Please review our <a href="https://example.invalid/resource" target="_blank" style="color:#6F7171; text-decoration:underline; line-height: 16px; " class="fontVeTX_11 ignoreTracking"><span style="color:#6F7171; text-decoration:underline; line-height: 16px; " class="fontVeTX_11 ignoreTracking">Privacy&nbsp;Policy</span></a>. California customers can view our <a href="https://example.invalid/resource" target="_blank" style="color:#6F7171; text-decoration:underline; line-height: 16px; " class="fontVeTX_11 ignoreTracking"><span style="color:#6F7171; text-decoration:underline; line-height: 16px; " class="fontVeTX_11 ignoreTracking">California Privacy Notice</span></a>.</p></td>
+                        </tr>
+                        <tr>
+                         <td valign="top" align="left" style="padding-top: 20px;">
+                          <p style="font-family: Helvetica, Arial; font-size: 11px; line-height: 16px;  letter-spacing: 0.1px; color:#6F7171; font-weight:normal; -webkit-text-size-adjust:none;" class="fontVeTX_11">Verizon, One Verizon Way, Mail Code: 180WVB, Basking Ridge, NJ 07920</p></td>
+                        </tr>
+                        <tr>
+                         <td height="30"></td>
+                        </tr><!-- STANDARD LEGAL END -->
+                       </tbody>
+                      </table></td>
+                    </tr><!-- campaing html snippet ends -->
+                   </tbody>
+                  </table></td>
+                 <td width="24"></td>
+                </tr>
+               </tbody>
+              </table>
+              <div style="display:none; white-space:nowrap; font:15px courier; color:#ffffff; background: #ffffff; max-height:0; height:0; overflow:hidden;">
+               - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+              </div></td>
+            </tr>
+           </tbody>
+          </table></td>
+        </tr><!-- YAHOO APP FIX START -->
+        <tr>
+         <td align="left" valign="top" style="line-height:1px;"><img src="https://example.invalid/resource" height="1" width="720" border="0" style="display:block;" class="mobileContainer" alt=""></td>
+        </tr><!-- YAHOO APP FIX END --> <!-- TRX FOOTER END --> <!-- BODY END -->
+       </tbody>
+      </table></td>
+    </tr>
+   </tbody>
+  </table><img src="https://example.invalid/resource">
+ </body></html>

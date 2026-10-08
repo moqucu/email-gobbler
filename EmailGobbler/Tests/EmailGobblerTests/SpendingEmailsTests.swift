@@ -62,6 +62,22 @@ final class SpendingEmailsTests: XCTestCase {
         assertSpendingError(.missingField("payment method"), try parsePayPalReceipt(html: noFunding))
     }
 
+    // MARK: - Verizon bills
+
+    func testVerizonBillFixtureIsParsed() throws {
+        XCTAssertEqual(try parseVerizonBill(html: try html("verizon-bill.synthetic")),
+                       VerizonBill(amountDue: dec("87.65"), autoPayDate: date(2026, 3, 18), accountEnding: "0000-00042"))
+    }
+
+    func testVerizonEmailsWithoutABillOrAutoPayAreNotApplicable() throws {
+        let manual = try html("verizon-bill.synthetic").replacingOccurrences(of: "Auto Pay date:", with: "Due date:")
+        assertSpendingError(.notApplicable("Verizon bill without Auto Pay"), try parseVerizonBill(html: manual))
+        let promotion = try html("verizon-bill.synthetic").replacingOccurrences(of: "Total amount due:", with: "New phones")
+        assertSpendingError(.notApplicable("Not a Verizon bill"), try parseVerizonBill(html: promotion))
+        let badDate = try html("verizon-bill.synthetic").replacingOccurrences(of: "3/18/2026", with: "2/30/2026")
+        assertSpendingError(.invalidDate("2/30/2026"), try parseVerizonBill(html: badDate))
+    }
+
     // MARK: - Booking
 
     private func account(_ guid: String, _ name: String, _ type: String, placeholder: Bool = false) -> GnuCashAccount {
@@ -89,6 +105,7 @@ final class SpendingEmailsTests: XCTestCase {
             account("bank", "Assets:Checking", "BANK"),
             account("gas", "Expenses:Utilities:Gas", "EXPENSE"),
             account("streaming", "Expenses:Streaming", "EXPENSE"),
+            account("phone", "Expenses:Phone", "EXPENSE"),
             account("hold", "Expenses:Uncategorized", "EXPENSE"),
             account("exp", "Expenses", "EXPENSE", placeholder: true),
         ], transactions: [
@@ -96,6 +113,7 @@ final class SpendingEmailsTests: XCTestCase {
             booking("t2", date(2026, 2, 9), "Example Propane Co", [("gas", "40.00"), ("amex", "-40.00")]),
             booking("t3", date(2026, 2, 12), "Example Streaming", [("streaming", "15.49"), ("paypal", "-15.49")]),
             booking("t4", date(2026, 2, 12), "PayPal - Collection", [("paypal", "15.49"), ("bank", "-15.49")]),
+            booking("t5", date(2026, 2, 18), "Verizon", [("phone", "86.10"), ("bank", "-86.10")]),
         ] + extra)
     }
 
@@ -184,6 +202,57 @@ final class SpendingEmailsTests: XCTestCase {
                                          holdingAccount: "Expenses:Uncategorized")
         XCTAssertEqual(both.transactions, [])
         XCTAssertEqual(both.notes.count, 2)
+    }
+
+    func testVerizonBillIsBookedOnTheAutoPayDateLikeTheLastBill() throws {
+        let bill = VerizonBill(amountDue: dec("87.65"), autoPayDate: date(2026, 3, 18), accountEnding: nil)
+        let plan = try planVerizonBill(bill, book: book(), paymentAccount: "Assets:Checking", holdingAccount: "Expenses:Uncategorized")
+        XCTAssertEqual(plan, SpendingPlan(transactions: [
+            NewGnuCashTransaction(date: date(2026, 3, 18), description: "Verizon", splits: [
+                NewGnuCashSplit(accountName: "Expenses:Phone", amount: dec("87.65")),
+                NewGnuCashSplit(accountName: "Assets:Checking", amount: dec("-87.65")),
+            ]),
+        ], notes: []))
+    }
+
+    func testVerizonBillAlreadyBookedOrWithNothingDueAddsNothing() throws {
+        let bill = VerizonBill(amountDue: dec("87.65"), autoPayDate: date(2026, 3, 18), accountEnding: nil)
+        let moved = booking("v", date(2026, 3, 20), "Verizon", [("phone", "87.65"), ("bank", "-87.65")])
+        let booked = try planVerizonBill(bill, book: book(extra: [moved]), paymentAccount: "Assets:Checking",
+                                         holdingAccount: "Expenses:Uncategorized")
+        XCTAssertEqual(booked, SpendingPlan(transactions: [], notes: ["Already booked: Verizon $87.65 on 3/20/2026"]))
+        for amount in ["0.00", "-5.00"] {
+            let credit = VerizonBill(amountDue: dec(amount), autoPayDate: date(2026, 3, 18), accountEnding: nil)
+            XCTAssertEqual(try planVerizonBill(credit, book: book(), paymentAccount: "Assets:Checking",
+                                               holdingAccount: "Expenses:Uncategorized"),
+                           SpendingPlan(transactions: [], notes: ["Nothing to pay on 3/18/2026"]))
+        }
+    }
+
+    func testAccountsOfTheWrongKindAreRefusedBeforeBooking() {
+        let bill = VerizonBill(amountDue: dec("87.65"), autoPayDate: date(2026, 3, 18), accountEnding: nil)
+        assertSpendingError(.unsuitableAccount("Expenses:Phone is an expense account; choose a bank, asset, or card account"),
+                            try planVerizonBill(bill, book: book(), paymentAccount: "Expenses:Phone",
+                                                holdingAccount: "Expenses:Uncategorized"))
+        assertSpendingError(.unsuitableAccount("Assets:Checking is a bank account; choose an expense account"),
+                            try planVerizonBill(bill, book: book(extra: []), paymentAccount: "Liabilities:Example Card",
+                                                holdingAccount: "Assets:Checking"))
+        let purchase = AmexPurchase(merchant: "EXAMPLE PROPANE CO", amount: dec("42.17"), date: date(2026, 3, 12), accountEnding: nil)
+        assertSpendingError(.unsuitableAccount("Assets:Checking is a bank account; choose a credit card or liability account"),
+                            try planAmexPurchase(purchase, book: book(), amexAccount: "Assets:Checking",
+                                                 holdingAccount: "Expenses:Uncategorized"))
+        let swapped = PayPalAccounts(payPal: "Assets:PayPal", bankFunding: "Liabilities:Example Card", cardFunding: "Assets:Checking")
+        assertSpendingError(.unsuitableAccount("Liabilities:Example Card is a credit card account; choose a bank, asset, or cash account"),
+                            try planPayPalPayment(payment(), book: book(), accounts: swapped, holdingAccount: "Expenses:Uncategorized"))
+    }
+
+    func testOnlyExpenseAccountsAreLearnedAsCategories() throws {
+        // The card's latest "Example Propane Co" entry is a transfer, not a purchase.
+        let transfer = booking("x", date(2026, 3, 1), "Example Propane Co", [("bank", "50.00"), ("amex", "-50.00")])
+        let purchase = AmexPurchase(merchant: "EXAMPLE PROPANE CO", amount: dec("42.17"), date: date(2026, 3, 12), accountEnding: nil)
+        let plan = try planAmexPurchase(purchase, book: book(extra: [transfer]), amexAccount: "Liabilities:Example Card",
+                                        holdingAccount: "Expenses:Uncategorized")
+        XCTAssertEqual(plan.transactions.first?.splits.map(\.accountName), ["Expenses:Utilities:Gas", "Liabilities:Example Card"])
     }
 
     func testMisconfiguredAccountsAreReported() {

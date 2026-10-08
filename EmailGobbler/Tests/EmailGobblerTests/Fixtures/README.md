@@ -79,3 +79,7 @@ the expected journal and balances. `gnucash-book.synthetic.gnucash` is the same 
 American Express "Card may not have been present" alert and one real PayPal payment receipt. Names,
 card and account endings, merchants, amounts, dates, transaction and invoice IDs, phone numbers,
 addresses, headers, and every link are synthetic. Other formats in the tests are constructed variants.
+
+`verizon-bill.synthetic.eml` keeps the HTML layout of one real Verizon "Your Verizon bill is ready."
+email for an Auto Pay account. The amount, Auto Pay date, account number, address, headers, and every
+link are synthetic.

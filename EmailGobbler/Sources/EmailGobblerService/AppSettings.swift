@@ -10,6 +10,7 @@ public enum UseCaseID: String, Codable, Sendable, CaseIterable {
     case etradeDividends = "etrade-dividends"
     case amexPurchases = "amex-purchases"
     case payPalPayments = "paypal-payments"
+    case verizonBills = "verizon-bills"
 }
 
 public struct StudentRouteSettings: Codable, Equatable, Sendable {
@@ -76,6 +77,17 @@ public struct PayPalBookingSettings: Codable, Equatable, Sendable {
     }
 }
 
+public struct VerizonBookingSettings: Codable, Equatable, Sendable {
+    public var enabled: Bool
+    /// The account Auto Pay draws from.
+    public var account: String?
+
+    public init(enabled: Bool = false, account: String? = nil) {
+        self.enabled = enabled
+        self.account = account
+    }
+}
+
 public struct GnuCashSettings: Codable, Equatable, Sendable {
     /// The GnuCash XML book EmailGobbler reads and writes; `nil` until chosen.
     public var bookPath: String?
@@ -83,17 +95,20 @@ public struct GnuCashSettings: Codable, Equatable, Sendable {
     public var holdingAccount: String?
     public var amex: AmexBookingSettings
     public var payPal: PayPalBookingSettings
+    public var verizon: VerizonBookingSettings
 
     public init(bookPath: String? = nil, holdingAccount: String? = nil, amex: AmexBookingSettings = AmexBookingSettings(),
-                payPal: PayPalBookingSettings = PayPalBookingSettings()) {
+                payPal: PayPalBookingSettings = PayPalBookingSettings(),
+                verizon: VerizonBookingSettings = VerizonBookingSettings()) {
         self.bookPath = bookPath
         self.holdingAccount = holdingAccount
         self.amex = amex
         self.payPal = payPal
+        self.verizon = verizon
     }
 
     private enum CodingKeys: String, CodingKey {
-        case bookPath, holdingAccount, amex, payPal
+        case bookPath, holdingAccount, amex, payPal, verizon
     }
 
     /// Settings saved before spending bookings existed load with them off.
@@ -103,6 +118,7 @@ public struct GnuCashSettings: Codable, Equatable, Sendable {
         holdingAccount = try container.decodeIfPresent(String.self, forKey: .holdingAccount)
         amex = try container.decodeIfPresent(AmexBookingSettings.self, forKey: .amex) ?? AmexBookingSettings()
         payPal = try container.decodeIfPresent(PayPalBookingSettings.self, forKey: .payPal) ?? PayPalBookingSettings()
+        verizon = VerizonBookingSettings()
     }
 
     /// Account settings in a stable order, for enabled bookings only.

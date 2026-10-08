@@ -182,6 +182,22 @@ public func parsePayPalReceipt(html: String) throws -> PayPalPayment {
                          transactionID: transactionID, funding: funding)
 }
 
+public struct VerizonBill: Equatable, Sendable {
+    public let amountDue: Decimal
+    public let autoPayDate: CalendarDate
+    public let accountEnding: String?
+
+    public init(amountDue: Decimal, autoPayDate: CalendarDate, accountEnding: String?) {
+        self.amountDue = amountDue
+        self.autoPayDate = autoPayDate
+        self.accountEnding = accountEnding
+    }
+}
+
+public func parseVerizonBill(html: String) throws -> VerizonBill {
+    throw SpendingEmailError.notApplicable("")
+}
+
 /// What to add to the book for one email, and what was skipped.
 public struct SpendingPlan: Equatable, Sendable {
     public let transactions: [NewGnuCashTransaction]
@@ -339,4 +355,9 @@ public func planPayPalPayment(_ payment: PayPalPayment, book: GnuCashBook, accou
         ]))
     }
     return SpendingPlan(transactions: transactions, notes: notes)
+}
+
+public func planVerizonBill(_ bill: VerizonBill, book: GnuCashBook, paymentAccount: String,
+                            holdingAccount: String) throws -> SpendingPlan {
+    SpendingPlan(transactions: [], notes: [])
 }

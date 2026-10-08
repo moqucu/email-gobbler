@@ -69,14 +69,15 @@ final class GnuCashSettingsTests: XCTestCase {
 
     // MARK: - Spending bookings
 
-    private func spending(amex: Bool = true, payPal: Bool = true) -> AppSettings {
+    private func spending(amex: Bool = true, payPal: Bool = true, verizon: Bool = true) -> AppSettings {
         AppSettings(intervalMinutes: 30, backupRetention: 30, grades: GradesSettings(enabled: false, routes: []),
                     dividends: DividendsSettings(enabled: false, workbookPath: nil, sheetName: "Sheet 1"),
                     gnuCash: GnuCashSettings(bookPath: "/tmp/Household.gnucash", holdingAccount: "Expenses:Uncategorized",
                                              amex: AmexBookingSettings(enabled: amex, account: "Liabilities:Example Card"),
                                              payPal: PayPalBookingSettings(enabled: payPal, account: "Assets:PayPal",
                                                                            bankFundingAccount: "Assets:Checking",
-                                                                           cardFundingAccount: "Liabilities:Example Card")))
+                                                                           cardFundingAccount: "Liabilities:Example Card"),
+                                             verizon: VerizonBookingSettings(enabled: verizon, account: "Assets:Checking")))
     }
 
     private func spendingBook(placeholder: String? = nil) -> GnuCashBook {
@@ -96,6 +97,7 @@ final class GnuCashSettingsTests: XCTestCase {
         XCTAssertFalse(decoded.amex.enabled)
         XCTAssertFalse(decoded.payPal.enabled)
         XCTAssertNil(decoded.holdingAccount)
+        XCTAssertFalse(decoded.verizon.enabled)
         XCTAssertEqual(try JSONDecoder().decode(AppSettings.self, from: JSONEncoder().encode(spending())), spending())
     }
 
@@ -105,7 +107,8 @@ final class GnuCashSettingsTests: XCTestCase {
         missing.gnuCash = GnuCashSettings(bookPath: nil, holdingAccount: " ",
                                           amex: AmexBookingSettings(enabled: true, account: nil),
                                           payPal: PayPalBookingSettings(enabled: true, account: nil, bankFundingAccount: "",
-                                                                        cardFundingAccount: nil))
+                                                                        cardFundingAccount: nil),
+                                          verizon: VerizonBookingSettings(enabled: true, account: nil))
         XCTAssertEqual(missing.validate(), [
             SettingsIssue(field: "gnuCash.bookPath", message: "Choose a GnuCash book"),
             SettingsIssue(field: "gnuCash.holdingAccount", message: "Choose an account for new merchants"),
@@ -113,9 +116,12 @@ final class GnuCashSettingsTests: XCTestCase {
             SettingsIssue(field: "gnuCash.payPal.account", message: "Choose the PayPal account"),
             SettingsIssue(field: "gnuCash.payPal.bankFundingAccount", message: "Choose the bank account that funds PayPal"),
             SettingsIssue(field: "gnuCash.payPal.cardFundingAccount", message: "Choose the card account that funds PayPal"),
+            SettingsIssue(field: "gnuCash.verizon.account", message: "Choose the account that pays the Verizon bill"),
         ])
         missing.gnuCash.amex.enabled = false
         missing.gnuCash.payPal.enabled = false
+        XCTAssertEqual(missing.validate().map(\.field), ["gnuCash.bookPath", "gnuCash.holdingAccount", "gnuCash.verizon.account"])
+        missing.gnuCash.verizon.enabled = false
         XCTAssertEqual(missing.validate(), [])
     }
 
@@ -123,17 +129,20 @@ final class GnuCashSettingsTests: XCTestCase {
         XCTAssertEqual(preflightIssues(spending(), readSheet: { _ in SheetSnapshot(rows: []) }, loadBook: { _ in self.spendingBook() }), [])
         var renamed = spending()
         renamed.gnuCash.payPal.account = "Assets:Missing"
+        renamed.gnuCash.verizon.account = "Assets:Old Checking"
         XCTAssertEqual(preflightIssues(renamed, readSheet: { _ in SheetSnapshot(rows: []) },
                                        loadBook: { _ in self.spendingBook(placeholder: "Expenses:Uncategorized") }), [
             SettingsIssue(field: "gnuCash.holdingAccount", message: "Expenses:Uncategorized is a placeholder and can't hold transactions"),
             SettingsIssue(field: "gnuCash.payPal.account", message: "Assets:Missing is not in Household.gnucash"),
+            SettingsIssue(field: "gnuCash.verizon.account", message: "Assets:Old Checking is not in Household.gnucash"),
         ])
     }
 
     func testEnabledBookingsBecomeUseCases() {
-        XCTAssertEqual(spending().configuredUseCases().map(\.id), [.amexPurchases, .payPalPayments])
-        XCTAssertEqual(spending(amex: false).configuredUseCases().map(\.id), [.payPalPayments])
-        XCTAssertEqual(spending(amex: false, payPal: false).configuredUseCases().map(\.id), [])
+        XCTAssertEqual(spending().configuredUseCases().map(\.id), [.amexPurchases, .payPalPayments, .verizonBills])
+        XCTAssertEqual(spending(amex: false, verizon: false).configuredUseCases().map(\.id), [.payPalPayments])
+        XCTAssertEqual(spending(amex: false, payPal: false).configuredUseCases().map(\.id), [.verizonBills])
+        XCTAssertEqual(spending(amex: false, payPal: false, verizon: false).configuredUseCases().map(\.id), [])
     }
 
     func testPostableAccountNamesForPickers() {

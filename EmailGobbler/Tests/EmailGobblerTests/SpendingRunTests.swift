@@ -65,6 +65,18 @@ final class SpendingRunTests: XCTestCase {
                        ["Example Streaming", "PayPal - Collection"])
     }
 
+    func testVerizonUseCaseSummarizesAndPlansTheBill() throws {
+        let html = try MailDecoder.html(from: try source("verizon-bill.synthetic"))
+        let useCase = VerizonBillsUseCase(bookURL: Self.bookURL, paymentAccount: "Assets:Checking",
+                                          holdingAccount: "Expenses:Uncategorized")
+        XCTAssertEqual(useCase.mailQuery, VerizonBillsUseCase.defaultQuery)
+        XCTAssertEqual(useCase.targets, [])
+        XCTAssertEqual(try useCase.summarize(html: html), ["Amount due: $87.65", "Auto Pay date: 3/18/2026"])
+        let plan = try useCase.planBook(html: html, book: book())
+        XCTAssertEqual(plan.transactions.map(\.date), [date(2026, 3, 18)])
+        XCTAssertEqual(plan.notes, ["New merchant \"Verizon\" booked to Expenses:Uncategorized"])
+    }
+
     func testOnlyNotApplicableEmailsStayInTheInbox() {
         XCTAssertTrue(SpendingEmailError.notApplicable("Not a receipt").leavesEmailInInbox)
         XCTAssertFalse(SpendingEmailError.missingField("Transaction ID").leavesEmailInInbox)
@@ -171,5 +183,7 @@ final class SpendingRunTests: XCTestCase {
         XCTAssertEqual(UseCaseID.payPalPayments.rawValue, "paypal-payments")
         XCTAssertEqual(UseCaseID.amexPurchases.displayName, "AmEx purchases")
         XCTAssertEqual(UseCaseID.payPalPayments.displayName, "PayPal payments")
+        XCTAssertEqual(UseCaseID.verizonBills.rawValue, "verizon-bills")
+        XCTAssertEqual(UseCaseID.verizonBills.displayName, "Verizon bills")
     }
 }

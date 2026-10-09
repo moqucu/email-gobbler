@@ -4,8 +4,10 @@ import GnuCashBook
 
 extension SpendingEmailError: EmailApplicability {
     public var leavesEmailInInbox: Bool {
-        if case .notApplicable = self { return true }
-        return false
+        switch self {
+        case .notApplicable, .notBookedYet: return true
+        default: return false
+        }
     }
 }
 
@@ -112,7 +114,7 @@ public struct VerizonBillsUseCase: GnuCashUseCase {
 
 /// Apple receipts paid with PayPal: archived once the PayPal payment is in the book.
 public struct AppleReceiptsUseCase: GnuCashUseCase {
-    public static let defaultQuery = MailQuery(subjectContains: "", senderContains: nil)
+    public static let defaultQuery = MailQuery(subjectContains: "Your receipt from Apple", senderContains: "apple.com")
 
     public let mailQuery: MailQuery
     public let bookURL: URL?
@@ -125,7 +127,17 @@ public struct AppleReceiptsUseCase: GnuCashUseCase {
     }
 
     public var targets: [SheetTarget] { [] }
-    public func summarize(html: String) throws -> [String] { [] }
+
+    public func summarize(html: String) throws -> [String] {
+        let receipt = try parseAppleReceipt(html: html)
+        return ["Order ID: \(receipt.orderID)", "Date: \(DateDisplayStyle.monthDayFullYear.display(receipt.date))",
+                "Paid with PayPal: \(currencyDisplay(receipt.payPalAmount))"]
+    }
+
     public func plan(html: String, sheets: [SheetTarget: SheetSnapshot]) throws -> UseCasePlan { UseCasePlan(targets: [], notes: []) }
-    public func planBook(html: String, book: GnuCashBook) throws -> GnuCashPlan { GnuCashPlan(transactions: [], notes: []) }
+
+    public func planBook(html: String, book: GnuCashBook) throws -> GnuCashPlan {
+        let planned = try planAppleReceipt(try parseAppleReceipt(html: html), book: book, payPalAccount: payPalAccount)
+        return GnuCashPlan(transactions: planned.transactions, notes: planned.notes)
+    }
 }

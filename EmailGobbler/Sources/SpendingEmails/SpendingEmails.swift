@@ -86,11 +86,11 @@ private func matches(_ text: String, _ pattern: String) -> Bool {
 private let months = ["Jan": 1, "Feb": 2, "Mar": 3, "Apr": 4, "May": 5, "Jun": 6,
                       "Jul": 7, "Aug": 8, "Sep": 9, "Oct": 10, "Nov": 11, "Dec": 12]
 
-/// Reads "Mar 12, 2026", optionally preceded by a weekday such as "Thu, ".
+/// Reads "Mar 12, 2026" or "March 12, 2026", optionally preceded by a weekday such as "Thu, ".
 private func emailDate(_ text: String) throws -> CalendarDate {
     let parts = text.replacingOccurrences(of: ",", with: " ").split(separator: " ").map(String.init)
     let tail = Array(parts.suffix(3))
-    guard tail.count == 3, let month = months[tail[0]], let day = Int(tail[1]), let year = Int(tail[2]),
+    guard tail.count == 3, let month = months[String(tail[0].prefix(3))], let day = Int(tail[1]), let year = Int(tail[2]),
           let date = try? CalendarDate(year: year, month: month, day: day) else {
         throw SpendingEmailError.invalidDate(text)
     }
@@ -242,8 +242,22 @@ public struct AppleReceipt: Equatable, Sendable {
     }
 }
 
+/// Apple receipts show the date, "Order ID:" with its value, and under
+/// "Subtotal" each payment method followed by the amount charged to it.
 public func parseAppleReceipt(html: String) throws -> AppleReceipt {
-    throw SpendingEmailError.notApplicable("")
+    let lines = (try? SwiftSoup.parse(html)).map(paragraphs) ?? []
+    guard let orderIndex = lines.firstIndex(of: "Order ID:"), orderIndex + 1 < lines.count else {
+        throw SpendingEmailError.notApplicable("Not an Apple receipt")
+    }
+    guard let dateText = lines.first(where: { matches($0, "^[A-Z][a-z]+ [0-9]{1,2}, [0-9]{4}$") }) else {
+        throw SpendingEmailError.missingField("date")
+    }
+    let subtotal = lines.firstIndex(of: "Subtotal") ?? lines.count
+    guard let payPal = lines.indices.first(where: { $0 > subtotal && lines[$0] == "PayPal" }), payPal + 1 < lines.count else {
+        throw SpendingEmailError.notApplicable("Apple receipt not paid with PayPal")
+    }
+    return AppleReceipt(date: try emailDate(dateText), orderID: lines[orderIndex + 1],
+                        payPalAmount: try dollars(lines[payPal + 1]))
 }
 
 /// What to add to the book for one email, and what was skipped.
@@ -481,6 +495,15 @@ public func planVerizonBill(_ bill: VerizonBill, book: GnuCashBook, paymentAccou
     ], notes: category.note.map { [$0] } ?? [])
 }
 
+/// An Apple receipt paid with PayPal adds nothing: the PayPal receipt books the
+/// payment. It only has to match a payment on the PayPal account within three days.
 public func planAppleReceipt(_ receipt: AppleReceipt, book: GnuCashBook, payPalAccount: String) throws -> SpendingPlan {
-    SpendingPlan(transactions: [], notes: [])
+    let payPal = try requireAccount(payPalAccount, in: book, as: .wallet)
+    guard let match = existingBooking(in: book, account: payPal, amount: -receipt.payPalAmount, date: receipt.date) else {
+        throw SpendingEmailError.notBookedYet("No PayPal payment of \(currencyDisplay(receipt.payPalAmount)) near "
+                                              + "\(shown(receipt.date)) is in the book yet")
+    }
+    return SpendingPlan(transactions: [], notes: [
+        "Matches \(match.description) \(currencyDisplay(receipt.payPalAmount)) on \(shown(match.datePosted))",
+    ])
 }

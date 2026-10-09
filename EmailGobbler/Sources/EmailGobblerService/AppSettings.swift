@@ -132,17 +132,20 @@ public struct GnuCashSettings: Codable, Equatable, Sendable {
         amex = try container.decodeIfPresent(AmexBookingSettings.self, forKey: .amex) ?? AmexBookingSettings()
         payPal = try container.decodeIfPresent(PayPalBookingSettings.self, forKey: .payPal) ?? PayPalBookingSettings()
         verizon = try container.decodeIfPresent(VerizonBookingSettings.self, forKey: .verizon) ?? VerizonBookingSettings()
-        apple = AppleReceiptSettings()
+        apple = try container.decodeIfPresent(AppleReceiptSettings.self, forKey: .apple) ?? AppleReceiptSettings()
     }
 
     /// Account settings in a stable order, for enabled bookings only.
     var accountFields: [(field: String, account: String?, missing: String, role: SpendingAccountRole)] {
         var fields: [(String, String?, String, SpendingAccountRole)] = []
-        guard amex.enabled || payPal.enabled || verizon.enabled else { return [] }
-        fields.append(("gnuCash.holdingAccount", holdingAccount, "Choose an account for new merchants", .expense))
+        if amex.enabled || payPal.enabled || verizon.enabled {
+            fields.append(("gnuCash.holdingAccount", holdingAccount, "Choose an account for new merchants", .expense))
+        }
         if amex.enabled { fields.append(("gnuCash.amex.account", amex.account, "Choose the American Express account", .card)) }
-        if payPal.enabled {
+        if payPal.enabled || apple.enabled {
             fields.append(("gnuCash.payPal.account", payPal.account, "Choose the PayPal account", .wallet))
+        }
+        if payPal.enabled {
             fields.append(("gnuCash.payPal.bankFundingAccount", payPal.bankFundingAccount,
                            "Choose the bank account that funds PayPal", .bank))
             fields.append(("gnuCash.payPal.cardFundingAccount", payPal.cardFundingAccount,
@@ -250,7 +253,7 @@ public struct AppSettings: Codable, Equatable, Sendable {
                 }
             }
         }
-        let bookingsEnabled = gnuCash.amex.enabled || gnuCash.payPal.enabled || gnuCash.verizon.enabled
+        let bookingsEnabled = gnuCash.amex.enabled || gnuCash.payPal.enabled || gnuCash.verizon.enabled || gnuCash.apple.enabled
         if (gnuCash.bookPath != nil || bookingsEnabled) && Self.isBlank(gnuCash.bookPath) {
             issues.append(SettingsIssue(field: "gnuCash.bookPath", message: "Choose a GnuCash book"))
         }
@@ -286,20 +289,25 @@ public struct AppSettings: Codable, Equatable, Sendable {
             let target = SheetTarget(workbook: URL(fileURLWithPath: path), sheetName: dividends.sheetName)
             result.append(ConfiguredUseCase(id: .etradeDividends, useCase: EtradeDividendsUseCase(target: target, mailQuery: query)))
         }
-        if let path = gnuCash.bookPath, let holding = gnuCash.holdingAccount {
+        if let path = gnuCash.bookPath {
             let book = URL(fileURLWithPath: path)
-            if gnuCash.amex.enabled, let account = gnuCash.amex.account {
+            let holding = gnuCash.holdingAccount
+            if gnuCash.amex.enabled, let account = gnuCash.amex.account, let holding {
                 result.append(ConfiguredUseCase(id: .amexPurchases, useCase: AmexPurchasesUseCase(
                     bookURL: book, amexAccount: account, holdingAccount: holding)))
             }
             let payPal = gnuCash.payPal
             if payPal.enabled, let account = payPal.account, let bank = payPal.bankFundingAccount,
-               let card = payPal.cardFundingAccount {
+               let card = payPal.cardFundingAccount, let holding {
                 result.append(ConfiguredUseCase(id: .payPalPayments, useCase: PayPalPaymentsUseCase(
                     bookURL: book, accounts: PayPalAccounts(payPal: account, bankFunding: bank, cardFunding: card),
                     holdingAccount: holding)))
             }
-            if gnuCash.verizon.enabled, let account = gnuCash.verizon.account {
+            // After PayPal payments, so a receipt and its PayPal email can match in one run.
+            if gnuCash.apple.enabled, let account = payPal.account {
+                result.append(ConfiguredUseCase(id: .appleReceipts, useCase: AppleReceiptsUseCase(bookURL: book, payPalAccount: account)))
+            }
+            if gnuCash.verizon.enabled, let account = gnuCash.verizon.account, let holding {
                 result.append(ConfiguredUseCase(id: .verizonBills, useCase: VerizonBillsUseCase(
                     bookURL: book, paymentAccount: account, holdingAccount: holding)))
             }

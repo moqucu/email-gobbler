@@ -69,7 +69,7 @@ final class GnuCashSettingsTests: XCTestCase {
 
     // MARK: - Spending bookings
 
-    private func spending(amex: Bool = true, payPal: Bool = true, verizon: Bool = true) -> AppSettings {
+    private func spending(amex: Bool = true, payPal: Bool = true, verizon: Bool = true, apple: Bool = false) -> AppSettings {
         AppSettings(intervalMinutes: 30, backupRetention: 30, grades: GradesSettings(enabled: false, routes: []),
                     dividends: DividendsSettings(enabled: false, workbookPath: nil, sheetName: "Sheet 1"),
                     gnuCash: GnuCashSettings(bookPath: "/tmp/Household.gnucash", holdingAccount: "Expenses:Uncategorized",
@@ -77,7 +77,8 @@ final class GnuCashSettingsTests: XCTestCase {
                                              payPal: PayPalBookingSettings(enabled: payPal, account: "Assets:PayPal",
                                                                            bankFundingAccount: "Assets:Checking",
                                                                            cardFundingAccount: "Liabilities:Example Card"),
-                                             verizon: VerizonBookingSettings(enabled: verizon, account: "Assets:Checking")))
+                                             verizon: VerizonBookingSettings(enabled: verizon, account: "Assets:Checking"),
+                                             apple: AppleReceiptSettings(enabled: apple)))
     }
 
     private func spendingBook(placeholder: String? = nil) -> GnuCashBook {
@@ -98,6 +99,7 @@ final class GnuCashSettingsTests: XCTestCase {
         XCTAssertFalse(decoded.payPal.enabled)
         XCTAssertNil(decoded.holdingAccount)
         XCTAssertFalse(decoded.verizon.enabled)
+        XCTAssertFalse(decoded.apple.enabled)
         XCTAssertEqual(try JSONDecoder().decode(AppSettings.self, from: JSONEncoder().encode(spending())), spending())
     }
 
@@ -150,6 +152,17 @@ final class GnuCashSettingsTests: XCTestCase {
             SettingsIssue(field: "gnuCash.verizon.account",
                           message: "Expenses:Uncategorized is an expense account; choose a bank, asset, or card account"),
         ])
+    }
+
+    func testAppleReceiptsNeedOnlyThePayPalAccountAndRunAfterPayPalPayments() {
+        XCTAssertEqual(spending(apple: true).configuredUseCases().map(\.id),
+                       [.amexPurchases, .payPalPayments, .appleReceipts, .verizonBills])
+        var onlyApple = spending(amex: false, payPal: false, verizon: false, apple: true)
+        onlyApple.gnuCash.holdingAccount = nil
+        XCTAssertEqual(onlyApple.validate(), [])
+        XCTAssertEqual(onlyApple.configuredUseCases().map(\.id), [.appleReceipts])
+        onlyApple.gnuCash.payPal.account = nil
+        XCTAssertEqual(onlyApple.validate(), [SettingsIssue(field: "gnuCash.payPal.account", message: "Choose the PayPal account")])
     }
 
     func testEnabledBookingsBecomeUseCases() {

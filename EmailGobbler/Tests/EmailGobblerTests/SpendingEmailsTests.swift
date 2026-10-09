@@ -78,6 +78,20 @@ final class SpendingEmailsTests: XCTestCase {
         assertSpendingError(.invalidDate("2/30/2026"), try parseVerizonBill(html: badDate))
     }
 
+    // MARK: - Apple receipts
+
+    func testAppleReceiptFixtureIsParsed() throws {
+        XCTAssertEqual(try parseAppleReceipt(html: try html("apple-receipt.synthetic")),
+                       AppleReceipt(date: date(2026, 3, 12), orderID: "SYNTH00042", payPalAmount: dec("4.25")))
+    }
+
+    func testAppleReceiptsNotPaidWithPayPalOrWithoutAnOrderAreNotApplicable() throws {
+        let card = try html("apple-receipt.synthetic").replacingOccurrences(of: ">PayPal<", with: ">Apple Card<")
+        assertSpendingError(.notApplicable("Apple receipt not paid with PayPal"), try parseAppleReceipt(html: card))
+        let other = try html("apple-receipt.synthetic").replacingOccurrences(of: "Order ID:", with: "Reference:")
+        assertSpendingError(.notApplicable("Not an Apple receipt"), try parseAppleReceipt(html: other))
+    }
+
     // MARK: - Booking
 
     private func account(_ guid: String, _ name: String, _ type: String, placeholder: Bool = false) -> GnuCashAccount {
@@ -253,6 +267,24 @@ final class SpendingEmailsTests: XCTestCase {
         let plan = try planAmexPurchase(purchase, book: book(extra: [transfer]), amexAccount: "Liabilities:Example Card",
                                         holdingAccount: "Expenses:Uncategorized")
         XCTAssertEqual(plan.transactions.first?.splits.map(\.accountName), ["Expenses:Utilities:Gas", "Liabilities:Example Card"])
+    }
+
+    func testAppleReceiptMatchesTheBookedPayPalPayment() throws {
+        let receipt = AppleReceipt(date: date(2026, 3, 12), orderID: "SYNTH00042", payPalAmount: dec("4.25"))
+        let booked = booking("a", date(2026, 3, 13), "Apple Services", num: "SYNTH0000TXN00077",
+                             [("streaming", "4.25"), ("paypal", "-4.25")])
+        XCTAssertEqual(try planAppleReceipt(receipt, book: book(extra: [booked]), payPalAccount: "Assets:PayPal"),
+                       SpendingPlan(transactions: [], notes: ["Matches Apple Services $4.25 on 3/13/2026"]))
+    }
+
+    func testAppleReceiptWithoutABookedPaymentWaitsInTheInbox() {
+        let receipt = AppleReceipt(date: date(2026, 3, 12), orderID: "SYNTH00042", payPalAmount: dec("4.25"))
+        let tooLate = booking("a", date(2026, 3, 16), "Apple Services", [("streaming", "4.25"), ("paypal", "-4.25")])
+        let error = SpendingEmailError.notBookedYet("No PayPal payment of $4.25 near 3/12/2026 is in the book yet")
+        assertSpendingError(error, try planAppleReceipt(receipt, book: book(extra: [tooLate]), payPalAccount: "Assets:PayPal"))
+        XCTAssertTrue(error.leavesEmailInInbox)
+        assertSpendingError(.unsuitableAccount("Expenses:Streaming is an expense account; choose an asset or bank account"),
+                            try planAppleReceipt(receipt, book: book(), payPalAccount: "Expenses:Streaming"))
     }
 
     func testMisconfiguredAccountsAreReported() {

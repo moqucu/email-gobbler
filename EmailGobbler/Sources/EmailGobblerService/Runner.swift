@@ -125,7 +125,7 @@ public func runUseCase(_ configured: ConfiguredUseCase, environment: RunEnvironm
                 do {
                     report = try processBookMessage(html: html, useCase: bookUseCase, actions: actions)
                 } catch let error as any EmailApplicability where error.leavesEmailInInbox {
-                    log(ref.rfcMessageID, "process", "skipped (not applicable)")
+                    log(ref.rfcMessageID, "process", "left in Inbox")
                     continue
                 }
                 rowsWritten += report.ledgerEntries

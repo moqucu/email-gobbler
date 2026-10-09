@@ -8,6 +8,7 @@ extension UseCaseID {
         case .amexPurchases: return "AmEx purchases"
         case .payPalPayments: return "PayPal payments"
         case .verizonBills: return "Verizon bills"
+        case .appleReceipts: return "Apple receipts"
         }
     }
 }

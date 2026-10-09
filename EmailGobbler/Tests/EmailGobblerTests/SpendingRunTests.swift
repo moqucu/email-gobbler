@@ -77,6 +77,43 @@ final class SpendingRunTests: XCTestCase {
         XCTAssertEqual(plan.notes, ["New merchant \"Verizon\" booked to Expenses:Uncategorized"])
     }
 
+    private func appleReceipts() -> AppleReceiptsUseCase {
+        AppleReceiptsUseCase(bookURL: Self.bookURL, payPalAccount: "Assets:PayPal")
+    }
+
+    private func bookWithApplePayment() -> GnuCashBook {
+        let base = book()
+        let payment = GnuCashTransaction(guid: "apple", currency: GnuCashCommodity(space: "CURRENCY", id: "USD"), num: nil,
+                                         datePosted: date(2026, 3, 12), dateEntered: Date(timeIntervalSince1970: 0),
+                                         description: "Apple Services", splits: [
+            GnuCashSplit(guid: "s1", accountGUID: "hold", value: dec("4.25"), quantity: dec("4.25"), memo: nil, reconciledState: "n"),
+            GnuCashSplit(guid: "s2", accountGUID: "paypal", value: dec("-4.25"), quantity: dec("-4.25"), memo: nil, reconciledState: "n"),
+        ])
+        return GnuCashBook(bookGUID: base.bookGUID, accounts: base.accounts, transactions: [payment])
+    }
+
+    func testAppleReceiptUseCaseSummarizesAndMatches() throws {
+        let html = try MailDecoder.html(from: try source("apple-receipt.synthetic"))
+        let useCase = appleReceipts()
+        XCTAssertEqual(useCase.mailQuery, AppleReceiptsUseCase.defaultQuery)
+        XCTAssertEqual(useCase.targets, [])
+        XCTAssertEqual(try useCase.summarize(html: html), ["Order ID: SYNTH00042", "Date: 3/12/2026", "Paid with PayPal: $4.25"])
+        XCTAssertEqual(try useCase.planBook(html: html, book: bookWithApplePayment()),
+                       GnuCashPlan(transactions: [], notes: ["Matches Apple Services $4.25 on 3/12/2026"]))
+    }
+
+    func testMatchedAppleReceiptsAreArchivedAndOthersWait() throws {
+        let client = FakeBookClient(book: bookWithApplePayment())
+        let unmatched = String(decoding: try source("apple-receipt.synthetic"), as: UTF8.self)
+            .replacingOccurrences(of: "$4.25", with: "$9.00")
+        client.messages = [ref(7), ref(8)]
+        client.sources = [7: Data(unmatched.utf8), 8: try source("apple-receipt.synthetic")]
+        let result = runUseCase(ConfiguredUseCase(id: .appleReceipts, useCase: appleReceipts()), environment: environment(client))
+        XCTAssertEqual(result, UseCaseRunResult(id: .appleReceipts, messagesFound: 2, messagesProcessed: 1, rowsWritten: 0, error: nil,
+                                                lastProcessedAt: Date(timeIntervalSince1970: 1_790_000_001)))
+        XCTAssertEqual(client.calls, ["list", "fetch 7", "load Household.gnucash", "fetch 8", "load Household.gnucash", "consume 8"])
+    }
+
     func testOnlyNotApplicableEmailsStayInTheInbox() {
         XCTAssertTrue(SpendingEmailError.notApplicable("Not a receipt").leavesEmailInInbox)
         XCTAssertFalse(SpendingEmailError.missingField("Transaction ID").leavesEmailInInbox)
@@ -185,5 +222,7 @@ final class SpendingRunTests: XCTestCase {
         XCTAssertEqual(UseCaseID.payPalPayments.displayName, "PayPal payments")
         XCTAssertEqual(UseCaseID.verizonBills.rawValue, "verizon-bills")
         XCTAssertEqual(UseCaseID.verizonBills.displayName, "Verizon bills")
+        XCTAssertEqual(UseCaseID.appleReceipts.rawValue, "apple-receipts")
+        XCTAssertEqual(UseCaseID.appleReceipts.displayName, "Apple receipts")
     }
 }

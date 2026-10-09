@@ -83,3 +83,7 @@ addresses, headers, and every link are synthetic. Other formats in the tests are
 `verizon-bill.synthetic.eml` keeps the HTML layout of one real Verizon "Your Verizon bill is ready."
 email for an Auto Pay account. The amount, Auto Pay date, account number, address, headers, and every
 link are synthetic.
+
+`apple-receipt.synthetic.eml` keeps the HTML layout of one real "Your receipt from Apple." email for a
+subscription paid with PayPal. Dates, the order and document numbers, the Apple Account, the billing
+name and address, amounts, headers, and every link are synthetic.

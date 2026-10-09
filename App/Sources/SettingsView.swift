@@ -116,6 +116,11 @@ struct SettingsView: View {
                 account("Paid from card", $editor.draft.gnuCash.payPal.cardFundingAccount,
                         field: "gnuCash.payPal.cardFundingAccount", role: .card)
             }
+            Toggle("Archive Apple receipts paid with PayPal once the payment is booked",
+                   isOn: $editor.draft.gnuCash.apple.enabled)
+            if editor.draft.gnuCash.apple.enabled && !editor.draft.gnuCash.payPal.enabled {
+                account("PayPal account", $editor.draft.gnuCash.payPal.account, field: "gnuCash.payPal.account", role: .wallet)
+            }
             Toggle("Book Verizon bills on their Auto Pay date", isOn: $editor.draft.gnuCash.verizon.enabled)
             if editor.draft.gnuCash.verizon.enabled {
                 account("Paid from", $editor.draft.gnuCash.verizon.account, field: "gnuCash.verizon.account", role: .billPayment)

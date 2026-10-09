@@ -11,6 +11,7 @@ public enum UseCaseID: String, Codable, Sendable, CaseIterable {
     case amexPurchases = "amex-purchases"
     case payPalPayments = "paypal-payments"
     case verizonBills = "verizon-bills"
+    case appleReceipts = "apple-receipts"
 }
 
 public struct StudentRouteSettings: Codable, Equatable, Sendable {
@@ -88,6 +89,15 @@ public struct VerizonBookingSettings: Codable, Equatable, Sendable {
     }
 }
 
+public struct AppleReceiptSettings: Codable, Equatable, Sendable {
+    /// Archive Apple receipts paid with PayPal once the payment is booked on the PayPal account.
+    public var enabled: Bool
+
+    public init(enabled: Bool = false) {
+        self.enabled = enabled
+    }
+}
+
 public struct GnuCashSettings: Codable, Equatable, Sendable {
     /// The GnuCash XML book EmailGobbler reads and writes; `nil` until chosen.
     public var bookPath: String?
@@ -96,19 +106,22 @@ public struct GnuCashSettings: Codable, Equatable, Sendable {
     public var amex: AmexBookingSettings
     public var payPal: PayPalBookingSettings
     public var verizon: VerizonBookingSettings
+    public var apple: AppleReceiptSettings
 
     public init(bookPath: String? = nil, holdingAccount: String? = nil, amex: AmexBookingSettings = AmexBookingSettings(),
                 payPal: PayPalBookingSettings = PayPalBookingSettings(),
-                verizon: VerizonBookingSettings = VerizonBookingSettings()) {
+                verizon: VerizonBookingSettings = VerizonBookingSettings(),
+                apple: AppleReceiptSettings = AppleReceiptSettings()) {
         self.bookPath = bookPath
         self.holdingAccount = holdingAccount
         self.amex = amex
         self.payPal = payPal
         self.verizon = verizon
+        self.apple = apple
     }
 
     private enum CodingKeys: String, CodingKey {
-        case bookPath, holdingAccount, amex, payPal, verizon
+        case bookPath, holdingAccount, amex, payPal, verizon, apple
     }
 
     /// Settings saved before spending bookings existed load with them off.
@@ -119,6 +132,7 @@ public struct GnuCashSettings: Codable, Equatable, Sendable {
         amex = try container.decodeIfPresent(AmexBookingSettings.self, forKey: .amex) ?? AmexBookingSettings()
         payPal = try container.decodeIfPresent(PayPalBookingSettings.self, forKey: .payPal) ?? PayPalBookingSettings()
         verizon = try container.decodeIfPresent(VerizonBookingSettings.self, forKey: .verizon) ?? VerizonBookingSettings()
+        apple = AppleReceiptSettings()
     }
 
     /// Account settings in a stable order, for enabled bookings only.

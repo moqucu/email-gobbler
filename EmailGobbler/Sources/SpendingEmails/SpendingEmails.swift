@@ -56,6 +56,8 @@ public enum SpendingEmailError: Error, Equatable, CustomStringConvertible {
     case unsupportedFunding(String)
     /// A configured account of the wrong kind, such as an expense account paying a bill.
     case unsuitableAccount(String)
+    /// The payment an email confirms is not in the book yet; the email waits in the Inbox.
+    case notBookedYet(String)
 
     public var description: String {
         switch self {
@@ -66,6 +68,7 @@ public enum SpendingEmailError: Error, Equatable, CustomStringConvertible {
         case .unsupportedCurrency(let code): return "Payments in \(code) are not supported yet"
         case .unsupportedFunding(let source): return "Unknown PayPal funding source \"\(source)\""
         case .unsuitableAccount(let problem): return problem
+        case .notBookedYet(let reason): return reason
         }
     }
 }
@@ -224,6 +227,23 @@ public func parseVerizonBill(html: String) throws -> VerizonBill {
     let prefix = "Account number ending in:"
     let ending = lines.first { $0.hasPrefix(prefix) }.map { $0.dropFirst(prefix.count).trimmingCharacters(in: .whitespaces) }
     return VerizonBill(amountDue: try dollars(amountText), autoPayDate: try numericDate(dateText), accountEnding: ending)
+}
+
+public struct AppleReceipt: Equatable, Sendable {
+    public let date: CalendarDate
+    public let orderID: String
+    /// The amount charged to PayPal.
+    public let payPalAmount: Decimal
+
+    public init(date: CalendarDate, orderID: String, payPalAmount: Decimal) {
+        self.date = date
+        self.orderID = orderID
+        self.payPalAmount = payPalAmount
+    }
+}
+
+public func parseAppleReceipt(html: String) throws -> AppleReceipt {
+    throw SpendingEmailError.notApplicable("")
 }
 
 /// What to add to the book for one email, and what was skipped.
@@ -459,4 +479,8 @@ public func planVerizonBill(_ bill: VerizonBill, book: GnuCashBook, paymentAccou
             NewGnuCashSplit(accountName: payer.fullName, amount: -bill.amountDue),
         ]),
     ], notes: category.note.map { [$0] } ?? [])
+}
+
+public func planAppleReceipt(_ receipt: AppleReceipt, book: GnuCashBook, payPalAccount: String) throws -> SpendingPlan {
+    SpendingPlan(transactions: [], notes: [])
 }

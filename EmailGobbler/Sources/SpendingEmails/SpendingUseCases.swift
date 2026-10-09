@@ -109,3 +109,23 @@ public struct VerizonBillsUseCase: GnuCashUseCase {
         return GnuCashPlan(transactions: planned.transactions, notes: planned.notes)
     }
 }
+
+/// Apple receipts paid with PayPal: archived once the PayPal payment is in the book.
+public struct AppleReceiptsUseCase: GnuCashUseCase {
+    public static let defaultQuery = MailQuery(subjectContains: "", senderContains: nil)
+
+    public let mailQuery: MailQuery
+    public let bookURL: URL?
+    public let payPalAccount: String
+
+    public init(bookURL: URL?, payPalAccount: String, mailQuery: MailQuery = defaultQuery) {
+        self.bookURL = bookURL
+        self.payPalAccount = payPalAccount
+        self.mailQuery = mailQuery
+    }
+
+    public var targets: [SheetTarget] { [] }
+    public func summarize(html: String) throws -> [String] { [] }
+    public func plan(html: String, sheets: [SheetTarget: SheetSnapshot]) throws -> UseCasePlan { UseCasePlan(targets: [], notes: []) }
+    public func planBook(html: String, book: GnuCashBook) throws -> GnuCashPlan { GnuCashPlan(transactions: [], notes: []) }
+}

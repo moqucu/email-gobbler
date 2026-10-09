@@ -9,7 +9,7 @@ Each kind of email is a *use case* built on one shared core:
 | `SchoologyGrades` | Schoology weekly-summary extraction, the weekly grades sheet planner, and the weekly-row upsert library. |
 | `EtradeDividends` | E*TRADE "Dividend or interest paid" alert extraction and the dividend ledger planner. |
 | `GnuCashBook` | Reads GnuCash 5 XML books (gzip or plain) and appends balanced transactions in GnuCash's own format, safely; the book workflow (`GnuCashUseCase`, `processBookMessage`). |
-| `SpendingEmails` | American Express purchase alerts, PayPal receipts, and Verizon bills, and how to book them from the book's history. |
+| `SpendingEmails` | American Express purchase alerts, PayPal receipts, Verizon bills, and Apple receipts, and how to book or match them from the book's history. |
 | `email-gobbler` | Command-line tool that runs a use case through the shared workflow. |
 
 A use case only parses its email and turns it into a `SheetUpdatePlan`: replace one
@@ -142,8 +142,11 @@ funding source). Booking learns from the book:
   Collection", and the PayPal balance nothing. Other sources stop with an error.
 - Verizon bills ("Total amount due" and "Auto Pay date") are booked on the Auto Pay date against the
   paying account, like its latest "Verizon" transaction. Nothing is booked when nothing is due.
+- Apple receipts paid with PayPal are only matched: a payment of the PayPal amount on the PayPal account
+  within three days lets the email be archived without writing; without one it stays in the Inbox
+  (`SpendingEmailError.notBookedYet`).
 
-The fixtures `amex-purchase.synthetic.eml`, `paypal-receipt.synthetic.eml`, and `verizon-bill.synthetic.eml` are anonymized copies of
+The fixtures `amex-purchase.synthetic.eml`, `paypal-receipt.synthetic.eml`, `verizon-bill.synthetic.eml`, and `apple-receipt.synthetic.eml` are anonymized copies of
 real emails with synthetic merchants, amounts, and identifiers.
 
 ## Schoology weekly-email extraction
